@@ -34,7 +34,7 @@ const ViewPage = () => {
   return (
     <>
       <button onClick={() => navigate('/')}>Go to Start Page</button>
-      <Viewport model={model} />
+      <Viewport />
     </>
   );
 };

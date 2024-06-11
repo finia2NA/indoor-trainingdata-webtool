@@ -1,25 +1,21 @@
-// src/components/Model.jsx
-import { Canvas, useLoader } from '@react-three/fiber'
-import { Suspense } from 'react';
-import { GLTFLoader } from 'three/examples/jsm/Addons.js';
+// App.tsx
+import React from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, useGLTF } from '@react-three/drei';
 
-const Model = () => {
-  const gltf = useLoader(GLTFLoader, "./Poimandres.gltf");
-  return (
-    <>
-      <primitive object={gltf.scene} />
-    </>
-  );
-};
+// Custom component to load and render the GLTF model
+const Model: React.FC = () => {
+  const { scene } = useGLTF('/example.glb');
+  return <primitive object={scene} />;
+}
 
-const Viewport = () => {
+const Viewport: React.FC = () => {
   return (
-    <Canvas>
+    <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
       <ambientLight intensity={0.5} />
-      <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
-      <Suspense fallback={null}>
-        <Model />
-      </Suspense>
+      <directionalLight position={[10, 10, 5]} intensity={1} />
+      <Model />
+      <OrbitControls />
     </Canvas>
   );
 }
