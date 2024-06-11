@@ -44,6 +44,17 @@ class MyAppDatabase extends Dexie {
     return models.map(({ id, name, size }) => ({ id, name, size }));
   }
 
+
+  /**
+   * Updates the name of a model in the database.
+   * @param id - The ID of the model to update.
+   * @param newName - The new name for the model.
+   * @returns A Promise that resolves when the update is complete.
+   */
+  async editModelName(id: number, newName: string): Promise<void> {
+    await this.models.update(id, { name: newName });
+  }
+
   /**
    * Deletes a model from the database based on the provided ID.
    * @param id - The ID of the model to delete.

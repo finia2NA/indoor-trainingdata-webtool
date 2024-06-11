@@ -1,62 +1,58 @@
-import React, { useEffect, useState } from 'react';
-import db, { ModelWithoutContent } from '../data/db';
-import byteSize from 'byte-size'
+import db from '../data/db';
+import byteSize from 'byte-size';
+import { useLiveQuery } from 'dexie-react-hooks';
 
 const ModelOverview = () => {
-  const [models, setModels] = useState<ModelWithoutContent[]>([]);
+  const models = useLiveQuery(() => db.models.toArray(), []);
 
-  useEffect(() => {
-    const fetchModels = async () => {
-      const modelsData = await db.getModels();
-      setModels(modelsData);
-    };
-
-    fetchModels();
-  }, []);
-
-  const onRowClick = (id?: number) => {
+  const onView = (id?: number) => {
     if (id === undefined) return;
     console.log(id);
-  }
+  };
 
-  const onDeleteClick = (id?: number) => {
+  const onRename = (id?: number) => {
     if (id === undefined) return;
     console.log(id);
 
-    db.deleteModel(id);
+    const newName = prompt('Enter the new name for the model:');
+    if (newName === null || newName === "") return;
+
+    db.editModelName(id, newName);
+
   }
 
+  const onDelete = async (id?: number) => {
+    if (id === undefined) return;
+    console.log(id);
 
+    await db.deleteModel(id);
+  };
 
   return (
     <div>
       <h1>Models</h1>
-      {/* <ul>
-        {models.map(model => (
-          <li key={model.id}>{model.name} {byteSize(model.size, { units: 'iec', precision: 1 }).toString()}</li>
-        ))}
-      </ul> */}
-
       <table className='border-2'>
         <thead>
           <tr>
             <th>Name</th>
             <th>Size</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {models.map(model => (
+          {models && models.map(model => (
             <tr key={model.id} className='border-2'>
               <td className='border-2'>{model.name}</td>
               <td className='border-2'>{byteSize(model.size, { units: 'iec', precision: 1 }).toString()}</td>
-              <td onClick={() => onRowClick(model.id)} className='border-2'>View</td>
-              <td onClick={() => onDeleteClick(model.id)} className='border-2'>Delete</td>
+              <td onClick={() => onView(model.id)} className='border-2'>View</td>
+              <td onClick={() => onRename(model.id)} className='border-2'>Rename</td>
+              <td onClick={() => onDelete(model.id)} className='border-2'>Delete</td>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
   );
-}
+};
 
 export default ModelOverview;

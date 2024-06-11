@@ -10,6 +10,8 @@ const UploadComponent: React.FC = () => {
       const name = file.name;
       const content = new TextDecoder().decode(fileData);
 
+      // TODO: here is where we would do validation, not rn though :)
+
       // Add the file to the database
       await db.addModel({ name, content, size });
       console.log(`File ${name} added to the database`);
@@ -21,7 +23,7 @@ const UploadComponent: React.FC = () => {
   return (
     <div {...getRootProps()} className='border-2 border-dashed border-sky-500 rounded-md p-5 text-center cursor-pointer'>
       <input {...getInputProps()} />
-      <p>Drag 'n' drop some files here, or click to select files</p>
+      <p>Drag + drop some files here, or click to select files</p>
     </div>
   );
 };
