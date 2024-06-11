@@ -1,0 +1,1 @@
+export const isNumeric = (s: string) => /^[+-]?\d+(\.\d+)?$/.test(s)

@@ -1,25 +1,27 @@
+import { useNavigate } from 'react-router-dom';
 import db from '../data/db';
 import byteSize from 'byte-size';
 import { useLiveQuery } from 'dexie-react-hooks';
 
 const ModelOverview = () => {
   const models = useLiveQuery(() => db.models.toArray(), []);
+  const navigate = useNavigate(); // Import and use the useNavigate hook
 
   const onView = (id?: number) => {
     if (id === undefined) return;
     console.log(id);
+    navigate(`/view/${id}`); // Navigate to the desired URL
   };
 
-  const onRename = (id?: number) => {
+  const onRename = (name: string, id?: number) => {
     if (id === undefined) return;
     console.log(id);
 
-    const newName = prompt('Enter the new name for the model:');
+    const newName = prompt('Enter the new name for the model:', name);
     if (newName === null || newName === "") return;
 
     db.editModelName(id, newName);
-
-  }
+  };
 
   const onDelete = async (id?: number) => {
     if (id === undefined) return;
@@ -44,9 +46,9 @@ const ModelOverview = () => {
             <tr key={model.id} className='border-2'>
               <td className='border-2'>{model.name}</td>
               <td className='border-2'>{byteSize(model.size, { units: 'iec', precision: 1 }).toString()}</td>
-              <td onClick={() => onView(model.id)} className='border-2'>View</td>
-              <td onClick={() => onRename(model.id)} className='border-2'>Rename</td>
-              <td onClick={() => onDelete(model.id)} className='border-2'>Delete</td>
+              <td onClick={() => onView(model.id)} className='border-2 cursor-pointer'>View</td>
+              <td onClick={() => onRename(model.name, model.id)} className='border-2 cursor-pointer'>Rename</td>
+              <td onClick={() => onDelete(model.id)} className='border-2 cursor-pointer'>Delete</td>
             </tr>
           ))}
         </tbody>

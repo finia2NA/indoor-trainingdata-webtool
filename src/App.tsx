@@ -1,25 +1,18 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import UploadComponent from './components/UploadComponent';
-import ModelOverview from './components/ModelOverview';
+import StartPage from './pages/StartPage';
+import Error404Page from './pages/Error404Page';
+import ViewPage from './pages/ViewPage';
 
 function App() {
   return (
-    // <Router>
-    //   <div>
-    //     <Routes>
-    //       <Route path="/" element={<Home />} />
-    //       <Route path="/upload" element={<Upload />} />
-    //     </Routes>
-    //   </div>
-    // </Router>
-
-
-
-    <>
-      <span className='font-bold text-2xl'>Hello World</span>
-      <UploadComponent />
-      <ModelOverview />
-    </>
+    <Router>
+      <Routes>
+        <Route path="/" element={<StartPage />} />
+        <Route path="/view/:id" element={<ViewPage />} />
+        <Route path="/404" element={<Error404Page />} />
+        <Route path="*" element={<Error404Page />} />
+      </Routes>
+    </Router>
   );
 }
 
