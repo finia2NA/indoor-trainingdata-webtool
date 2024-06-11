@@ -10,10 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/fiber": "^8.16.8",
+    "@types/three": "^0.165.0",
     "babel-plugin-react-compiler": "^0.0.0-experimental-938cd9a-20240601",
+    "dexie": "^4.0.7",
+    "dexie-react-hooks": "^1.1.7",
     "eslint-plugin-react-compiler": "^0.0.0-experimental-51a85ea-20240601",
-    "react": "^19.0.0-beta-26f2496093-20240514",
-    "react-dom": "^19.0.0-beta-26f2496093-20240514"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.23.1",
+    "three": "^0.165.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
