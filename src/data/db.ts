@@ -49,3 +49,13 @@ export const getModels = async (): Promise<ModelWithoutContent[]> => {
   const models = await db.models.toArray();
   return models.map(({ id, name, size }) => ({ id, name, size }));
 };
+
+/**
+ * Clears all tables in the database.
+ * @returns A promise that resolves when all tables are cleared.
+ */
+export const clearAllTables = async (): Promise<void> => {
+  const tableNames = db.tables.map(table => table.name);
+  await Promise.all(tableNames.map(tableName => db.table(tableName).clear()));
+  console.log('All tables cleared!');
+};
