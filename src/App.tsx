@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import UploadComponent from './components/UploadComponent';
+import ModelOverview from './components/ModelOverview';
 
 function App() {
   return (
@@ -15,6 +17,8 @@ function App() {
 
     <>
       <span className='font-bold text-2xl'>Hello World</span>
+      <UploadComponent />
+      <ModelOverview />
     </>
   );
 }

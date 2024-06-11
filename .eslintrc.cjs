@@ -14,6 +14,10 @@ module.exports = {
       'warn',
       { allowConstantExport: true },
     ],
-    'react-compiler/react-compiler': "error"
+    'no-unused-vars': 'warn',
+    '@typescript-eslint/no-unused-vars': 'warn',
+    'prefer-const': 'warn',
+    'no-debugger': 'off',
+    'react-compiler/react-compiler': 'error',
   },
-}
+};
