@@ -31,11 +31,16 @@ const ViewPage = () => {
     return <div>Loading...</div>;
   }
 
+  // TODO: proper sizing
   return (
-    <>
-      <button onClick={() => navigate('/')}>Go to Start Page</button>
-      <Viewport model={model as Model} />
-    </>
+    <div className="flex flex-row h-full w-screen">
+      <div className="basis-3/4">
+        <Viewport model={model as Model} />
+      </div>
+      <div className="basis-1/4">
+        hi
+      </div>
+    </div>
   );
 };
 

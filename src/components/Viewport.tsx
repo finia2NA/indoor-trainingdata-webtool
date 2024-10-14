@@ -5,7 +5,6 @@ import { Model } from '../data/db';
 import { useEffect, useState, useRef, LegacyRef } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Group, Object3DEventMap, Mesh, Camera } from 'three';
-import * as THREE from 'three';
 
 
 interface ViewportProps {
@@ -38,8 +37,6 @@ const SceneObject = ({ model, onClick }: SceneObjectProps) => {
       // scene.position.sub(mid);
 
 
-
-
       setScene(gltf.scene);
     });
   }, [model]);
@@ -63,7 +60,7 @@ const Viewport = ({ model }: ViewportProps) => {
   const transformRef = useRef(null);
 
   return (
-    <div className='w-96 h-96'>
+    <div className='h-full'>
       <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 10, 5]} intensity={1} />

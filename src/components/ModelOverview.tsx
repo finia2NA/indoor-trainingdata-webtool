@@ -32,7 +32,6 @@ const ModelOverview = () => {
 
   return (
     <div>
-      <h1>Models</h1>
       <table className='border-2'>
         <thead>
           <tr>

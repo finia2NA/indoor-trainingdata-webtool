@@ -17,6 +17,13 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* This was added by me */
+html, body, #root {
+  height: 100%;
+  /* width: 100%; */
+  margin: 0;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
