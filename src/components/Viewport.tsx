@@ -1,13 +1,15 @@
 // App.tsx
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
 import { Model } from '../data/db';
 import { useEffect, useState } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Group, Object3DEventMap } from 'three';
+import WrappedOrbitControls from './Viewport/WrappedOrbitControls';
 
 interface ViewportProps {
   model: Model;
+  orbitAngles: { azimuthAngle: number, polarAngle: number };
+  setOrbitAngles: React.Dispatch<React.SetStateAction<{ azimuthAngle: number; polarAngle: number; }>>;
 }
 
 interface SceneObjectProps {
@@ -27,7 +29,7 @@ const SceneObject = ({ model }: SceneObjectProps) => {
   return scene ? <primitive object={scene} /> : null;
 }
 
-const Viewport = ({ model }: ViewportProps) => {
+const Viewport = ({ model, orbitAngles, setOrbitAngles }: ViewportProps) => {
   return (
     <div className='h-full'>
       <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
@@ -36,7 +38,7 @@ const Viewport = ({ model }: ViewportProps) => {
 
         <SceneObject model={model} />
 
-        <OrbitControls />
+        <WrappedOrbitControls orbitAngles={orbitAngles} setOrbitAngles={setOrbitAngles} />
         <gridHelper args={[10, 10]} />
         <axesHelper args={[5]} />
         <color attach="background" args={['#484848']} />

@@ -43,9 +43,6 @@ export const TransformToggles = () => {
   const transformMode = useEditorStore((state) => (state as EditorState).transformMode);
   const setTransformMode = useEditorStore((state) => (state as EditorState).setTransformMode);
 
-  console.log('transformMode', transformMode);
-
-
   const items: Item[] = [
     {
       id: 'none',

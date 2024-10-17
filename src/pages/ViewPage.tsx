@@ -4,10 +4,13 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { isNumeric } from "../utils";
 import Viewport from "../components/Viewport";
 import { TransformToggles } from "../components/Viewport/Multitoggle";
+import { useState } from "react";
 
 const ViewPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+
+  const [orbitAngles, setOrbitAngles] = useState({ azimuthAngle: 0, polarAngle: Math.PI / 2 });
 
   // get our model, or redirect to 404 if it doesn't exist
   const model = useLiveQuery(
@@ -35,7 +38,7 @@ const ViewPage = () => {
   return (
     <div className="flex flex-row h-full w-screen">
       <div className="basis-3/4 relative">
-        <Viewport model={model as Model} />
+        <Viewport model={model as Model} orbitAngles={orbitAngles} setOrbitAngles={setOrbitAngles} />
         <div className="
           absolute top-0 left-0 w-full h-full
           grid grid-cols-2 grid-rows-2
