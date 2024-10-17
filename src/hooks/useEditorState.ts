@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 
 // Data definition
-export enum CameraMode {
+export enum Perspective {
   PERSPECTIVE = 'perspective',
   ORTHOGRAPHIC = 'orthographic',
 }
@@ -22,8 +22,8 @@ export enum TransformMode {
 }
 
 export type EditorState = {
-  cameraMode: CameraMode;
-  setCameraMode: (mode: CameraMode) => void;
+  perspectiveMode: Perspective;
+  setPerspectiveMode: (mode: Perspective) => void;
 
   editorMode: EditorMode;
   setEditorMode: (mode: EditorMode) => void;
@@ -31,8 +31,8 @@ export type EditorState = {
   transformMode: TransformMode;
   setTransformMode: (mode: TransformMode) => void;
 
-  displayGrid: boolean;
-  setDisplayGrid: (display: boolean) => void;
+  showGrid: boolean;
+  setShowGrid: (display: boolean) => void;
 };
 
 // --------------------------------------------
@@ -40,7 +40,7 @@ export type EditorState = {
 // Store creation
 const useEditorStore = create((set) => ({
   cameraMode: 'perspective',
-  setCameraMode: (mode: CameraMode) => set({ cameraMode: mode }),
+  setPerspectiveMode: (mode: Perspective) => set({ perspectiveMode: mode }),
 
   editorMode: 'layout',
   setEditorMode: (mode: EditorMode) => set({ editorMode: mode }),
@@ -48,8 +48,8 @@ const useEditorStore = create((set) => ({
   transformMode: 'none',
   setTransformMode: (mode: TransformMode) => set({ transformMode: mode }),
 
-  displayGrid: true,
-  setDisplayGrid: (display: boolean) => set({ displayGrid: display }),
+  showGrid: true,
+  setShowGrid: (showGrid: boolean) => set({ showGrid: showGrid }),
 
 }));
 

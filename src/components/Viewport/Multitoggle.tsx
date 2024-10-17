@@ -1,6 +1,10 @@
 import { IconType } from "react-icons";
-import useEditorStore, { EditorState, TransformMode } from "../../hooks/useEditorState";
+import useEditorStore, { EditorState, Perspective, TransformMode } from "../../hooks/useEditorState";
 import { LuExpand, LuMousePointer2, LuMove, LuRotate3D } from "react-icons/lu";
+import { TbPerspective, TbPerspectiveOff } from "react-icons/tb";
+import { MdOutlineGridOn, MdOutlineGridOff } from "react-icons/md";
+
+
 
 
 interface Item {
@@ -8,6 +12,7 @@ interface Item {
   icon: IconType;
   active: boolean;
   onClick: () => void;
+  endsSection?: boolean;
 }
 
 interface MultitoggleProps {
@@ -20,7 +25,7 @@ const Multitoggle = ({ items, direction }: MultitoggleProps) => {
   return (
     <div className={`
     bg-oxford_blue bg-opacity-60
-    m-1 px-2 py-3 gap-2
+    px-2 py-3 gap-2
     flex flex-${direction === 'row' ? 'row' : 'col'}
     pointer-events-auto`}>
       {items.map((item) => (
@@ -40,8 +45,7 @@ const Multitoggle = ({ items, direction }: MultitoggleProps) => {
 }
 
 export const TransformToggles = () => {
-  const transformMode = useEditorStore((state) => (state as EditorState).transformMode);
-  const setTransformMode = useEditorStore((state) => (state as EditorState).setTransformMode);
+  const { transformMode, setTransformMode } = useEditorStore((state) => state as EditorState);
 
   const items: Item[] = [
     {
@@ -72,6 +76,50 @@ export const TransformToggles = () => {
 
   return (
     <Multitoggle items={items} direction="column" />
+  );
+}
+
+export const ViewmodeToggles = () => {
+  // Perspective stuff
+  // state
+  const { perspectiveMode, setPerspectiveMode } = useEditorStore((state) => (state as EditorState));
+  // icon
+  const PerspectiveOrthographicIcon = perspectiveMode === Perspective.ORTHOGRAPHIC ? TbPerspectiveOff : TbPerspective;
+  // onClick
+  const togglePerspectiveMode = () => {
+    const newMode = perspectiveMode === Perspective.ORTHOGRAPHIC ? Perspective.PERSPECTIVE : Perspective.ORTHOGRAPHIC;
+    setPerspectiveMode(newMode);
+  }
+
+  // Grid stuff
+  // state
+  const { showGrid, setShowGrid } = useEditorStore((state) => (state as EditorState));
+  // icon
+  const GridIcon = showGrid ? MdOutlineGridOn : MdOutlineGridOff;
+  // onClick
+  const toggleGrid = () => setShowGrid(!showGrid);
+
+  console.log(showGrid);
+
+  const items: Item[] = [
+    {
+      id: 'perspectiveOrthographic',
+      icon: () => <PerspectiveOrthographicIcon />,
+      active: true,
+      onClick: togglePerspectiveMode,
+      endsSection: true,
+    },
+    {
+      id: 'grid',
+      icon: () => <GridIcon />,
+      active: showGrid,
+      onClick: toggleGrid,
+    },
+
+  ];
+
+  return (
+    <Multitoggle items={items} direction="row" />
   );
 }
 

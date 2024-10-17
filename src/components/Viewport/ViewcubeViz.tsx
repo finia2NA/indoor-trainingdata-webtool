@@ -144,7 +144,7 @@ const Cube = ({ setOrbitAngles }: CubeProps) => {
 
 const ViewcubeViz = ({ orbitAngles, setOrbitAngles }: ViewcubeVizProps) => {
   return (
-    <Canvas className='bg-oxford_blue bg-opacity-50'>
+    <Canvas className='bg-oxford_blue bg-opacity-60'>
       <ambientLight />
       <pointLight position={[10, 10, 10]} />
       <Cube setOrbitAngles={setOrbitAngles} />

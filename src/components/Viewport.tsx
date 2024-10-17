@@ -6,6 +6,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Group, Object3DEventMap } from 'three';
 import WrappedOrbitControls from './Viewport/WrappedOrbitControls';
 import { ViewcubeVizProps } from './Viewport/ViewcubeViz';
+import useEditorStore, { EditorState } from '../hooks/useEditorState';
 
 interface ViewportProps extends ViewcubeVizProps {
   model: Model;
@@ -18,6 +19,7 @@ interface SceneObjectProps {
 const SceneObject = ({ model }: SceneObjectProps) => {
   const [scene, setScene] = useState<Group<Object3DEventMap> | null>(null);
 
+
   useEffect(() => {
     const loader = new GLTFLoader();
     loader.parse(model.content, '', (gltf) => {
@@ -29,6 +31,9 @@ const SceneObject = ({ model }: SceneObjectProps) => {
 }
 
 const Viewport = ({ model, orbitAngles, setOrbitAngles }: ViewportProps) => {
+
+  const { showGrid } = useEditorStore((state) => (state as EditorState));
+
   return (
     <div className='h-full'>
       <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
@@ -38,8 +43,12 @@ const Viewport = ({ model, orbitAngles, setOrbitAngles }: ViewportProps) => {
         <SceneObject model={model} />
 
         <WrappedOrbitControls orbitAngles={orbitAngles} setOrbitAngles={setOrbitAngles} />
-        <gridHelper args={[10, 10]} />
-        <axesHelper args={[5]} />
+        {showGrid &&
+          <>
+            <gridHelper args={[10, 10]} />
+            <axesHelper args={[5]} />
+          </>
+        }
         <color attach="background" args={['#484848']} />
       </Canvas>
     </div>

@@ -3,7 +3,7 @@ import db, { Model } from "../data/db";
 import { useLiveQuery } from "dexie-react-hooks";
 import { isNumeric } from "../utils";
 import Viewport from "../components/Viewport";
-import { TransformToggles } from "../components/Viewport/Multitoggle";
+import { ViewmodeToggles, TransformToggles } from "../components/Viewport/Multitoggle";
 import { useState } from "react";
 import ViewcubeViz from "../components/Viewport/ViewcubeViz";
 
@@ -52,8 +52,9 @@ const ViewPage = () => {
           <div className="flex items-start justify-end p-2">
             {/* Top Right Corner Content */}
           </div>
-          <div className="flex items-end justify-start p-2">
+          <div className="flex flex-col items-start justify-end p-2 gap-1">
             {/* Bottom Left Corner Content */}
+            <ViewmodeToggles />
             <div className="h-28 w-28">
               <ViewcubeViz orbitAngles={orbitAngles} setOrbitAngles={setOrbitAngles} />
             </div>
