@@ -1,46 +1,60 @@
 import { OrbitControls, OrbitControlsProps } from "@react-three/drei";
-import { useEffect, useRef } from "react";
-
+import React, { useEffect, useRef, useCallback } from "react";
 
 interface WrappedOrbitControlsProps extends OrbitControlsProps {
   orbitAngles?: { azimuthAngle: number, polarAngle: number };
   setOrbitAngles?: React.Dispatch<React.SetStateAction<{ azimuthAngle: number; polarAngle: number; }>>;
 }
 
-const WrappedOrbitControls = ({ orbitAngles, setOrbitAngles, ...props }: WrappedOrbitControlsProps) => {
+const WrappedOrbitControls = React.memo(({ orbitAngles, setOrbitAngles, ...props }: WrappedOrbitControlsProps) => {
 
   // Default values
   const azimuthAngle = orbitAngles?.azimuthAngle ?? 0;
   const polarAngle = orbitAngles?.polarAngle ?? Math.PI / 2;
 
-  const setAzimuthAngle = (angle: number) => {
+  const setAzimuthAngle = useCallback((angle: number) => {
     if (setOrbitAngles) {
-      setOrbitAngles(prev => ({ ...prev, azimuthAngle: angle }));
+      setOrbitAngles(prev => {
+        if (prev.azimuthAngle !== angle) {
+          return { ...prev, azimuthAngle: angle };
+        }
+        return prev;
+      });
     }
-  };
+  }, [setOrbitAngles]);
 
-  const setPolarAngle = (angle: number) => {
+  const setPolarAngle = useCallback((angle: number) => {
     if (setOrbitAngles) {
-      setOrbitAngles(prev => ({ ...prev, polarAngle: angle }));
+      setOrbitAngles(prev => {
+        if (prev.polarAngle !== angle) {
+          return { ...prev, polarAngle: angle };
+        }
+        return prev;
+      });
     }
-  };
+  }, [setOrbitAngles]);
 
-  // @ts-expect-error No idea what type this is supposed to be. Tbh, I don't really care.
-  // https://media1.tenor.com/m/PuKLSZxC-GwAAAAd/patrick-bateman-i-dont-care.gif
+  // @ts-expect-error aaa 
   const theRef = useRef<OrbitControls>(null);
 
   useEffect(() => {
     if (theRef.current) {
+      let updated = false;
+
       if (theRef.current.azimuthAngle !== azimuthAngle) {
         theRef.current.minAzimuthAngle = azimuthAngle;
         theRef.current.maxAzimuthAngle = azimuthAngle;
+        updated = true;
       }
       if (theRef.current.polarAngle !== polarAngle) {
         theRef.current.minPolarAngle = polarAngle;
         theRef.current.maxPolarAngle = polarAngle;
+        updated = true;
       }
 
-      theRef.current.update();
+      if (updated) {
+        theRef.current.update();
+      }
 
       // reset
       theRef.current.minAzimuthAngle = -Infinity;
@@ -61,6 +75,6 @@ const WrappedOrbitControls = ({ orbitAngles, setOrbitAngles, ...props }: Wrapped
       }}
       {...props} />
   )
-}
+});
 
 export default WrappedOrbitControls;

@@ -6,9 +6,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Group, Object3DEventMap } from 'three';
 import WrappedOrbitControls from './Viewport/WrappedOrbitControls';
 import { ViewcubeVizProps } from './Viewport/ViewcubeViz';
-import useEditorStore, { EditorState, Perspective } from '../hooks/useEditorState';
-import { OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
+import useEditorStore, { EditorState } from '../hooks/useEditorState';
 import SwitchableCamera from './Viewport/SwitchableCamera';
+import { OrbitControls } from '@react-three/drei';
 
 interface ViewportProps extends ViewcubeVizProps {
   model: Model;
@@ -34,7 +34,10 @@ const SceneObject = ({ model }: SceneObjectProps) => {
 
 const Viewport = ({ model, orbitAngles, setOrbitAngles }: ViewportProps) => {
 
-  const { showGrid } = useEditorStore((state) => (state as EditorState));
+  console.log("RENDERING VIEWPORT");
+
+  // const { showGrid } = useEditorStore((state) => (state as EditorState));
+  const showGrid = true;
 
 
   return (
@@ -46,6 +49,7 @@ const Viewport = ({ model, orbitAngles, setOrbitAngles }: ViewportProps) => {
         <SceneObject model={model} />
 
         <WrappedOrbitControls orbitAngles={orbitAngles} setOrbitAngles={setOrbitAngles} />
+        {/* <OrbitControls /> */}
         {showGrid &&
           <>
             <gridHelper args={[10, 10]} />

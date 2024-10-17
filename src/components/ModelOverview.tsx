@@ -9,7 +9,6 @@ const ModelOverview = () => {
 
   const onView = (id?: number) => {
     if (id === undefined) return;
-    console.log(id);
     navigate(`/view/${id}`); // Navigate to the desired URL
   };
 

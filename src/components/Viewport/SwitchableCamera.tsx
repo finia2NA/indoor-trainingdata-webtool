@@ -1,24 +1,21 @@
-import { OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
-import useEditorStore, { EditorState, Perspective } from "../../hooks/useEditorState";
+import { OrthographicCamera, PerspectiveCamera } from "@react-three/drei";
+import useEditorStore, { EditorState, Perspective, } from "../../hooks/useEditorState";
 
-interface SwitchableCameraProps {
-  a?: string
-}
+const SwitchableCamera = () => {
 
-const SwitchableCamera = ({ a }: SwitchableCameraProps) => {
+  // console.log("RENDERING SWITCHABLE CAMERA");
 
-  const { showGrid, perspectiveMode } = useEditorStore((state) => (state as EditorState));
+  const { perspectiveMode } = useEditorStore((state) => (state as EditorState));
 
 
-  return <>
-    {perspectiveMode === Perspective.ORTHOGRAPHIC &&
-      <OrthographicCamera makeDefault={true} position={[0, 0, 10]}
-        zoom={10} />
-    }
-    {perspectiveMode === Perspective.PERSPECTIVE &&
-      <PerspectiveCamera makeDefault={true} position={[0, 0, 10]} />
-    }
-  </>
+  return (
+    <>
+      {perspectiveMode === Perspective.PERSPECTIVE ?
+        <PerspectiveCamera makeDefault position={[0, 0, 5]} /> :
+        <OrthographicCamera makeDefault position={[0, 0, 5]} />}
+
+    </>
+  )
 }
 
 export default SwitchableCamera;
