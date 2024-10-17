@@ -1,38 +1,53 @@
-import * as THREE from "three";
-import * as DREI from "@react-three/drei";
+import { OrthographicCamera, PerspectiveCamera } from "@react-three/drei";
 import useEditorStore, { EditorState, Perspective, } from "../../hooks/useEditorState";
 import { useEffect, useRef } from "react";
-
 
 const SwitchableCamera = () => {
   console.log("RENDERING SWITCHABLE CAMERA");
   const { perspectiveMode } = useEditorStore((state) => (state as EditorState));
 
-  const cameraRef = useRef(null);
+  const perspectiveRef = useRef(null);
+  const orthoRef = useRef(null);
 
   useEffect(() => {
+    console.log(perspectiveRef.current);
+    console.log(orthoRef.current);
 
-    const aspect = window.innerWidth / window.innerHeight;
-    const orthoMatrix = new THREE.OrthographicCamera(
-      -aspect, aspect, 1, -1, 0.1, 1000
-    ).projectionMatrix;
-    const perspMatrix = new THREE.PerspectiveCamera(
-      75, aspect, 0.1, 1000
-    ).projectionMatrix;
+    if (!perspectiveRef.current || !orthoRef.current) return;
 
-    if (!cameraRef.current) return;
-    console.log(cameraRef.current);
+    if (perspectiveMode === Perspective.PERSPECTIVE) {
+      perspectiveRef.current.position.x = orthoRef.current.position.x;
+      perspectiveRef.current.position.y = orthoRef.current.position.y;
+      perspectiveRef.current.position.z = orthoRef.current.position.z;
+    }
 
-    cameraRef.current.projectionMatrix.copy(perspectiveMode === Perspective.PERSPECTIVE ? perspMatrix : orthoMatrix);
+    if (perspectiveMode === Perspective.ORTHOGRAPHIC) {
 
-  }, [cameraRef, perspectiveMode]);
+      orthoRef.current.position.x = perspectiveRef.current.position.x;
+      orthoRef.current.position.y = perspectiveRef.current.position.y;
+      orthoRef.current.position.z = perspectiveRef.current.position.z;
+    }
+  }, [perspectiveMode]);
+
+  console.log("perspective", perspectiveMode === Perspective.PERSPECTIVE);
+  console.log("ortho", perspectiveMode === Perspective.ORTHOGRAPHIC);
 
   return (
-    <DREI.PerspectiveCamera
-      makeDefault
-      position={[0, 0, 5]}
-      ref={cameraRef}
-    />
+    <>
+      <PerspectiveCamera
+        makeDefault={perspectiveMode === Perspective.PERSPECTIVE}
+        position={[0, 1, 0]}
+        ref={perspectiveRef}
+        zoom={1}
+      />
+      <OrthographicCamera
+        makeDefault={perspectiveMode === Perspective.ORTHOGRAPHIC}
+        position={[0, 10, 0]}
+        ref={orthoRef}
+        zoom={10}
+      />
+    </>
+
 
   )
 }

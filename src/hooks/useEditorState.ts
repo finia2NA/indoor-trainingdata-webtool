@@ -39,7 +39,7 @@ export type EditorState = {
 
 // Store creation
 const useEditorStore = create((set) => ({
-  perspectiveMode: 'perspective',
+  perspectiveMode: Perspective.PERSPECTIVE,
   setPerspectiveMode: (mode: Perspective) => set({ perspectiveMode: mode }),
 
   editorMode: 'layout',
