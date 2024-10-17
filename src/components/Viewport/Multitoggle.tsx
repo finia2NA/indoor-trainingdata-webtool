@@ -9,6 +9,7 @@ import { MdOutlineGridOn, MdOutlineGridOff } from "react-icons/md";
 
 interface Item {
   id: string;
+  title?: string;
   icon: IconType;
   active: boolean;
   onClick: () => void;
@@ -35,6 +36,7 @@ const Multitoggle = ({ items, direction }: MultitoggleProps) => {
           }
           onClick={item.onClick}
           key={item.id}
+          title={item.title}
         >
           <item.icon className="text-white" />
         </button>
@@ -50,24 +52,28 @@ export const TransformToggles = () => {
   const items: Item[] = [
     {
       id: 'none',
+      title: 'Select',
       icon: () => <LuMousePointer2 />,
       active: transformMode === TransformMode.NONE,
       onClick: () => setTransformMode(TransformMode.NONE),
     },
     {
       id: 'translate',
+      title: 'Move',
       icon: () => <LuMove />,
       active: transformMode === TransformMode.TRANSLATE,
       onClick: () => setTransformMode(TransformMode.TRANSLATE),
     },
     {
       id: 'rotate',
+      title: 'Rotate',
       icon: () => <LuRotate3D />,
       active: transformMode === TransformMode.ROTATE,
       onClick: () => setTransformMode(TransformMode.ROTATE),
     },
     {
       id: 'scale',
+      title: 'Scale',
       icon: () => <LuExpand />,
       active: transformMode === TransformMode.SCALE,
       onClick: () => setTransformMode(TransformMode.SCALE),
@@ -99,11 +105,10 @@ export const ViewmodeToggles = () => {
   // onClick
   const toggleGrid = () => setShowGrid(!showGrid);
 
-  console.log(showGrid);
-
   const items: Item[] = [
     {
       id: 'perspectiveOrthographic',
+      title: 'Switch Perspective/Orthographic Camera',
       icon: () => <PerspectiveOrthographicIcon />,
       active: true,
       onClick: togglePerspectiveMode,
@@ -111,6 +116,7 @@ export const ViewmodeToggles = () => {
     },
     {
       id: 'grid',
+      title: 'Toggle Grid',
       icon: () => <GridIcon />,
       active: showGrid,
       onClick: toggleGrid,

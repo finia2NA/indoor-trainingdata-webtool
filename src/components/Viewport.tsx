@@ -6,7 +6,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Group, Object3DEventMap } from 'three';
 import WrappedOrbitControls from './Viewport/WrappedOrbitControls';
 import { ViewcubeVizProps } from './Viewport/ViewcubeViz';
-import useEditorStore, { EditorState } from '../hooks/useEditorState';
+import useEditorStore, { EditorState, Perspective } from '../hooks/useEditorState';
+import { OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
+import SwitchableCamera from './Viewport/SwitchableCamera';
 
 interface ViewportProps extends ViewcubeVizProps {
   model: Model;
@@ -34,9 +36,10 @@ const Viewport = ({ model, orbitAngles, setOrbitAngles }: ViewportProps) => {
 
   const { showGrid } = useEditorStore((state) => (state as EditorState));
 
+
   return (
     <div className='h-full'>
-      <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
+      <Canvas>
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 10, 5]} intensity={1} />
 
@@ -50,6 +53,8 @@ const Viewport = ({ model, orbitAngles, setOrbitAngles }: ViewportProps) => {
           </>
         }
         <color attach="background" args={['#484848']} />
+
+        <SwitchableCamera />
       </Canvas>
     </div>
   );
