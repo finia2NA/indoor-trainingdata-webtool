@@ -5,6 +5,7 @@ import { isNumeric } from "../utils";
 import Viewport from "../components/Viewport";
 import { TransformToggles } from "../components/Viewport/Multitoggle";
 import { useState } from "react";
+import ViewcubeViz from "../components/Viewport/ViewcubeViz";
 
 const ViewPage = () => {
   const navigate = useNavigate();
@@ -53,6 +54,9 @@ const ViewPage = () => {
           </div>
           <div className="flex items-end justify-start p-2">
             {/* Bottom Left Corner Content */}
+            <div className="h-28 w-28">
+              <ViewcubeViz orbitAngles={orbitAngles} setOrbitAngles={setOrbitAngles} />
+            </div>
           </div>
           <div className="flex items-end justify-end p-2">
             {/* Bottom Right Corner Content */}
@@ -60,7 +64,6 @@ const ViewPage = () => {
         </div>
       </div>
       <div className="basis-1/4">
-        hi
       </div>
     </div>
   );

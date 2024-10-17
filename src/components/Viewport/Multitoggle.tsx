@@ -19,7 +19,7 @@ const Multitoggle = ({ items, direction }: MultitoggleProps) => {
 
   return (
     <div className={`
-    bg-oxford_blue bg-opacity-80
+    bg-oxford_blue bg-opacity-60
     m-1 px-2 py-3 gap-2
     flex flex-${direction === 'row' ? 'row' : 'col'}
     pointer-events-auto`}>

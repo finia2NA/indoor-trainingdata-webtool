@@ -5,11 +5,10 @@ import { useEffect, useState } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Group, Object3DEventMap } from 'three';
 import WrappedOrbitControls from './Viewport/WrappedOrbitControls';
+import { ViewcubeVizProps } from './Viewport/ViewcubeViz';
 
-interface ViewportProps {
+interface ViewportProps extends ViewcubeVizProps {
   model: Model;
-  orbitAngles: { azimuthAngle: number, polarAngle: number };
-  setOrbitAngles: React.Dispatch<React.SetStateAction<{ azimuthAngle: number; polarAngle: number; }>>;
 }
 
 interface SceneObjectProps {
