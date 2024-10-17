@@ -1,6 +1,7 @@
-import { Canvas, useLoader } from '@react-three/fiber';
+import { Canvas } from '@react-three/fiber';
 import WrappedOrbitControls from './WrappedOrbitControls';
 import * as THREE from 'three';
+import useOrbitAngleStore from '../../hooks/useOrbitAngleStore';
 
 enum CUBEFACE {
   RIGHT = "right",
@@ -77,15 +78,6 @@ function faceToAngles(face: CUBEFACE): { azimuthAngle: number, polarAngle: numbe
   }
 }
 
-export interface ViewcubeVizProps {
-  orbitAngles: { azimuthAngle: number, polarAngle: number };
-  setOrbitAngles: React.Dispatch<React.SetStateAction<{ azimuthAngle: number; polarAngle: number; }>>;
-}
-
-export interface CubeProps {
-  setOrbitAngles: React.Dispatch<React.SetStateAction<{ azimuthAngle: number; polarAngle: number; }>>;
-}
-
 // Helper function to create text texture
 const createTextTexture = (text: string) => {
   const canvas = document.createElement('canvas');
@@ -115,6 +107,11 @@ const createTextTexture = (text: string) => {
   return texture;
 };
 
+interface CubeProps {
+  setOrbitAngles: (angles: { azimuthAngle: number; polarAngle: number }) => void;
+}
+
+
 const Cube = ({ setOrbitAngles }: CubeProps) => {
 
 
@@ -142,13 +139,16 @@ const Cube = ({ setOrbitAngles }: CubeProps) => {
   );
 };
 
-const ViewcubeViz = ({ orbitAngles, setOrbitAngles }: ViewcubeVizProps) => {
+const ViewcubeViz = () => {
+
+  const { setOrbitAngles } = useOrbitAngleStore((state) => state);
+
   return (
     <Canvas className='bg-oxford_blue bg-opacity-60'>
       <ambientLight />
       <pointLight position={[10, 10, 10]} />
       <Cube setOrbitAngles={setOrbitAngles} />
-      <WrappedOrbitControls orbitAngles={orbitAngles} setOrbitAngles={setOrbitAngles} enablePan={false} />
+      <WrappedOrbitControls enablePan={false} />
     </Canvas>
   );
 };

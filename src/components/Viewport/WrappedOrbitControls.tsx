@@ -1,38 +1,36 @@
 import { OrbitControls, OrbitControlsProps } from "@react-three/drei";
 import React, { useEffect, useRef, useCallback } from "react";
+import useOrbitAngleStore from "../../hooks/useOrbitAngleStore";
 
-interface WrappedOrbitControlsProps extends OrbitControlsProps {
-  orbitAngles?: { azimuthAngle: number, polarAngle: number };
-  setOrbitAngles?: React.Dispatch<React.SetStateAction<{ azimuthAngle: number; polarAngle: number; }>>;
-}
+const WrappedOrbitControls = React.memo((props: OrbitControlsProps) => {
 
-const WrappedOrbitControls = React.memo(({ orbitAngles, setOrbitAngles, ...props }: WrappedOrbitControlsProps) => {
+  const { orbitAngles, updateOrbitAngles } = useOrbitAngleStore((state) => state);
 
   // Default values
   const azimuthAngle = orbitAngles?.azimuthAngle ?? 0;
   const polarAngle = orbitAngles?.polarAngle ?? Math.PI / 2;
 
-  const setAzimuthAngle = useCallback((angle: number) => {
-    if (setOrbitAngles) {
-      setOrbitAngles(prev => {
+  const updateAzimuthAngle = useCallback((angle: number) => {
+    if (updateOrbitAngles) {
+      updateOrbitAngles(prev => {
         if (prev.azimuthAngle !== angle) {
           return { ...prev, azimuthAngle: angle };
         }
         return prev;
       });
     }
-  }, [setOrbitAngles]);
+  }, [updateOrbitAngles]);
 
-  const setPolarAngle = useCallback((angle: number) => {
-    if (setOrbitAngles) {
-      setOrbitAngles(prev => {
+  const updatePolarAngle = useCallback((angle: number) => {
+    if (updateOrbitAngles) {
+      updateOrbitAngles(prev => {
         if (prev.polarAngle !== angle) {
           return { ...prev, polarAngle: angle };
         }
         return prev;
       });
     }
-  }, [setOrbitAngles]);
+  }, [updateOrbitAngles]);
 
   // @ts-expect-error aaa 
   const theRef = useRef<OrbitControls>(null);
@@ -69,8 +67,8 @@ const WrappedOrbitControls = React.memo(({ orbitAngles, setOrbitAngles, ...props
       ref={theRef}
       onChange={() => {
         if (theRef.current) {
-          setAzimuthAngle(theRef.current.getAzimuthalAngle());
-          setPolarAngle(theRef.current.getPolarAngle());
+          updateAzimuthAngle(theRef.current.getAzimuthalAngle());
+          updatePolarAngle(theRef.current.getPolarAngle());
         }
       }}
       {...props} />

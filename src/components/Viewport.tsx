@@ -1,16 +1,13 @@
-// App.tsx
 import { Canvas } from '@react-three/fiber';
 import { Model } from '../data/db';
 import { useEffect, useState } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Group, Object3DEventMap } from 'three';
 import WrappedOrbitControls from './Viewport/WrappedOrbitControls';
-import { ViewcubeVizProps } from './Viewport/ViewcubeViz';
 import useEditorStore, { EditorState } from '../hooks/useEditorState';
 import SwitchableCamera from './Viewport/SwitchableCamera';
-import { OrbitControls } from '@react-three/drei';
 
-interface ViewportProps extends ViewcubeVizProps {
+interface ViewportProps {
   model: Model;
 }
 
@@ -20,7 +17,6 @@ interface SceneObjectProps {
 
 const SceneObject = ({ model }: SceneObjectProps) => {
   const [scene, setScene] = useState<Group<Object3DEventMap> | null>(null);
-
 
   useEffect(() => {
     const loader = new GLTFLoader();
@@ -32,12 +28,11 @@ const SceneObject = ({ model }: SceneObjectProps) => {
   return scene ? <primitive object={scene} /> : null;
 }
 
-const Viewport = ({ model, orbitAngles, setOrbitAngles }: ViewportProps) => {
+const Viewport = ({ model }: ViewportProps) => {
 
   console.log("RENDERING VIEWPORT");
 
-  // const { showGrid } = useEditorStore((state) => (state as EditorState));
-  const showGrid = true;
+  const { showGrid } = useEditorStore((state) => (state as EditorState));
 
 
   return (
@@ -48,7 +43,7 @@ const Viewport = ({ model, orbitAngles, setOrbitAngles }: ViewportProps) => {
 
         <SceneObject model={model} />
 
-        <WrappedOrbitControls orbitAngles={orbitAngles} setOrbitAngles={setOrbitAngles} />
+        <WrappedOrbitControls />
         {/* <OrbitControls /> */}
         {showGrid &&
           <>
