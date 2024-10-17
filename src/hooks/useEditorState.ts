@@ -3,25 +3,25 @@
 import { create } from 'zustand';
 
 // Data definition
-enum CameraMode {
+export enum CameraMode {
   PERSPECTIVE = 'perspective',
   ORTHOGRAPHIC = 'orthographic',
 }
 
-enum EditorMode {
+export enum EditorMode {
   LAYOUT = 'layout',
   MAP = 'map',
   GENERATE = 'generate',
 }
 
-enum TransformMode {
+export enum TransformMode {
   NONE = 'none',
   TRANSLATE = 'translate',
   ROTATE = 'rotate',
   SCALE = 'scale',
 }
 
-type EditorState = {
+export type EditorState = {
   cameraMode: CameraMode;
   setCameraMode: (mode: CameraMode) => void;
 
@@ -30,6 +30,9 @@ type EditorState = {
 
   transformMode: TransformMode;
   setTransformMode: (mode: TransformMode) => void;
+
+  displayGrid: boolean;
+  setDisplayGrid: (display: boolean) => void;
 };
 
 // --------------------------------------------
@@ -44,6 +47,9 @@ const useEditorStore = create((set) => ({
 
   transformMode: 'none',
   setTransformMode: (mode: TransformMode) => set({ transformMode: mode }),
+
+  displayGrid: true,
+  setDisplayGrid: (display: boolean) => set({ displayGrid: display }),
 
 }));
 
