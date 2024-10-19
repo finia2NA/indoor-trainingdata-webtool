@@ -6,6 +6,9 @@ type Transform = {
   translation: number[];
 };
 
+/**
+ * @deprecated
+*/
 // eslint-disable-next-line no-unused-vars
 const useTranslate = (id: number): [number[] | null, (axis: number, val: number) => void] => {
   const [localTranslate, setLocalTranslate] = useState<number[] | null>(null);
@@ -43,7 +46,7 @@ const useTranslate = (id: number): [number[] | null, (axis: number, val: number)
 
     debounceTimeout.current = setTimeout(() => {
       db.setTranslation(Number(id), newVal);
-    }, 500);
+    }, 1000);
   };
 
   return [localTranslate, setTranslate];

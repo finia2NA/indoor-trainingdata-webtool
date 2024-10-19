@@ -2,11 +2,23 @@ import { useState, useEffect, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import db, { Transformation } from '../data/db';
 
-type UseTransformReturn = [
+type UseTransformReturn = {
+  // Whole transform base
   transform: Transformation | null,
   // eslint-disable-next-line no-unused-vars
   setTransform: (newTransform: Transformation) => void
-]
+
+  // Individual components
+  translation: number[] | null,
+  // eslint-disable-next-line no-unused-vars
+  setTranslation: (translationVector: number[]) => void
+  rotation: number[] | null,
+  // eslint-disable-next-line no-unused-vars
+  setRotation: (rotationVector: number[]) => void
+  scale: number[] | null,
+  // eslint-disable-next-line no-unused-vars
+  setScale: (scaleVector: number[]) => void
+}
 
 const useTransform = (id: number): UseTransformReturn => {
 
@@ -24,7 +36,7 @@ const useTransform = (id: number): UseTransformReturn => {
       if (!curr) {
         return null;
       }
-      return curr.transform;
+      return new Transformation(curr.transform.translation, curr.transform.rotation, curr.transform.scale);
     },
     [id]
   );
@@ -55,7 +67,46 @@ const useTransform = (id: number): UseTransformReturn => {
 
   }
 
-  return [localTransform, setTransform];
+  const translation = localTransform?.translation ?? null;
+  const setTranslation = (translationVector: number[]) => {
+    if (!localTransform) {
+      throw new Error("localTransform is null. This should never happen.");
+    }
+    const newTransform = localTransform.copy();
+    newTransform.translation = translationVector;
+    setTransform(newTransform);
+  }
+
+  const rotation = localTransform?.rotation ?? null;
+  const setRotation = (rotationVector: number[]) => {
+    if (!localTransform) {
+      throw new Error("localTransform is null. This should never happen.");
+    }
+    const newTransform = localTransform.copy();
+    newTransform.rotation = rotationVector;
+    setTransform(newTransform);
+  }
+
+  const scale = localTransform?.scale ?? null;
+  const setScale = (scaleVector: number[]) => {
+    if (!localTransform) {
+      throw new Error("localTransform is null. This should never happen.");
+    }
+    const newTransform = localTransform.copy();
+    newTransform.scale = scaleVector;
+    setTransform(newTransform);
+  }
+
+  return {
+    transform: localTransform,
+    setTransform,
+    translation,
+    setTranslation,
+    rotation,
+    setRotation,
+    scale,
+    setScale
+  }
 
 }
 
