@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { Model } from '../data/db';
+import { Model3D } from '../data/db';
 import { useEffect, useState } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Group, Object3DEventMap } from 'three';
@@ -8,11 +8,11 @@ import useEditorStore, { EditorState } from '../hooks/useEditorState';
 import SwitchableCamera from './Viewport/SwitchableCamera';
 
 interface ViewportProps {
-  model: Model;
+  model: Model3D;
 }
 
 interface SceneObjectProps {
-  model: Model;
+  model: Model3D;
 }
 
 const SceneObject = ({ model }: SceneObjectProps) => {

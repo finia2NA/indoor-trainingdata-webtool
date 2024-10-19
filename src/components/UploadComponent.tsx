@@ -1,19 +1,17 @@
 import React from 'react';
 import { useDropzone } from 'react-dropzone';
-import db from '../data/db';
+import db, { Model3D } from '../data/db';
 
 const UploadComponent: React.FC = () => {
   const onDrop = async (acceptedFiles: File[]) => {
     for (const file of acceptedFiles) {
       const fileData = await file.arrayBuffer();
-      const size = file.size;
-      const name = file.name;
-      const content = new TextDecoder().decode(fileData);
 
-      // TODO: here is where we would do validation, not rn though :)
+      const model3D: Model3D = new Model3D(file, fileData);
 
       // Add the file to the database
-      await db.addModel({ name, content, size });
+      // await db.addModel({ name, content, size });
+      await db.addModel(model3D);
       console.log(`File ${name} added to the database`);
     }
   };

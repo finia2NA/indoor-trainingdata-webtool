@@ -6,23 +6,57 @@ export interface ModelWithoutContent {
   name: string;
   size: number;
 }
-export interface Model extends ModelWithoutContent {
-  content: string;
+export class Transformation {
+  translation: [number, number, number];
+  rotation: [number, number, number, number];
+  scale: [number, number, number];
+
+  constructor(translation?: [number, number, number], rotation?: [number, number, number, number], scale?: [number, number, number]) {
+    if (!translation) {
+      translation = [0, 0, 0];
+    }
+    if (!rotation) {
+      rotation = [0, 0, 0, 1];
+    }
+    if (!scale) {
+      scale = [1, 1, 1];
+    }
+    this.translation = translation;
+    this.rotation = rotation;
+    this.scale = scale;
+  }
 }
+
+export class Model3D implements ModelWithoutContent {
+  id?: number;
+  name: string;
+  size: number;
+  content: string;
+  transform?: Transformation;
+
+  constructor(file: File, fileData: ArrayBuffer) {
+    this.name = file.name;
+    this.size = file.size;
+
+    this.content = new TextDecoder().decode(fileData);
+    this.transform = new Transformation();
+  }
+}
+
 
 // DB definition
 class MyAppDatabase extends Dexie {
-  models!: Table<Model>;
+  models!: Table<Model3D>;
 
   constructor() {
     super('webtool');
     this.version(1).stores({
-      models: '++id, name, content, size'
+      models: '++id, name, content, size, transform',
     });
   }
 
   // Data manipulation methods
-  async addModel(model: Model): Promise<number> {
+  async addModel(model: Model3D): Promise<number> {
     return await this.models.add(model);
   }
 
@@ -31,7 +65,7 @@ class MyAppDatabase extends Dexie {
    * @param id - The ID of the model to retrieve.
    * @returns A Promise that resolves to the retrieved model, or undefined if the model is not found.
    */
-  async getModel(id: number): Promise<Model | undefined> {
+  async getModel(id: number): Promise<Model3D | undefined> {
     return await this.models.get(id);
   }
 
@@ -53,6 +87,17 @@ class MyAppDatabase extends Dexie {
    */
   async editModelName(id: number, newName: string): Promise<void> {
     await this.models.update(id, { name: newName });
+  }
+
+  /**
+   * Edits the transformation of a model with the specified ID.
+   *
+   * @param id - The unique identifier of the model to be updated.
+   * @param newTransform - The new transformation to be applied to the model.
+   * @returns A promise that resolves when the update is complete.
+   */
+  async editModelTransform(id: number, newTransform: Transformation): Promise<void> {
+    await this.models.update(id, { transform: newTransform });
   }
 
   /**

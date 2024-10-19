@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import db, { Model } from "../data/db";
+import db, { Model3D } from "../data/db";
 import { useLiveQuery } from "dexie-react-hooks";
 import { isNumeric } from "../utils";
 import Viewport from "../components/Viewport";
@@ -36,7 +36,7 @@ const ViewPage = () => {
   return (
     <div className="flex flex-row h-full w-screen">
       <div className="basis-3/4 relative">
-        <Viewport model={model as Model}/>
+        <Viewport model={model as Model3D}/>
         <div className="
           absolute top-0 left-0 w-full h-full
           grid grid-cols-2 grid-rows-2
