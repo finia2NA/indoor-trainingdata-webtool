@@ -7,16 +7,16 @@ export interface ModelWithoutContent {
   size: number;
 }
 export class Transformation {
-  translation: [number, number, number];
-  rotation: [number, number, number, number];
-  scale: [number, number, number];
+  translation: number[];
+  rotation: number[];
+  scale: number[];
 
-  constructor(translation?: [number, number, number], rotation?: [number, number, number, number], scale?: [number, number, number]) {
+  constructor(translation?: number[], rotation?: number[], scale?: number[]) {
     if (!translation) {
       translation = [0, 0, 0];
     }
     if (!rotation) {
-      rotation = [0, 0, 0, 1];
+      rotation = [0, 0, 0];
     }
     if (!scale) {
       scale = [1, 1, 1];
@@ -25,6 +25,10 @@ export class Transformation {
     this.rotation = rotation;
     this.scale = scale;
   }
+
+  copy(): Transformation {
+    return new Transformation([...this.translation], [...this.rotation], [...this.scale]);
+  }
 }
 
 export class Model3D implements ModelWithoutContent {
@@ -32,7 +36,7 @@ export class Model3D implements ModelWithoutContent {
   name: string;
   size: number;
   content: string;
-  transform?: Transformation;
+  transform: Transformation;
 
   constructor(file: File, fileData: ArrayBuffer) {
     this.name = file.name;
@@ -96,8 +100,19 @@ class MyAppDatabase extends Dexie {
    * @param newTransform - The new transformation to be applied to the model.
    * @returns A promise that resolves when the update is complete.
    */
-  async editModelTransform(id: number, newTransform: Transformation): Promise<void> {
+  async setModelTransform(id: number, newTransform: Transformation): Promise<void> {
     await this.models.update(id, { transform: newTransform });
+  }
+
+  async setTranslation(id: number, newTranslation: number[]): Promise<void> {
+
+    console.log("hi");
+
+    const model = await this.models.get(id);
+    if (model) {
+      model.transform.translation = newTranslation;
+      await this.models.update(id, { transform: model.transform });
+    }
   }
 
   /**

@@ -110,7 +110,7 @@ export const ViewmodeToggles = () => {
       id: 'perspectiveOrthographic',
       title: 'Switch Perspective/Orthographic Camera',
       icon: () => <PerspectiveOrthographicIcon />,
-      active: true,
+      active: perspectiveMode === Perspective.PERSPECTIVE,
       onClick: togglePerspectiveMode,
       endsSection: true,
     },

@@ -3,16 +3,12 @@ import useEditorStore, { EditorState, Perspective, } from "../../hooks/useEditor
 import { useEffect, useRef } from "react";
 
 const SwitchableCamera = () => {
-  console.log("RENDERING SWITCHABLE CAMERA");
   const { perspectiveMode } = useEditorStore((state) => (state as EditorState));
 
   const perspectiveRef = useRef(null);
   const orthoRef = useRef(null);
 
   useEffect(() => {
-    console.log(perspectiveRef.current);
-    console.log(orthoRef.current);
-
     if (!perspectiveRef.current || !orthoRef.current) return;
 
     if (perspectiveMode === Perspective.PERSPECTIVE) {
@@ -28,9 +24,6 @@ const SwitchableCamera = () => {
       orthoRef.current.position.z = perspectiveRef.current.position.z;
     }
   }, [perspectiveMode]);
-
-  console.log("perspective", perspectiveMode === Perspective.PERSPECTIVE);
-  console.log("ortho", perspectiveMode === Perspective.ORTHOGRAPHIC);
 
   return (
     <>

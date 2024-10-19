@@ -5,6 +5,7 @@ import { isNumeric } from "../utils";
 import Viewport from "../components/Viewport";
 import { ViewmodeToggles, TransformToggles } from "../components/Viewport/Multitoggle";
 import ViewcubeViz from "../components/Viewport/ViewcubeViz";
+import Channelbox from "../components/UI/Channelbox";
 
 const ViewPage = () => {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ const ViewPage = () => {
   return (
     <div className="flex flex-row h-full w-screen">
       <div className="basis-3/4 relative">
-        <Viewport model={model as Model3D}/>
+        <Viewport model={model as Model3D} />
         <div className="
           absolute top-0 left-0 w-full h-full
           grid grid-cols-2 grid-rows-2
@@ -53,7 +54,7 @@ const ViewPage = () => {
             {/* Bottom Left Corner Content */}
             <ViewmodeToggles />
             <div className="h-28 w-28">
-              <ViewcubeViz/>
+              <ViewcubeViz />
             </div>
           </div>
           <div className="flex items-end justify-end p-2">
@@ -62,6 +63,7 @@ const ViewPage = () => {
         </div>
       </div>
       <div className="basis-1/4">
+        <Channelbox />
       </div>
     </div>
   );

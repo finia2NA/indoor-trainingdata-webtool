@@ -30,8 +30,6 @@ const SceneObject = ({ model }: SceneObjectProps) => {
 
 const Viewport = ({ model }: ViewportProps) => {
 
-  console.log("RENDERING VIEWPORT");
-
   const { showGrid } = useEditorStore((state) => (state as EditorState));
 
 
