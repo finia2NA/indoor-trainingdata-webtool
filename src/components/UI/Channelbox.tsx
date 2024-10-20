@@ -8,17 +8,26 @@ const Channelbox = () => {
   const { id } = useParams();
   const idnum = Number(id);
 
-  const { addTransformation, transformations, getTransformation } = useMultiTransformationStore3();
+  const { addTransformation, getTransformation, setTranslation } = useMultiTransformationStore3();
 
-  if (!transformations[idnum]) {
+  if (!getTransformation(idnum)) {
     addTransformation(idnum);
   }
 
-  const aa = getTransformation(27);
-  const bb = transformations[27];
+  const myTransformation = getTransformation(idnum);
+  if (!myTransformation) {
+    return <></>
+  }
+
+  const setter = (val: number[]) => {
+    const prevVal = myTransformation.translation;
+    const newVal = [...prevVal];
+    newVal[0] = val[0];
+    setTranslation(idnum, newVal);
+  }
 
   return (
-    <></>
+    <input type="number" value={myTransformation.translation[0]} onChange={(e) => setter([Number(e.target.value), 0, 0])} />
   )
 
 };
