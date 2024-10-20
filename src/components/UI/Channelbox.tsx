@@ -1,14 +1,19 @@
 import { useParams } from 'react-router-dom';
-import useMultiTransformationStore3 from '../../hooks/useTransform3';
+import useMultiTransformationStore from '../../hooks/useTransforms';
+import InputWithDrag from 'react-input-with-drag';
+import type { InputWithDragChangeHandler } from 'react-input-with-drag';
 
 
 interface SingleChannelProps {
   name: string,
   values: number[],
   onChange: (val: number[]) => void,
+  step?: number,
+  min?: number,
+  max?: number,
 }
 
-const SingleChannel = ({ name, values, onChange }: SingleChannelProps) => {
+const SingleChannel = ({ name, values, onChange, step = 1, min = -100, max = 100 }: SingleChannelProps) => {
 
   const individualChanger = (axis: number, val: number) => {
     const newVal = [...values];
@@ -17,23 +22,26 @@ const SingleChannel = ({ name, values, onChange }: SingleChannelProps) => {
   }
 
   return (
-    <>
-      <h2>{name}</h2>
-      {values.map((val, i) => (
-        <input key={i} type="number" value={val} onChange={(e) => individualChanger(i, Number(e.target.value))} />
-      ))}
-    </>
+    <div className='flex flex-col'>
+      <h3>{name}</h3>
+      <div className='flex flex-row gap-1'>
+        {values.map((val, idx) => (
+          <InputWithDrag
+            className='w-16 text-right' type="number" key={idx}
+            min={min} max={max} step={step}
+            value={val} onChange={i => individualChanger(idx, i)} />
+        ))}
+      </div>
+    </div>
   )
 }
-
-
 
 
 const Channelbox = () => {
   const { id } = useParams();
   const idnum = Number(id);
 
-  const { addTransformation, getTransformation, setTranslation, setRotation, setScale } = useMultiTransformationStore3();
+  const { addTransformation, getTransformation, setTranslation, setRotation, setScale } = useMultiTransformationStore();
 
   if (!getTransformation(idnum)) {
     addTransformation(idnum);
@@ -56,9 +64,15 @@ const Channelbox = () => {
 
   return (
     <>
-      <SingleChannel name="Translate" values={myTransformation.translation} onChange={translateSetter} />
-      <SingleChannel name="Rotate" values={myTransformation.rotation} onChange={rotateSetter} />
-      <SingleChannel name="Scale" values={myTransformation.scale} onChange={scaleSetter} />
+      <h2 className='text-xl'>Channelbox</h2>
+      <div>
+        <SingleChannel name="Translate" min={-10} max={10} step={0.1}
+          values={myTransformation.translation} onChange={translateSetter} />
+        <SingleChannel name="Rotate" min={-Math.PI} max={Math.PI} step={0.05}
+          values={myTransformation.rotation} onChange={rotateSetter} />
+        <SingleChannel name="Scale" min={0.1} max={3} step={0.1}
+          values={myTransformation.scale} onChange={scaleSetter} />
+      </div>
     </>
   )
 

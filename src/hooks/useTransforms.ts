@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 /* eslint-disable no-unused-vars */
-export class Transformation3 {
+export class Transformation {
   translation: number[];
   rotation: number[];
   scale: number[];
@@ -13,14 +13,14 @@ export class Transformation3 {
     this.scale = scale || [1, 1, 1];
   }
 
-  copy(): Transformation3 {
-    return new Transformation3([...this.translation], [...this.rotation], [...this.scale]);
+  copy(): Transformation {
+    return new Transformation([...this.translation], [...this.rotation], [...this.scale]);
   }
 }
 
-interface MultiTransformationState3 {
-  transformations: Record<number, Transformation3>;
-  getTransformation: (id: number) => Transformation3 | null;
+interface MultiTransformationState {
+  transformations: Record<number, Transformation>;
+  getTransformation: (id: number) => Transformation | null;
   addTransformation: (id: number) => void;
 
   setTranslation: (id: number, translation: number[]) => void;
@@ -28,7 +28,7 @@ interface MultiTransformationState3 {
   setScale: (id: number, scale: number[]) => void;
 }
 
-const useMultiTransformationStore3 = create<MultiTransformationState3>()(
+const useMultiTransformationStore = create<MultiTransformationState>()(
   persist(
     (set, get) => ({
       transformations: {},
@@ -38,13 +38,13 @@ const useMultiTransformationStore3 = create<MultiTransformationState3>()(
         if (!obj) {
           return null;
         }
-        return new Transformation3(obj.translation, obj.rotation, obj.scale);
+        return new Transformation(obj.translation, obj.rotation, obj.scale);
       },
 
       addTransformation: (id: number) => set((state) => ({
         transformations: {
           ...state.transformations,
-          [id]: new Transformation3(),
+          [id]: new Transformation(),
         },
       })),
 
@@ -107,4 +107,4 @@ const useMultiTransformationStore3 = create<MultiTransformationState3>()(
   ),
 );
 
-export default useMultiTransformationStore3;
+export default useMultiTransformationStore;
