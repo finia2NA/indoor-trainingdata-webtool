@@ -1,7 +1,6 @@
 import { useParams } from 'react-router-dom';
-import useTransform from '../../hooks/useTransform';
 import InputWithDrag from 'react-input-with-drag';
-import useTranslate from '../../hooks/useTranslate';
+import useTransformationStore from '../../hooks/useTransform2';
 // import type { InputWithDragChangeHandler } from 'react-input-with-drag';
 
 
@@ -40,53 +39,60 @@ const SingleChannel = ({ title, value, onChange, step = 1, min = -Infinity, max 
 
 
 const Channelbox = () => {
-  const { id } = useParams();
-  // const {
-  //   translation, setTranslation,
-  //   rotation, setRotation,
-  //   scale, setScale
-  // } = useTransform(Number(id));
+  const { id: idParam } = useParams();
+  const id = Number(idParam);
 
-  // const onTranslationChange = (axis: number, val: number) => {
-  //   if (!translation) {
-  //     return;
-  //   }
-  //   const newTranslation = [...translation];
-  //   newTranslation[axis] = val;
-  //   setTranslation(newTranslation);
-  // };
+  const { addTransformation, getTransformation, removeTransformation, reset, setRotation, setScale, setTranslation, transformations } = useTransformationStore();
 
-  // const onRotationChange = (axis: number, val: number) => {
-  //   if (!rotation) {
-  //     return;
-  //   }
-  //   const newRotation = [...rotation];
-  //   newRotation[axis] = val;
-  //   setRotation(newRotation);
-  // }
+  let transformation = getTransformation(id.toString());
+  if (!transformation) {
+    addTransformation(id.toString());
+    transformation = getTransformation(id.toString());
+  }
 
-  // const onScaleChange = (axis: number, val: number) => {
-  //   if (!scale) {
-  //     return;
-  //   }
-  //   const newScale = [...scale];
-  //   newScale[axis] = val;
-  //   setScale(newScale);
-  // }
+  // console.log(transformation)
 
-  const [translation, setTranslation] = useTranslate(Number(id));
-  const onTranslationChange = setTranslation;
+  
+  const translation = transformation?.translation || [0, 0, 0];
+  const onTranslationChange = (axis: number, val: number) => {
+    if (!translation) {
+      return;
+    }
+    const newTranslation = [...translation];
+    newTranslation[axis] = val;
+    setTranslation(id.toString(), newTranslation);
+  };
+
+  const rotation = transformation?.rotation || [0, 0, 0];
+  const onRotationChange = (axis: number, val: number) => {
+    if (!translation || !rotation) {
+      return;
+    }
+    const newRotation = [...rotation];
+    newRotation[axis] = val;
+    setRotation(id.toString(), newRotation);
+  }
+
+  const scale = transformation?.scale || [1, 1, 1];
+  const onScaleChange = (axis: number, val: number) => {
+    if (!translation) {
+      return;
+    }
+    const newScale = [...scale];
+    newScale[axis] = val;
+    setScale(id.toString(), newScale);
+  }
 
   return (
+    // <></>
     <>
       <h2>Model Transforms</h2>
       {translation && // rotation && scale &&
         (
           <>
-            <input type="text" value={translation[0]} onChange={(v) => onTranslationChange(0, Number(v.target.value))} />
-            {/* <SingleChannel title="Translation" value={translation} onChange={onTranslationChange} />
-          <SingleChannel title="Rotation" value={rotation} onChange={onRotationChange} />
-          <SingleChannel title="Scale" value={scale} onChange={onScaleChange} /> */}
+            <SingleChannel title="Translation" value={translation} onChange={onTranslationChange} />
+            <SingleChannel title="Rotation" value={rotation} onChange={onRotationChange} />
+            <SingleChannel title="Scale" value={scale} onChange={onScaleChange} />
           </>
         )}
     </>

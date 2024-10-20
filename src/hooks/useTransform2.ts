@@ -17,50 +17,112 @@ export class Transformation {
   }
 }
 
-interface TransformationState {
-  transformation: Transformation;
-  // eslint-disable-next-line no-unused-vars
-  setTranslation: (translation: number[]) => void;
-  // eslint-disable-next-line no-unused-vars
-  setRotation: (rotation: number[]) => void;
-  // eslint-disable-next-line no-unused-vars
-  setScale: (scale: number[]) => void;
-  reset: () => void;
+// TODO: make id number
+interface MultiTransformationState {
+  transformations: Record<string, Transformation>;
+  addTransformation: (id: string) => void;
+  removeTransformation: (id: string) => void;
+  setTranslation: (id: string, translation: number[]) => void;
+  setRotation: (id: string, rotation: number[]) => void;
+  setScale: (id: string, scale: number[]) => void;
+  reset: (id: string) => void;
+  getTransformation: (id: string) => Transformation | undefined;
 }
 
-const useTransformationStore = create<TransformationState>()(
+const useMultiTransformationStore = create<MultiTransformationState>()(
   persist(
-    (set) => ({
-      transformation: new Transformation(),
+    (set, get) => ({
+      transformations: {},
 
-      setTranslation: (translation: number[]) => set((state) => ({
-        transformation: new Transformation(translation, state.transformation.rotation, state.transformation.scale)
+      addTransformation: (id: string) => set((state) => ({
+        transformations: {
+          ...state.transformations,
+          [id]: new Transformation(),
+        },
       })),
 
-      setRotation: (rotation: number[]) => set((state) => ({
-        transformation: new Transformation(state.transformation.translation, rotation, state.transformation.scale)
+      removeTransformation: (id: string) => set((state) => {
+        const { [id]: _, ...rest } = state.transformations;
+        return { transformations: rest };
+      }),
+
+      setTranslation: (id: string, translation: number[]) => set((state) => {
+        const currentTransformation = state.transformations[id];
+        if (!currentTransformation) return state;
+
+        const newTransformation = currentTransformation.copy();
+        newTransformation.translation = translation;
+        return {
+          transformations: {
+            ...state.transformations,
+            [id]: newTransformation,
+          },
+        };
+      }),
+
+      setRotation: (id: string, rotation: number[]) => set((state) => {
+        const currentTransformation = state.transformations[id];
+        if (!currentTransformation) return state;
+
+        const newTransformation = currentTransformation.copy();
+        newTransformation.rotation = rotation;
+        return {
+          transformations: {
+            ...state.transformations,
+            [id]: newTransformation,
+          },
+        };
+      }),
+
+      setScale: (id: string, scale: number[]) => set((state) => {
+        const currentTransformation = state.transformations[id];
+        if (!currentTransformation) return state;
+
+        const newTransformation = currentTransformation.copy();
+        newTransformation.scale = scale;
+        return {
+          transformations: {
+            ...state.transformations,
+            [id]: newTransformation,
+          },
+        };
+      }),
+
+      reset: (id: string) => set((state) => ({
+        transformations: {
+          ...state.transformations,
+          [id]: new Transformation(),
+        },
       })),
 
-      setScale: (scale: number[]) => set((state) => ({
-        transformation: new Transformation(state.transformation.translation, state.transformation.rotation, scale)
-      })),
-
-      reset: () => set(() => ({
-        transformation: new Transformation()
-      })),
+      getTransformation: (id: string) => get().transformations[id],
     }),
     {
-      name: 'transformation-storage',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        transformation: {
-          translation: state.transformation.translation,
-          rotation: state.transformation.rotation,
-          scale: state.transformation.scale,
+      name: 'multi-transformation-storage',
+      storage: createJSONStorage(() => localStorage), serialize: (state) => JSON.stringify(state),
+      deserialize: (state) => {
+        const parsed = JSON.parse(state);
+        console.log(parsed)
+        const transformations = Object.fromEntries(
+          Object.entries(parsed.transformations).map(([key, value]: [string, any]) => [
+            key,
+            new Transformation(value.translation, value.rotation, value.scale),
+          ])
+        );
+        console.log(transformations)
+        return {
+          ...parsed,
+          transformations: Object.fromEntries(
+            Object.entries(parsed.transformations).map(([key, value]: [string, any]) => [
+              key,
+              new Transformation(value.translation, value.rotation, value.scale),
+            ])
+          ),
         }
-      }),
+      }
+
     }
   )
 );
 
-export default useTransformationStore;
+export default useMultiTransformationStore;
