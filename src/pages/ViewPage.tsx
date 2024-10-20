@@ -2,7 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import db, { Model3D } from "../data/db";
 import { useLiveQuery } from "dexie-react-hooks";
 import { isNumeric } from "../utils";
-import Viewport from "../components/Viewport";
+import Viewport from "../components/Viewport/Viewport";
 import { ViewmodeToggles, TransformToggles } from "../components/Viewport/Multitoggle";
 import ViewcubeViz from "../components/Viewport/ViewcubeViz";
 import Channelbox from "../components/UI/Channelbox";

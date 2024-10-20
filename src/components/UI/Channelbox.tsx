@@ -1,7 +1,6 @@
 import { useParams } from 'react-router-dom';
 import useMultiTransformationStore from '../../hooks/useTransforms';
 import InputWithDrag from 'react-input-with-drag';
-import type { InputWithDragChangeHandler } from 'react-input-with-drag';
 
 
 interface SingleChannelProps {
