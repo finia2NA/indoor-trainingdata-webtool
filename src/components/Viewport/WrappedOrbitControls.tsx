@@ -8,7 +8,7 @@ const WrappedOrbitControls = React.memo((props: OrbitControlsProps) => {
   // get shared orbit state
   const { orbitAngles, updateOrbitAngles } = useOrbitAngleStore((state) => state);
 
-  // we only want to apply the orbit angles when the user is not transforming
+  // we only want to apply the orbit control when the user is not transforming
   const { isTransforming } = useOrbitTransformSync();
 
   // Default values

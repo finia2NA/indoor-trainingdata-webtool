@@ -9,7 +9,7 @@ function App() {
     <>
       <Router>
         <TopBar />
-        <div className="pt-16 h-full bg-slate-300">
+        <div className="pt-16 h-full w-full bg-slate-300">
           <Routes>
             <Route path="/" element={<StartPage />} />
             <Route path="/view/:id" element={<ViewPage />} />

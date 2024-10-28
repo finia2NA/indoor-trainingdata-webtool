@@ -108,6 +108,7 @@ const createTextTexture = (text: string) => {
 };
 
 interface CubeProps {
+  // eslint-disable-next-line no-unused-vars
   setOrbitAngles: (angles: { azimuthAngle: number; polarAngle: number }) => void;
 }
 
