@@ -5,8 +5,6 @@ import { TbPerspective, TbPerspectiveOff } from "react-icons/tb";
 import { MdOutlineGridOn, MdOutlineGridOff } from "react-icons/md";
 
 
-
-
 interface Item {
   id: string;
   title?: string;
@@ -31,9 +29,12 @@ const Multitoggle = ({ items, direction }: MultitoggleProps) => {
     pointer-events-auto`}>
       {items.map((item) => (
         <button
-          className={`rounded-full p-1 focus:outline-none
-            ${item.active ? "bg-orangeweb" : "bg-dim_gray"}  text-white outline-none`
-          }
+          className={`rounded-full p-1
+          text-white outline-none
+          border-transparent border-[1px]
+          hover:transform hover:scale-105 hover:border-orangeweb-800
+          ${item.active ? "bg-orangeweb" : "bg-dim_gray"}
+          `}
           onClick={item.onClick}
           key={item.id}
           title={item.title}

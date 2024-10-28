@@ -34,7 +34,7 @@ const ViewPage = () => {
   // TODO: proper sizing
   return (
     <div className="flex flex-row h-full w-full flex-grow flex-shrink">
-      <div className="flex-grow flex-shrink basis-3/4">
+      <div className="flex-grow flex-shrink basis-3/4 min-h-[400px]">
         <Editor model={model as Model3D} />
       </div>
       <div className="flex-grow flex-shrink basis-1/4">

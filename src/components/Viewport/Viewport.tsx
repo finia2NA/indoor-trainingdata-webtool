@@ -15,26 +15,24 @@ const Viewport = ({ model }: ViewportProps) => {
   const { showGrid } = useEditorStore((state) => (state as EditorState));
 
   return (
-    <div className='h-full'>
-      <Canvas>
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 5]} intensity={1} />
+    <Canvas>
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[10, 10, 5]} intensity={1} />
 
-        <SceneObject model={model} />
+      <SceneObject model={model} />
 
-        <WrappedOrbitControls />
-        {/* <OrbitControls /> */}
-        {showGrid &&
-          <>
-            <gridHelper args={[10, 10]} />
-            <axesHelper args={[5]} />
-          </>
-        }
-        <color attach="background" args={['#484848']} />
+      <WrappedOrbitControls />
+      {/* <OrbitControls /> */}
+      {showGrid &&
+        <>
+          <gridHelper args={[10, 10]} />
+          <axesHelper args={[5]} />
+        </>
+      }
+      <color attach="background" args={['#484848']} />
 
-        <SwitchableCamera />
-      </Canvas>
-    </div>
+      <SwitchableCamera />
+    </Canvas>
   );
 }
 
