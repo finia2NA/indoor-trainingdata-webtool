@@ -1,4 +1,5 @@
 import { Model3D } from "../../data/db"
+import useEditorStore, { EditorMode, EditorState } from "../../hooks/useEditorStore";
 import { TransformToggles, ViewmodeToggles } from "./Multitoggle"
 import ViewcubeViz from "./ViewcubeViz"
 import Viewport from "./Viewport"
@@ -10,6 +11,8 @@ interface EditorProps {
 
 const Editor = ({ model }: EditorProps) => {
 
+  const { editorMode } = useEditorStore(state => state as EditorState)
+
   return (
     <div className="h-full w-full relative">
       <Viewport model={model as Model3D} />
@@ -20,7 +23,9 @@ const Editor = ({ model }: EditorProps) => {
         ">
         <div className="flex items-start justify-start p-2">
           {/* Top Left Corner Content */}
-          <TransformToggles />
+          {editorMode === EditorMode.LAYOUT &&
+            <TransformToggles />
+          }
         </div>
         <div className="flex items-start justify-end p-2">
           {/* Top Right Corner Content */}

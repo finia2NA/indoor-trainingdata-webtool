@@ -42,15 +42,17 @@ const useEditorStore = create((set) => ({
   perspectiveMode: Perspective.PERSPECTIVE,
   setPerspectiveMode: (mode: Perspective) => set({ perspectiveMode: mode }),
 
-  editorMode: 'layout',
-  setEditorMode: (mode: EditorMode) => set({ editorMode: mode }),
+  editorMode: EditorMode.LAYOUT,
+  setEditorMode: (mode: EditorMode) => set((state: EditorState) => ({
+    editorMode: mode,
+    transformMode: mode !== EditorMode.LAYOUT ? TransformMode.NONE : state.transformMode,
+  })),
 
-  transformMode: 'none',
+  transformMode: TransformMode.NONE,
   setTransformMode: (mode: TransformMode) => set({ transformMode: mode }),
 
   showGrid: true,
   setShowGrid: (showGrid: boolean) => set({ showGrid: showGrid }),
-
 }));
 
 export default useEditorStore;

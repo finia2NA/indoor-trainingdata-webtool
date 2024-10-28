@@ -1,6 +1,9 @@
 import { useParams } from 'react-router-dom';
 import useMultiTransformationStore from '../../hooks/useTransforms';
 import InputWithDrag from 'react-input-with-drag';
+import { LuExpand, LuMove, LuRotate3D } from "react-icons/lu";
+import useEditorStore, { EditorState } from '../../hooks/useEditorStore';
+
 
 
 interface SingleChannelProps {
@@ -14,27 +17,57 @@ interface SingleChannelProps {
 
 const SingleChannel = ({ name, values, onChange, step = 1, min = -100, max = 100 }: SingleChannelProps) => {
 
+  const { transformMode, setTransformMode } = useEditorStore((state) => state as EditorState);
+  const isActive = transformMode === name.toLowerCase();
+
   const individualChanger = (axis: number, val: number) => {
     const newVal = [...values];
     newVal[axis] = val;
     onChange(newVal);
   }
 
+  let icon = null
+  switch (name) {
+    case "Translate":
+      icon = <LuMove />
+      break;
+    case "Rotate":
+      icon = <LuRotate3D />
+      break;
+    case "Scale":
+      icon = <LuExpand />
+      break;
+    default:
+      throw new Error("Invalid channel name");
+  }
+
   return (
-    <div className='flex flex-col'>
-      <h3>{name}</h3>
-      <div className='flex flex-row gap-1'>
-        {values.map((val, idx) => (
-          <InputWithDrag
-            className='w-16 text-right' type="number" key={idx}
-            min={min} max={max} step={step}
-            value={val} onChange={i => individualChanger(idx, i)} />
-        ))}
+    <div className='flex flex-row px-1 gap-1'>
+      <button className={`flex h-6 items-center ${isActive ? "text-orangeweb" : ""}`}
+        onClick={() => setTransformMode(name.toLowerCase() as EditorState["transformMode"])}
+      >
+        {icon}
+      </button>
+      <div className='flex flex-col gap-1'>
+        <button className={`flex h-6 items-center ${isActive ? "text-orangeweb" : ""}`}
+          onClick={() => setTransformMode(name.toLowerCase() as EditorState["transformMode"])}
+        >
+          <h3>{name}</h3>
+        </button>
+        <div className='flex flex-row gap-1 pl-1 pb-1'>
+          {values.map((val, idx) => (
+            <InputWithDrag
+              className='w-20 text-right bg-dim_gray  basis-1/3'
+              type="number" key={idx}
+              min={min} max={max} step={step}
+              // TODO: I want to limit the display to 3 decimal places, but without changing the actual value
+              value={val} onChange={i => individualChanger(idx, i)} />
+          ))}
+        </div>
       </div>
-    </div>
+    </div >
   )
 }
-
 
 const Channelbox = () => {
   const { id } = useParams();
@@ -81,8 +114,9 @@ const Channelbox = () => {
 
   return (
     <>
-      <h2 className='text-xl'>Channelbox</h2>
-      <div>
+      <h2 className='text-2xl p-1'>Channelbox</h2>
+      <hr />
+      <div className='flex flex-col p-1 gap-1'>
         <SingleChannel name="Translate" min={-10} max={10} step={0.1}
           values={myTransformation.translation} onChange={translateSetter} />
         <SingleChannel name="Rotate" min={-Math.PI} max={Math.PI} step={0.05}

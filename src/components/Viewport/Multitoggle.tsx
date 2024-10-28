@@ -1,5 +1,5 @@
 import { IconType } from "react-icons";
-import useEditorStore, { EditorState, Perspective, TransformMode } from "../../hooks/useEditorState";
+import useEditorStore, { EditorState, Perspective, TransformMode } from "../../hooks/useEditorStore";
 import { LuExpand, LuMousePointer2, LuMove, LuRotate3D } from "react-icons/lu";
 import { TbPerspective, TbPerspectiveOff } from "react-icons/tb";
 import { MdOutlineGridOn, MdOutlineGridOff } from "react-icons/md";

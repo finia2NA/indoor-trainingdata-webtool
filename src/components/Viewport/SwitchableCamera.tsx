@@ -1,5 +1,5 @@
 import { OrthographicCamera, PerspectiveCamera } from "@react-three/drei";
-import useEditorStore, { EditorState, Perspective, } from "../../hooks/useEditorState";
+import useEditorStore, { EditorState, Perspective, } from "../../hooks/useEditorStore";
 import { useEffect, useRef } from "react";
 
 const SwitchableCamera = () => {

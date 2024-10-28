@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import { Model3D } from '../../data/db';
 import WrappedOrbitControls from './WrappedOrbitControls';
-import useEditorStore, { EditorState } from '../../hooks/useEditorState';
+import useEditorStore, { EditorState } from '../../hooks/useEditorStore';
 import SwitchableCamera from './SwitchableCamera';
 import SceneObject from './SceneObject';
 

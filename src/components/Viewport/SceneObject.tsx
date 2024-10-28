@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Group, Object3DEventMap } from 'three';
 import useMultiTransformationStore from '../../hooks/useTransforms';
 import * as THREE from 'three';
-import useEditorStore, { EditorState } from '../../hooks/useEditorState';
+import useEditorStore, { EditorState } from '../../hooks/useEditorStore';
 import { TransformControls } from '@react-three/drei';
 import useOrbitTransformSync from '../../hooks/useOrbitTransformSync';
 import Transformation from '../../data/Transformation';
