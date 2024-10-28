@@ -1,27 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import Transformation from '../data/Transformation';
 
 /* eslint-disable no-unused-vars */
-export class Transformation {
-  translation: number[];
-  rotation: number[];
-  scale: number[];
-
-  constructor(translation?: number[], rotation?: number[], scale?: number[]) {
-    this.translation = translation || [0, 0, 0];
-    this.rotation = rotation || [0, 0, 0];
-    this.scale = scale || [1, 1, 1];
-  }
-
-  copy(): Transformation {
-    return new Transformation([...this.translation], [...this.rotation], [...this.scale]);
-  }
-}
 
 interface MultiTransformationState {
   transformations: Record<number, Transformation>;
   getTransformation: (id: number) => Transformation | null;
   addTransformation: (id: number) => void;
+
+  setTransformation: (id: number, transformation: Transformation) => void;
 
   setTranslation: (id: number, translation: number[]) => void;
   setRotation: (id: number, rotation: number[]) => void;
@@ -47,6 +35,20 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
           [id]: new Transformation(),
         },
       })),
+
+      setTransformation: (id: number, transformation: Transformation) => set((state) => {
+        // Check if the transformation exists; if not, do nothing
+        const currTrans = state.getTransformation(id);
+        if (!currTrans) return state;
+
+        // Use the provided transformation to replace the current one
+        return {
+          transformations: {
+            ...state.transformations,
+            [id]: transformation.copy(),
+          },
+        };
+      }),
 
       setTranslation: (id: number, translation: number[]) => set((state) => {
         // get the object

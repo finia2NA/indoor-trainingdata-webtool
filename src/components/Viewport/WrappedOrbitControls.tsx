@@ -1,10 +1,15 @@
 import { OrbitControls, OrbitControlsProps } from "@react-three/drei";
 import React, { useEffect, useRef, useCallback } from "react";
 import useOrbitAngleStore from "../../hooks/useOrbitAngleStore";
+import useOrbitTransformSync from "../../hooks/useOrbitTransformSync";
 
 const WrappedOrbitControls = React.memo((props: OrbitControlsProps) => {
 
+  // get shared orbit state
   const { orbitAngles, updateOrbitAngles } = useOrbitAngleStore((state) => state);
+
+  // we only want to apply the orbit angles when the user is not transforming
+  const { isTransforming } = useOrbitTransformSync();
 
   // Default values
   const azimuthAngle = orbitAngles?.azimuthAngle ?? 0;
@@ -62,7 +67,7 @@ const WrappedOrbitControls = React.memo((props: OrbitControlsProps) => {
     }
   }, [azimuthAngle, polarAngle]);
 
-  return (
+  return (isTransforming ? null :
     <OrbitControls
       ref={theRef}
       onChange={() => {
@@ -71,7 +76,8 @@ const WrappedOrbitControls = React.memo((props: OrbitControlsProps) => {
           updatePolarAngle(theRef.current.getPolarAngle());
         }
       }}
-      {...props} />
+      {...props}
+    />
   )
 });
 

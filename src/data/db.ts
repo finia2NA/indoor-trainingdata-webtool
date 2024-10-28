@@ -1,4 +1,5 @@
 import Dexie, { Table } from 'dexie';
+import Transformation from './Transformation';
 
 // Data model
 export interface ModelWithoutContent {
@@ -6,31 +7,6 @@ export interface ModelWithoutContent {
   name: string;
   size: number;
 }
-export class Transformation {
-  translation: number[];
-  rotation: number[];
-  scale: number[];
-
-  constructor(translation?: number[], rotation?: number[], scale?: number[]) {
-    if (!translation) {
-      translation = [0, 0, 0];
-    }
-    if (!rotation) {
-      rotation = [0, 0, 0];
-    }
-    if (!scale) {
-      scale = [1, 1, 1];
-    }
-    this.translation = translation;
-    this.rotation = rotation;
-    this.scale = scale;
-  }
-
-  copy(): Transformation {
-    return new Transformation([...this.translation], [...this.rotation], [...this.scale]);
-  }
-}
-
 export class Model3D implements ModelWithoutContent {
   id?: number;
   name: string;
