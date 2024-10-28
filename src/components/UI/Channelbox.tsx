@@ -52,13 +52,31 @@ const Channelbox = () => {
   }
 
   const translateSetter = (newVals: number[]) => {
-    setTranslation(idnum, newVals);
+    const sanitizedVals = newVals.map((val) => {
+      if (isNaN(val)) {
+        return 0;
+      }
+      return val;
+    });
+    setTranslation(idnum, sanitizedVals);
   }
   const rotateSetter = (newVals: number[]) => {
-    setRotation(idnum, newVals);
+    const sanitizedVals = newVals.map((val) => {
+      if (isNaN(val)) {
+        return 0;
+      }
+      return val;
+    });
+    setRotation(idnum, sanitizedVals);
   }
   const scaleSetter = (newVals: number[]) => {
-    setScale(idnum, newVals);
+    const sanitizedVals = newVals.map((val) => {
+      if (isNaN(val)) {
+        return 1;
+      }
+      return val;
+    });
+    setScale(idnum, sanitizedVals);
   }
 
   return (
