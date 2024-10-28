@@ -3,13 +3,10 @@ import WrappedOrbitControls from './WrappedOrbitControls';
 import * as THREE from 'three';
 import useOrbitAngleStore from '../../hooks/useOrbitAngleStore';
 
+// eslint-disable-next-line no-unused-vars
 enum CUBEFACE {
-  RIGHT = "right",
-  LEFT = "left",
-  TOP = "top",
-  BOTTOM = "bottom",
-  FRONT = "front",
-  BACK = "back"
+  // eslint-disable-next-line no-unused-vars
+  RIGHT = "right", LEFT = "left", TOP = "top", BOTTOM = "bottom", FRONT = "front", BACK = "back"
 }
 
 function directionToFace(direction: THREE.Vector3): CUBEFACE {
