@@ -21,6 +21,12 @@ export enum TransformMode {
   SCALE = 'scale',
 }
 
+export enum PolygonToolMode {
+  CREATE = 'create', // Adding new polygons
+  EDIT = 'edit', // moving/deleting points
+  SPLICE = 'splice', // inserting points on lines
+}
+
 export type EditorState = {
   perspectiveMode: Perspective;
   setPerspectiveMode: (mode: Perspective) => void;
@@ -36,6 +42,15 @@ export type EditorState = {
 
   showLabels: boolean;
   setShowLabel: (label: boolean) => void;
+
+  polygonHeight: number;
+  setPolygonHeight: (newHeight: number) => void;
+
+  polygonSize: number;
+  setPolygonSize: (newSize: number) => void;
+
+  polygonToolMode: PolygonToolMode;
+  setPolygonToolMode: (mode: PolygonToolMode) => void;
 };
 
 // --------------------------------------------
@@ -59,6 +74,15 @@ const useEditorStore = create((set) => ({
 
   showLabels: false,
   setShowLabel: (showLabels: boolean) => set({ showLabels }),
+
+  polygonHeight: 0,
+  setPolygonHeight: (newHeight: number) => set({ polygonHeight: newHeight }),
+
+  polygonSize: 5,
+  setPolygonSize: (newSize: number) => set({ polygonSize: newSize }),
+
+  polygonToolMode: PolygonToolMode.CREATE,
+  setPolygonToolMode: (mode: PolygonToolMode) => set({ polygonToolMode: mode }),
 }));
 
 export default useEditorStore;

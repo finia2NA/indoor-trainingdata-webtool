@@ -1,6 +1,6 @@
 import { Model3D } from "../../data/db"
 import useEditorStore, { EditorMode, EditorState } from "../../hooks/useEditorStore";
-import { TransformToggles, ViewmodeToggles } from "./Multitoggle"
+import { PolygonCreatorToggles, TransformToggles, ViewmodeToggles } from "./Multitoggle"
 import ViewcubeViz from "./ViewcubeViz"
 import Viewport from "./Viewport"
 
@@ -25,6 +25,9 @@ const Editor = ({ model }: EditorProps) => {
           {/* Top Left Corner Content */}
           {editorMode === EditorMode.LAYOUT &&
             <TransformToggles />
+          }
+          {editorMode === EditorMode.MAP &&
+            <PolygonCreatorToggles />
           }
         </div>
         <div className="flex items-start justify-end p-2">

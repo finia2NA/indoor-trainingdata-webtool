@@ -1,8 +1,8 @@
 import { IconType } from "react-icons";
-import useEditorStore, { EditorState, Perspective, TransformMode } from "../../hooks/useEditorStore";
+import useEditorStore, { EditorState, Perspective, PolygonToolMode, TransformMode } from "../../hooks/useEditorStore";
 import { LuExpand, LuMousePointer2, LuMove, LuRotate3D } from "react-icons/lu";
 import { TbPerspective, TbPerspectiveOff } from "react-icons/tb";
-import { MdOutlineGridOn, MdOutlineGridOff, MdLabel, MdLabelOff } from "react-icons/md";
+import { MdOutlineGridOn, MdOutlineGridOff, MdLabel, MdLabelOff, MdOutlineAddLocationAlt, MdOutlinePolyline } from "react-icons/md";
 
 
 interface Item {
@@ -86,6 +86,38 @@ export const TransformToggles = () => {
   );
 }
 
+export const PolygonCreatorToggles = () => {
+  const { polygonToolMode, setPolygonToolMode } = useEditorStore((state) => state as EditorState);
+
+  const items: Item[] = [
+    {
+      id: 'create',
+      title: 'Create',
+      icon: () => <MdOutlineAddLocationAlt />,
+      active: polygonToolMode === PolygonToolMode.CREATE,
+      onClick: () => setPolygonToolMode(PolygonToolMode.CREATE),
+    },
+    {
+      id: 'edit',
+      title: 'Edit',
+      icon: () => <LuMove />,
+      active: polygonToolMode === PolygonToolMode.EDIT,
+      onClick: () => setPolygonToolMode(PolygonToolMode.EDIT),
+    },
+    {
+      id: 'splice',
+      title: 'Splice',
+      icon: () => <MdOutlinePolyline />,
+      active: polygonToolMode === PolygonToolMode.SPLICE,
+      onClick: () => setPolygonToolMode(PolygonToolMode.SPLICE),
+    },
+  ];
+
+  return (
+    <Multitoggle items={items} direction="column" />
+  );
+}
+
 export const ViewmodeToggles = () => {
   // Perspective stuff
   // state
@@ -129,7 +161,7 @@ export const ViewmodeToggles = () => {
       active: showGrid,
       onClick: toggleGrid,
     },
-      {
+    {
       id: 'labels',
       title: 'Toggle Labels',
       icon: () => <LabelIcon />,

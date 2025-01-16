@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import usePolygonCreatorStore from "../../hooks/usePolygonCreatorStore.ts";
+
 import { DoubleSide, Vector3 } from 'three';
 import { useEffect } from 'react';
+import useEditorStore, { EditorState } from '../../hooks/useEditorStore.ts';
 
 
 const PolygonCreator: React.FC = () => {
-  const { height, size } = usePolygonCreatorStore((state) => state);
+  const { polygonHeight, polygonSize } = useEditorStore((state) => state as EditorState);
 
   // STATE
   // helper to avoid adding a point when dragging
@@ -81,12 +82,12 @@ const PolygonCreator: React.FC = () => {
       {/* surface */}
       <mesh
         rotation={[Math.PI / 2, 0, 0]}
-        position={[0, height, 0]}
+        position={[0, polygonHeight, 0]}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
-        <planeGeometry args={[size, size]} />
+        <planeGeometry args={[polygonSize, polygonSize]} />
         <meshStandardMaterial
           color="lightblue"
           side={DoubleSide}
