@@ -34,7 +34,7 @@ export type EditorState = {
   showGrid: boolean;
   setShowGrid: (display: boolean) => void;
 
-  showLabel: boolean;
+  showLabels: boolean;
   setShowLabel: (label: boolean) => void;
 };
 
@@ -57,8 +57,8 @@ const useEditorStore = create((set) => ({
   showGrid: true,
   setShowGrid: (showGrid: boolean) => set({ showGrid }),
 
-  showLabel: false,
-  setShowLabel: (showLabel: boolean) => set({ showLabel }),
+  showLabels: false,
+  setShowLabel: (showLabels: boolean) => set({ showLabels }),
 }));
 
 export default useEditorStore;

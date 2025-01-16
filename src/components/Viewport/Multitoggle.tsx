@@ -89,7 +89,7 @@ export const TransformToggles = () => {
 export const ViewmodeToggles = () => {
   // Perspective stuff
   // state
-  const { perspectiveMode, setPerspectiveMode, showLabel, setShowLabel } = useEditorStore((state) => (state as EditorState));
+  const { perspectiveMode, setPerspectiveMode, showLabels: showLabel, setShowLabel } = useEditorStore((state) => (state as EditorState));
 
   // icons
   const PerspectiveOrthographicIcon = perspectiveMode === Perspective.ORTHOGRAPHIC ? TbPerspectiveOff : TbPerspective;
