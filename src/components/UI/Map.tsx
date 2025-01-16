@@ -1,5 +1,6 @@
 import usePolygonCreatorStore from "../../hooks/usePolygonCreatorStore.ts";
-import InputWithDrag from 'react-input-with-drag';
+import { InteractiveInput } from '@designbyadrian/react-interactive-input';
+
 
 
 
@@ -9,13 +10,13 @@ const Map: React.FC = () => {
 
   return (
     <div className='flex flex-row px-1 gap-1'>
-    {/* //   <InputWithDrag
-    //     className='w-20 text-right bg-dim_gray  basis-1/3'
-    //     type="number"
-    //     min={0} max={100} step={1}
-    //     value={height}
-    //     onChange={setHeight}
-    //   /> */}
+      <InteractiveInput
+        className='w-20 text-right bg-dim_gray  basis-1/3'
+        type="number"
+        min={-3} max={3} step={0.01}
+        value={height}
+        onChange={e => setHeight(parseFloat(e.target.value))}
+      />
     </div>
   );
 };

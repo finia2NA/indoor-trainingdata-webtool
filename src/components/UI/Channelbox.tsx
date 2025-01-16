@@ -1,8 +1,8 @@
 import { useParams } from 'react-router-dom';
 import useMultiTransformationStore from '../../hooks/useTransforms';
-import InputWithDrag from 'react-input-with-drag';
 import { LuExpand, LuMove, LuRotate3D } from "react-icons/lu";
 import useEditorStore, { EditorState } from '../../hooks/useEditorStore';
+import { InteractiveInput } from '@designbyadrian/react-interactive-input';
 
 
 
@@ -58,13 +58,13 @@ const SingleChannel = ({ name, values, onChange, step = 1, min = -100, max = 100
         </button>
         <div className='flex flex-row gap-1 pl-1 pb-1'>
           {values.map((val, idx) => (
-            <InputWithDrag
+            <InteractiveInput
               className='w-20 text-right bg-dim_gray  basis-1/3'
               type="number" key={idx}
               min={min} max={max} step={step}
               // TODO: I want to limit the display to 3 decimal places, but without changing the actual value
               value={val}
-              onChange={i => individualChanger(idx, i)} />
+              onChange={e => individualChanger(idx, Number(e.target.value))} />
           ))}
         </div>
       </div>
