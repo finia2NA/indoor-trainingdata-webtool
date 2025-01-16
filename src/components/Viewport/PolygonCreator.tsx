@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import usePolygonCreatorStore from "../../hooks/usePolygonCreatorStore.ts";
 import { DoubleSide, Vector3 } from 'three';
+import { useEffect } from 'react';
+
 
 const PolygonCreator: React.FC = () => {
-  const { height } = usePolygonCreatorStore((state) => state);
+  const { height, size } = usePolygonCreatorStore((state) => state);
 
   // STATE
   // helper to avoid adding a point when dragging
@@ -12,6 +14,7 @@ const PolygonCreator: React.FC = () => {
   const [polygons, setPolygons] = useState<Vector3[][]>([[]]);
 
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handlePointerDown = (event: any) => {
     event.stopPropagation();
     setIsDragging(false);
@@ -21,6 +24,7 @@ const PolygonCreator: React.FC = () => {
     setIsDragging(true);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handlePointerUp = (event: any) => {
     event.stopPropagation();
     if (isDragging) return;
@@ -40,6 +44,38 @@ const PolygonCreator: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        const currentPolygon = polygons[polygons.length - 1];
+        if (currentPolygon.length > 2) {
+          setPolygons([...polygons, []]);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [polygons]);
+
+  // ...existing code...
+
+  const getPointColor = (polygonIndex: number, pointIndex: number, polygon: Vector3[]) => {
+    if (polygonIndex === polygons.length - 1) {
+      if (pointIndex === 0) {
+        return "green";
+      } else if (pointIndex === polygon.length - 1) {
+        return "blue";
+      } else {
+        return "red";
+      }
+    } else {
+      return "red";
+    }
+  };
+
   return (
     <>
       {/* surface */}
@@ -50,7 +86,7 @@ const PolygonCreator: React.FC = () => {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
-        <planeGeometry args={[5, 5]} />
+        <planeGeometry args={[size, size]} />
         <meshStandardMaterial
           color="lightblue"
           side={DoubleSide}
@@ -65,7 +101,8 @@ const PolygonCreator: React.FC = () => {
           {polygon.map((point, pointIndex) => (
             <mesh key={`${polygonIndex}-${pointIndex}`} position={point}>
               <sphereGeometry args={[0.1, 16, 16]} />
-              <meshBasicMaterial color={pointIndex===0 ? "green": "red"} />
+              {/* <meshBasicMaterial color={polygonIndex === polygons.length - 1 ? pointIndex === 0 ? "green" : pointIndex === polygon.length - 1 ? "blue" : "red" : "red"} /> */}
+              <meshBasicMaterial color={getPointColor(polygonIndex, pointIndex, polygon)} />
             </mesh>
           ))}
           {polygon.length > 1 && (
