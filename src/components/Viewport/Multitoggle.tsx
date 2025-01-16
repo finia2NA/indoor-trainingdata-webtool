@@ -2,7 +2,7 @@ import { IconType } from "react-icons";
 import useEditorStore, { EditorState, Perspective, TransformMode } from "../../hooks/useEditorStore";
 import { LuExpand, LuMousePointer2, LuMove, LuRotate3D } from "react-icons/lu";
 import { TbPerspective, TbPerspectiveOff } from "react-icons/tb";
-import { MdOutlineGridOn, MdOutlineGridOff } from "react-icons/md";
+import { MdOutlineGridOn, MdOutlineGridOff, MdLabel, MdLabelOff } from "react-icons/md";
 
 
 interface Item {
@@ -89,13 +89,20 @@ export const TransformToggles = () => {
 export const ViewmodeToggles = () => {
   // Perspective stuff
   // state
-  const { perspectiveMode, setPerspectiveMode } = useEditorStore((state) => (state as EditorState));
-  // icon
+  const { perspectiveMode, setPerspectiveMode, showLabel, setShowLabel } = useEditorStore((state) => (state as EditorState));
+
+  // icons
   const PerspectiveOrthographicIcon = perspectiveMode === Perspective.ORTHOGRAPHIC ? TbPerspectiveOff : TbPerspective;
-  // onClick
+  const LabelIcon = showLabel ? MdLabel : MdLabelOff;
+
+  // onClicks
   const togglePerspectiveMode = () => {
     const newMode = perspectiveMode === Perspective.ORTHOGRAPHIC ? Perspective.PERSPECTIVE : Perspective.ORTHOGRAPHIC;
     setPerspectiveMode(newMode);
+  }
+  const toggleShowLabel = () => {
+    const newLabel = !showLabel;
+    setShowLabel(newLabel);
   }
 
   // Grid stuff
@@ -122,6 +129,13 @@ export const ViewmodeToggles = () => {
       active: showGrid,
       onClick: toggleGrid,
     },
+      {
+      id: 'labels',
+      title: 'Toggle Labels',
+      icon: () => <LabelIcon />,
+      active: showLabel,
+      onClick: toggleShowLabel,
+    }
 
   ];
 

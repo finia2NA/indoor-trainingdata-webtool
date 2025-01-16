@@ -1,9 +1,11 @@
 import { Canvas } from '@react-three/fiber';
 import { Model3D } from '../../data/db';
 import WrappedOrbitControls from './WrappedOrbitControls';
-import useEditorStore, { EditorState } from '../../hooks/useEditorStore';
+import useEditorStore, { EditorMode, EditorState } from '../../hooks/useEditorStore';
 import SwitchableCamera from './SwitchableCamera';
 import SceneObject from './SceneObject';
+import PolygonSurface from './PolygonSurface';
+import LabeledAxesHelper from './LabeledAxesHelper';
 
 interface ViewportProps {
   model: Model3D;
@@ -12,7 +14,7 @@ interface ViewportProps {
 
 const Viewport = ({ model }: ViewportProps) => {
 
-  const { showGrid } = useEditorStore((state) => (state as EditorState));
+  const { showGrid, editorMode } = useEditorStore((state) => (state as EditorState));
 
   return (
     <Canvas>
@@ -20,13 +22,14 @@ const Viewport = ({ model }: ViewportProps) => {
       <directionalLight position={[10, 10, 5]} intensity={1} />
 
       <SceneObject model={model} />
+      {editorMode === EditorMode.MAP && <PolygonSurface/>}
 
       <WrappedOrbitControls />
       {/* <OrbitControls /> */}
       {showGrid &&
         <>
           <gridHelper args={[10, 10]} />
-          <axesHelper args={[5]} />
+          <LabeledAxesHelper size={5} />
         </>
       }
       <color attach="background" args={['#484848']} />

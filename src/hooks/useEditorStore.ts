@@ -33,6 +33,9 @@ export type EditorState = {
 
   showGrid: boolean;
   setShowGrid: (display: boolean) => void;
+
+  showLabel: boolean;
+  setShowLabel: (label: boolean) => void;
 };
 
 // --------------------------------------------
@@ -52,7 +55,10 @@ const useEditorStore = create((set) => ({
   setTransformMode: (mode: TransformMode) => set({ transformMode: mode }),
 
   showGrid: true,
-  setShowGrid: (showGrid: boolean) => set({ showGrid: showGrid }),
+  setShowGrid: (showGrid: boolean) => set({ showGrid }),
+
+  showLabel: false,
+  setShowLabel: (showLabel: boolean) => set({ showLabel }),
 }));
 
 export default useEditorStore;
