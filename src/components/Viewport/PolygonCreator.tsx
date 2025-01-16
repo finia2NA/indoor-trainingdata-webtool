@@ -4,8 +4,13 @@ import { DoubleSide, Vector3 } from 'three';
 
 const PolygonCreator: React.FC = () => {
   const { height } = usePolygonCreatorStore((state) => state);
-  const [points, setPoints] = useState<Vector3[]>([]);
+
+  // STATE
+  // helper to avoid adding a point when dragging
   const [isDragging, setIsDragging] = useState(false);
+  // poly list
+  const [polygons, setPolygons] = useState<Vector3[][]>([[]]);
+
 
   const handlePointerDown = (event: any) => {
     event.stopPropagation();
@@ -18,9 +23,20 @@ const PolygonCreator: React.FC = () => {
 
   const handlePointerUp = (event: any) => {
     event.stopPropagation();
-    if (!isDragging) {
-      const { x, y, z } = event.point;
-      setPoints([...points, new Vector3(x, y, z)]);
+    if (isDragging) return;
+
+    const { x, y, z } = event.point;
+    const currentPolygon = polygons[polygons.length - 1];
+    const newPoint = new Vector3(x, y, z);
+
+    if (currentPolygon.length > 0 && currentPolygon[0].distanceTo(newPoint) < 0.1) {
+      // Complete the current polygon and start a new one
+      setPolygons([...polygons, []]);
+    } else {
+      // Add the new point to the current polygon
+      const updatedPolygons = [...polygons];
+      updatedPolygons[updatedPolygons.length - 1] = [...currentPolygon, newPoint];
+      setPolygons(updatedPolygons);
     }
   };
 
@@ -42,13 +58,26 @@ const PolygonCreator: React.FC = () => {
           transparent={true}
         />
       </mesh>
-      
+
       {/* points */}
-      {points.map((point, index) => (
-        <mesh key={index} position={point}>
-          <sphereGeometry args={[0.02, 16, 16]} />
-          <meshBasicMaterial color="red" />
-        </mesh>
+      {polygons.map((polygon, polygonIndex) => (
+        <React.Fragment key={polygonIndex}>
+          {polygon.map((point, pointIndex) => (
+            <mesh key={`${polygonIndex}-${pointIndex}`} position={point}>
+              <sphereGeometry args={[0.1, 16, 16]} />
+              <meshBasicMaterial color={pointIndex===0 ? "green": "red"} />
+            </mesh>
+          ))}
+          {polygon.length > 1 && (
+            <line>
+              <bufferGeometry
+                attach="geometry"
+                ref={(geometry) => geometry && geometry.setFromPoints([...polygon, polygon[0]])}
+              />
+              <lineBasicMaterial attach="material" color="black" />
+            </line>
+          )}
+        </React.Fragment>
       ))}
     </>
   );
