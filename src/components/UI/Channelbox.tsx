@@ -6,6 +6,7 @@ import useEditorStore, { EditorState } from '../../hooks/useEditorStore';
 
 
 
+
 interface SingleChannelProps {
   name: string,
   values: number[],
@@ -62,7 +63,8 @@ const SingleChannel = ({ name, values, onChange, step = 1, min = -100, max = 100
               type="number" key={idx}
               min={min} max={max} step={step}
               // TODO: I want to limit the display to 3 decimal places, but without changing the actual value
-              value={val} onChange={i => individualChanger(idx, i)} />
+              value={val}
+              onChange={i => individualChanger(idx, i)} />
           ))}
         </div>
       </div>

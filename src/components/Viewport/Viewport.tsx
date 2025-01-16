@@ -4,7 +4,7 @@ import WrappedOrbitControls from './WrappedOrbitControls';
 import useEditorStore, { EditorMode, EditorState } from '../../hooks/useEditorStore';
 import SwitchableCamera from './SwitchableCamera';
 import SceneObject from './SceneObject';
-import PolygonSurface from './PolygonSurface';
+import PolygonCreator from './PolygonCreator';
 import LabeledAxesHelper from './LabeledAxesHelper';
 
 interface ViewportProps {
@@ -22,7 +22,7 @@ const Viewport = ({ model }: ViewportProps) => {
       <directionalLight position={[10, 10, 5]} intensity={1} />
 
       <SceneObject model={model} />
-      {editorMode === EditorMode.MAP && <PolygonSurface/>}
+      {editorMode === EditorMode.MAP && <PolygonCreator/>}
 
       <WrappedOrbitControls />
       {/* <OrbitControls /> */}

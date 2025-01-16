@@ -2,7 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import db, { Model3D } from "../data/db";
 import { useLiveQuery } from "dexie-react-hooks";
 import { isNumeric } from "../utils";
-import EditSection from "../components/UI/EditSection";
+import Sidebar from "../components/UI/Sidebar";
 import Editor from "../components/Viewport/Editor";
 
 const ViewPage = () => {
@@ -38,7 +38,7 @@ const ViewPage = () => {
         <Editor model={model as Model3D} />
       </div>
       <div className="flex-grow flex-shrink basis-1/4">
-        <EditSection />
+        <Sidebar />
       </div>
     </div>
   );

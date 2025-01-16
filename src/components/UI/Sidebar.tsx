@@ -1,9 +1,10 @@
 import useEditorStore, { EditorState } from "../../hooks/useEditorStore";
 import Channelbox from "./Channelbox";
 import Progress from "./Progress";
+import Map from "./Map";
 
 
-const EditSection: React.FC = () => {
+const Sidebar: React.FC = () => {
 
   const { editorMode } = useEditorStore((state) => state as EditorState);
 
@@ -18,10 +19,14 @@ const EditSection: React.FC = () => {
         {editorMode === 'layout' &&
           <Channelbox />
         }
+        {editorMode === 'map' &&
+          <Map />
+        }
+
 
       </div>
     </div>
   );
 };
 
-export default EditSection;
+export default Sidebar;
