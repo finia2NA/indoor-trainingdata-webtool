@@ -4,6 +4,7 @@ import { DoubleSide, Vector3 } from 'three';
 import { useEffect } from 'react';
 import useEditorStore, { EditorState, PolygonToolMode } from '../../hooks/useEditorStore.ts';
 import { toast } from 'react-toastify';
+import VertexObject from './VertexObject.tsx';
 
 
 const PolygonCreator: React.FC = () => {
@@ -40,18 +41,40 @@ const PolygonCreator: React.FC = () => {
     event.stopPropagation();
     if (isDragging) return;
 
-    const { x, y, z } = event.point;
-    const currentPolygon = polygons[polygons.length - 1];
-    const newPoint = new Vector3(x, y, z);
+    // adding a new point
+    if (polygonToolMode === PolygonToolMode.CREATE) {
+      const { x, y, z } = event.point;
+      const currentPolygon = polygons[polygons.length - 1];
+      const newPoint = new Vector3(x, y, z);
 
-    if (currentPolygon.length > 0 && currentPolygon[0].distanceTo(newPoint) < 0.1) {
-      // Complete the current polygon and start a new one
-      setPolygons([...polygons, []]);
-    } else {
-      // Add the new point to the current polygon
-      const updatedPolygons = [...polygons];
-      updatedPolygons[updatedPolygons.length - 1] = [...currentPolygon, newPoint];
-      setPolygons(updatedPolygons);
+      if (currentPolygon.length > 0 && currentPolygon[0].distanceTo(newPoint) < 0.1) {
+        // Complete the current polygon and start a new one
+        setPolygons([...polygons, []]);
+      } else {
+        // Add the new point to the current polygon
+        const updatedPolygons = [...polygons];
+        updatedPolygons[updatedPolygons.length - 1] = [...currentPolygon, newPoint];
+        setPolygons(updatedPolygons);
+      }
+    }
+
+    // selection
+    if(polygonToolMode === PolygonToolMode.EDIT) {
+      const { x, y, z } = event.point;
+      const clickedPoint = new Vector3(x, y, z);
+
+      // check if a point is selected
+      for (let i = 0; i < polygons.length; i++) {
+        for (let j = 0; j < polygons[i].length; j++) {
+          if (polygons[i][j].distanceTo(clickedPoint) < 0.1) {
+            setSelectedPolygon([i, j]);
+            return;
+          }
+        }
+      }
+
+      // if no point is selected, deselect
+      setSelectedPolygon([null, null]);
     }
   };
 
@@ -121,6 +144,12 @@ const PolygonCreator: React.FC = () => {
     return "red";
   };
 
+  const setPointPosition = (polygonIndex: number, pointIndex: number, newPosition: Vector3) => {
+    const updatedPolygons = [...polygons];
+    updatedPolygons[polygonIndex][pointIndex] = newPosition;
+    setPolygons(updatedPolygons);
+  }
+
   return (
     <>
       {/* surface */}
@@ -144,11 +173,12 @@ const PolygonCreator: React.FC = () => {
       {polygons.map((polygon, polygonIndex) => (
         <React.Fragment key={polygonIndex}>
           {polygon.map((point, pointIndex) => (
-            <mesh key={`${polygonIndex}-${pointIndex}`} position={point}>
-              <sphereGeometry args={[0.1, 16, 16]} />
-              {/* <meshBasicMaterial color={polygonIndex === polygons.length - 1 ? pointIndex === 0 ? "green" : pointIndex === polygon.length - 1 ? "blue" : "red" : "red"} /> */}
-              <meshBasicMaterial color={getPointColor(polygonIndex, pointIndex, polygon)} />
-            </mesh>
+            <VertexObject
+              key={`${polygonIndex}-${pointIndex}`}
+              position={point}
+              setPosition={(newPosition) => setPointPosition(polygonIndex, pointIndex, newPosition)}
+              isSelected={polygonIndex === selectedPolygon[0] && pointIndex === selectedPolygon[1]}
+              color={getPointColor(polygonIndex, pointIndex, polygon)} />
           ))}
           {polygon.length > 1 && (
             <line>

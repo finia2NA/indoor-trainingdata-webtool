@@ -24,31 +24,32 @@ const SceneObject = ({ model }: SceneObjectProps) => {
   if (!transformation) throw new Error('No transformation found for model');
 
   // Load scene and apply transformation
-  const [scene, setScene] = useState<Group<Object3DEventMap> | null>(null);
+  const [object3D, setObject3D] = useState<Group<Object3DEventMap> | null>(null);
   useEffect(() => {
     const loader = new GLTFLoader();
     loader.parse(model.content, '', (gltf) => {
-      setScene(gltf.scene);
+      setObject3D(gltf.scene);
     });
   }, [model]);
+  // Apply transformation to object
   useEffect(() => {
-    if (!scene) return;
-    scene.position.set(transformation.translation[0], transformation.translation[1], transformation.translation[2]);
-    scene.setRotationFromEuler(new THREE.Euler(transformation.rotation[0], transformation.rotation[1], transformation.rotation[2]));
-    scene.scale.set(transformation.scale[0], transformation.scale[1], transformation.scale[2]);
-  }, [scene, transformation.translation, transformation.rotation, transformation.scale]);
+    if (!object3D) return;
+    object3D.position.set(transformation.translation[0], transformation.translation[1], transformation.translation[2]);
+    object3D.setRotationFromEuler(new THREE.Euler(transformation.rotation[0], transformation.rotation[1], transformation.rotation[2]));
+    object3D.scale.set(transformation.scale[0], transformation.scale[1], transformation.scale[2]);
+  }, [object3D, transformation.translation, transformation.rotation, transformation.scale]);
 
   // Getting current UI transform mode
   const { transformMode } = useEditorStore((state) => (state as EditorState));
   const { setIsTransforming } = useOrbitTransformSync();
 
-  const sceneRef = useRef<THREE.Object3D | null>(null);
+  const objectRef = useRef<THREE.Object3D | null>(null);
 
   const onTransform = () => {
-    if (!sceneRef.current) return;
+    if (!objectRef.current) return;
     if (!model.id) return;
 
-    const obj = sceneRef.current;
+    const obj = objectRef.current;
 
     const pos = obj.position;
     const rot = obj.rotation;
@@ -63,14 +64,14 @@ const SceneObject = ({ model }: SceneObjectProps) => {
     setTransformation(model.id, newTransform);
   }
 
-  return (!scene ?
+  return (!object3D ?
     // Nothing if scene is not loaded
     null :
     <>
-      <primitive object={scene} ref={sceneRef} />
+      <primitive object={object3D} ref={objectRef} />
       {transformMode !== 'none' &&
         <TransformControls
-          object={scene}
+          object={object3D}
           position={new THREE.Vector3(...transformation.translation)}
           mode={transformMode}
           onMouseDown={() => setIsTransforming(true)}
