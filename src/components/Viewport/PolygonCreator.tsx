@@ -1,7 +1,7 @@
 // TODO: mesh completion (when clicking on the first point)
 // TODO: deselect by clicking surface when not in create mode
 
-import React, { useState } from 'react';
+import React, { Fragment, useState } from 'react';
 
 import { Vector3 } from 'three';
 import { useEffect } from 'react';
@@ -9,6 +9,7 @@ import useEditorStore, { EditorState, PolygonToolMode } from '../../hooks/useEdi
 import { toast } from 'react-toastify';
 import PolygonVertex from './PolygonCreator/PolygonVertex.tsx';
 import CreatorSurface from './PolygonCreator/CreatorSurface.tsx';
+import PolygonLine from './PolygonCreator/PolygonLine.tsx';
 
 
 const PolygonCreator: React.FC = () => {
@@ -31,10 +32,21 @@ const PolygonCreator: React.FC = () => {
   /**
    * Adds a point to the current polygon
    */
-  const addPoint = (position: Vector3) => {
-    const currentPolygon = polygons[polygons.length - 1];
+  const addPoint = (position: Vector3, polygonIndex?: number, afterPoint?: Vector3) => {
+    const currentPolygon = polygonIndex !== undefined ? polygons[polygonIndex] : polygons[polygons.length - 1];
+    polygonIndex = polygonIndex ?? polygons.length - 1;
+    let newCurrentPolygon;
+
+    if (afterPoint) {
+      const afterIndex = currentPolygon.indexOf(afterPoint);
+      newCurrentPolygon = [...currentPolygon.slice(0, afterIndex + 1), position, ...currentPolygon.slice(afterIndex + 1)];
+    } else {
+      newCurrentPolygon = [...currentPolygon, position];
+    }
+
     const updatedPolygons = [...polygons];
-    updatedPolygons[updatedPolygons.length - 1] = [...currentPolygon, position];
+    updatedPolygons[polygonIndex] = newCurrentPolygon;
+
     setPolygons(updatedPolygons);
   }
 
@@ -147,27 +159,39 @@ const PolygonCreator: React.FC = () => {
 
       {/* points */}
       {polygons.map((polygon, polygonIndex) => (
-        <React.Fragment key={polygonIndex}>
+        <Fragment key={polygonIndex}>
           {polygon.map((point, pointIndex) => (
-            <PolygonVertex
-              key={`${polygonIndex}-${pointIndex}`}
-              position={point}
-              setPosition={(newPosition) => setPointPosition(polygonIndex, pointIndex, newPosition)}
-              isSelected={polygonIndex === selectedPolygon[0] && pointIndex === selectedPolygon[1]}
-              setAsSelected={() => setSelectedPolygon([polygonIndex, pointIndex])}
-              color={getPointColor(polygonIndex, pointIndex, polygon)}
-              tryPolygonCompletion={tryPolygonCompletion} />
+            <Fragment key={pointIndex}>
+              {/* Vert */}
+              <PolygonVertex
+                position={point}
+                setPosition={(newPosition) => setPointPosition(polygonIndex, pointIndex, newPosition)}
+                isSelected={polygonIndex === selectedPolygon[0] && pointIndex === selectedPolygon[1]}
+                setAsSelected={() => setSelectedPolygon([polygonIndex, pointIndex])}
+                color={getPointColor(polygonIndex, pointIndex, polygon)}
+                tryPolygonCompletion={tryPolygonCompletion} />
+              {/* Line(s) */}
+              {/* One line when we have just 2 points */}
+              {polygon.length === 2 && (
+                <PolygonLine
+                  start={polygon[0]}
+                  end={polygon[1]}
+                  polygonIndex={polygonIndex}
+                  addPoint={addPoint}
+                />
+              )}
+              {/* Closing the loop when we have more than 2 */}
+              {polygon.length > 2 && (
+                <PolygonLine
+                  start={point}
+                  end={polygon[(pointIndex + 1) % polygon.length]}
+                  polygonIndex={polygonIndex}
+                  addPoint={addPoint}
+                />
+              )}
+            </Fragment>
           ))}
-          {polygon.length > 1 && (
-            <line>
-              <bufferGeometry
-                attach="geometry"
-                ref={(geometry) => geometry && geometry.setFromPoints([...polygon, polygon[0]])}
-              />
-              <lineBasicMaterial attach="material" color="black" />
-            </line>
-          )}
-        </React.Fragment>
+        </Fragment>
       ))}
     </>
   );

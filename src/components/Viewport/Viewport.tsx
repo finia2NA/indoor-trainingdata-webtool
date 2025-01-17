@@ -11,18 +11,29 @@ interface ViewportProps {
   model: Model3D;
 }
 
+// Make it a bit easier to click on lines
+const raycasterParams = {
+  Line: { threshold: 0.03 },
+  Mesh: undefined,
+  LOD: undefined,
+  Points: {
+    threshold: 0
+  },
+  Sprite: undefined
+}
+
 
 const Viewport = ({ model }: ViewportProps) => {
 
   const { showGrid, editorMode } = useEditorStore((state) => (state as EditorState));
 
   return (
-    <Canvas>
+    <Canvas raycaster={{ params: raycasterParams }}>
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} intensity={1} />
 
       <SceneObject model={model} />
-      {editorMode === EditorMode.MAP && <PolygonCreator/>}
+      {editorMode === EditorMode.MAP && <PolygonCreator />}
 
       <WrappedOrbitControls />
       {/* <OrbitControls /> */}
