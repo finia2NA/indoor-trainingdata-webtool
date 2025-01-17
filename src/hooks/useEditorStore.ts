@@ -25,6 +25,7 @@ export enum PolygonToolMode {
   CREATE = 'create', // Adding new polygons
   EDIT = 'edit', // moving/deleting points
   SPLICE = 'splice', // inserting points on lines
+  NONE = 'none', // no tool selected
 }
 
 export type EditorState = {

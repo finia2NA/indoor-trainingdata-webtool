@@ -6,27 +6,49 @@ import React, { Fragment, useState } from 'react';
 import { Vector3 } from 'three';
 import { useEffect } from 'react';
 import useEditorStore, { EditorState, PolygonToolMode } from '../../hooks/useEditorStore.ts';
-import { toast } from 'react-toastify';
+import { toast, ToastContentProps } from 'react-toastify';
 import PolygonVertex from './PolygonCreator/PolygonVertex.tsx';
 import CreatorSurface from './PolygonCreator/CreatorSurface.tsx';
 import PolygonLine from './PolygonCreator/PolygonLine.tsx';
+import usePolygonStore, { PolygonState } from '../../hooks/usePolygonStore.ts';
+
+const PolygonDeletionToast = ({ closeToast }: ToastContentProps) => {
+  return (
+    <div className='flex flex-col gap-2 align-right'>
+      <p>Cannot delete a point in a triangle</p>
+      <button className='bg-red-500 rounded-md' onClick={() => closeToast("delete")}>Delete Polygon</button>
+    </div>
+  )
+}
 
 
 const PolygonCreator: React.FC = () => {
-  const { polygonToolMode } = useEditorStore((state) => state as EditorState);
+  const { polygonToolMode, setPolygonToolMode, editorMode } = useEditorStore((state) => state as EditorState);
+
+  // // STATE
+  // // poly list
+  // const [polygons, setPolygons] = useState<Vector3[][]>([[]]);
+  // // currently selected poly in <polygonsIndex, pointIndex> format
+  // const [selectedPolygon, setSelectedPolygon] = useState<[number | null, number | null]>([null, null]);
+  const { getPolygons, setPolygons, selectedPolygon, setSelectedPolygon } = usePolygonStore((state) => state as PolygonState);
+  const polygons = getPolygons();
 
   // reset selected poly when switching out of edit mode
   useEffect(() => {
     if (polygonToolMode !== PolygonToolMode.EDIT) {
       setSelectedPolygon([null, null]);
     }
-  }, [polygonToolMode]);
+  }, [polygonToolMode, setSelectedPolygon]);
 
-  // STATE
-  // poly list
-  const [polygons, setPolygons] = useState<Vector3[][]>([[]]);
-  // currently selected poly in <polygonsIndex, pointIndex> format
-  const [selectedPolygon, setSelectedPolygon] = useState<[number | null, number | null]>([null, null]);
+  // When leaving the component, set the polygon tool to None
+  useEffect(() => {
+    return () => {
+      setPolygonToolMode(PolygonToolMode.NONE);
+    }
+  }, [setPolygonToolMode]);
+
+
+
 
   // FUNCTIONS FOR CHILDREN
   /**
@@ -48,7 +70,12 @@ const PolygonCreator: React.FC = () => {
     updatedPolygons[polygonIndex] = newCurrentPolygon;
 
     setPolygons(updatedPolygons);
-  }
+  };
+
+  const deletePolygon = React.useCallback((polygonIndex: number) => {
+    const updatedPolygons = [...polygons.slice(0, polygonIndex), ...polygons.slice(polygonIndex + 1)];
+    setPolygons(updatedPolygons);
+  }, [polygons, setPolygons]);
 
   /**
    * Taking a point, check if it is the first one in the current polygon.
@@ -91,7 +118,7 @@ const PolygonCreator: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [polygons]);
+  }, [polygons, setPolygons]);
 
   // Backspace handler: delete selected point
   useEffect(() => {
@@ -99,13 +126,23 @@ const PolygonCreator: React.FC = () => {
       // This is a handler for the backspace key
       if (event.key !== 'Backspace') return;
 
-      // If no polygon is selected, do nothing
+      // If no point is selected, do nothing
       const [polygonIndex, pointIndex] = selectedPolygon;
       if (polygonIndex === null || pointIndex === null) return;
 
       // If the polygon has only 3 points, give a warning and do nothing
       if (polygons[polygonIndex].length <= 3) {
-        toast.warn('Cannot delete a point in a polygon of 3 points', { type: 'error' });
+        toast.warn(PolygonDeletionToast,
+          {
+            type: 'error',
+            onClose: (reason) => {
+              if (reason === "delete") {
+                deletePolygon(polygonIndex);
+                setSelectedPolygon([null, null]);
+              }
+            }
+
+          });
         return;
       }
 
@@ -122,7 +159,7 @@ const PolygonCreator: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [polygons, selectedPolygon]);
+  }, [deletePolygon, polygons, selectedPolygon, setPolygons, setSelectedPolygon]);
 
   const getPointColor = (polygonIndex: number, pointIndex: number, polygon: Vector3[]) => {
     // selected is yellow
@@ -162,7 +199,7 @@ const PolygonCreator: React.FC = () => {
       {polygons.map((polygon, polygonIndex) => (
         <Fragment key={polygonIndex}>
           {polygon.map((point, pointIndex) => (
-            <Fragment key={pointIndex}>
+            <Fragment key={`${polygonIndex}, ${pointIndex}`}>
               {/* Vert */}
               <PolygonVertex
                 position={point}
@@ -194,6 +231,12 @@ const PolygonCreator: React.FC = () => {
           ))}
         </Fragment>
       ))}
+
+      {/* Debug cube */}
+      <mesh position={[0, 0, 0]} onClick={(e) => { e.stopPropagation(); console.log(polygons) }}>
+        <boxGeometry args={[0.3, 0.3, 0.3]} />
+        <meshBasicMaterial color="red" />
+      </mesh>
     </>
   );
 };

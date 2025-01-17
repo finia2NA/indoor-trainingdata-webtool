@@ -4,7 +4,7 @@ import { InteractiveInput } from '@designbyadrian/react-interactive-input';
 
 
 
-const Map: React.FC = () => {
+const PolygonSidebar: React.FC = () => {
 
   const {  polygonHeight, setPolygonHeight, polygonSize, setPolygonSize } = useEditorStore((state) => state as EditorState);
 
@@ -28,4 +28,4 @@ const Map: React.FC = () => {
   );
 };
 
-export default Map;
+export default PolygonSidebar;

@@ -1,7 +1,7 @@
 import useEditorStore, { EditorState } from "../../hooks/useEditorStore";
 import Channelbox from "./Channelbox";
 import Progress from "./Progress";
-import Map from "./Map";
+import PolygonSidebar from "./PolygonSidebar";
 
 
 const Sidebar: React.FC = () => {
@@ -20,7 +20,7 @@ const Sidebar: React.FC = () => {
           <Channelbox />
         }
         {editorMode === 'map' &&
-          <Map />
+          <PolygonSidebar />
         }
 
 

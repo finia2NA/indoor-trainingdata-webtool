@@ -91,6 +91,13 @@ export const PolygonCreatorToggles = () => {
 
   const items: Item[] = [
     {
+      id: 'none',
+      title: 'None',
+      icon: () => <LuMousePointer2 />,
+      active: polygonToolMode === PolygonToolMode.NONE,
+      onClick: () => setPolygonToolMode(PolygonToolMode.NONE),
+    },
+    {
       id: 'create',
       title: 'Create',
       icon: () => <MdOutlineAddLocationAlt />,

@@ -70,28 +70,6 @@ class MyAppDatabase extends Dexie {
   }
 
   /**
-   * Edits the transformation of a model with the specified ID.
-   *
-   * @param id - The unique identifier of the model to be updated.
-   * @param newTransform - The new transformation to be applied to the model.
-   * @returns A promise that resolves when the update is complete.
-   */
-  async setModelTransform(id: number, newTransform: Transformation): Promise<void> {
-    await this.models.update(id, { transform: newTransform });
-  }
-
-  async setTranslation(id: number, newTranslation: number[]): Promise<void> {
-
-    console.log("hi");
-
-    const model = await this.models.get(id);
-    if (model) {
-      model.transform.translation = newTranslation;
-      await this.models.update(id, { transform: model.transform });
-    }
-  }
-
-  /**
    * Deletes a model from the database based on the provided ID.
    * @param id - The ID of the model to delete.
    * @returns A promise that resolves when the model is deleted.
