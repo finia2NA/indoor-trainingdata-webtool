@@ -1,22 +1,18 @@
+// TODO: mesh completion (when clicking on the first point)
+// TODO: deselect by clicking surface when not in create mode
+
 import React, { useState } from 'react';
 
-import { DoubleSide, Vector3 } from 'three';
+import { Vector3 } from 'three';
 import { useEffect } from 'react';
 import useEditorStore, { EditorState, PolygonToolMode } from '../../hooks/useEditorStore.ts';
 import { toast } from 'react-toastify';
-import VertexObject from './VertexObject.tsx';
+import PolygonVertex from './PolygonCreator/PolygonVertex.tsx';
+import CreatorSurface from './PolygonCreator/CreatorSurface.tsx';
 
 
 const PolygonCreator: React.FC = () => {
-  const { polygonHeight, polygonSize, polygonToolMode } = useEditorStore((state) => state as EditorState);
-
-  // STATE
-  // helper to avoid adding a point when dragging
-  const [isDragging, setIsDragging] = useState(false);
-  // poly list
-  const [polygons, setPolygons] = useState<Vector3[][]>([[]]);
-  // currently selected poly in <polygonsIndex, pointIndex> format
-  const [selectedPolygon, setSelectedPolygon] = useState<[number | null, number | null]>([null, null]);
+  const { polygonToolMode } = useEditorStore((state) => state as EditorState);
 
   // reset selected poly when switching out of edit mode
   useEffect(() => {
@@ -25,59 +21,50 @@ const PolygonCreator: React.FC = () => {
     }
   }, [polygonToolMode]);
 
+  // STATE
+  // poly list
+  const [polygons, setPolygons] = useState<Vector3[][]>([[]]);
+  // currently selected poly in <polygonsIndex, pointIndex> format
+  const [selectedPolygon, setSelectedPolygon] = useState<[number | null, number | null]>([null, null]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handlePointerDown = (event: any) => {
-    event.stopPropagation();
-    setIsDragging(false);
-  };
+  // FUNCTIONS FOR CHILDREN
+  /**
+   * Adds a point to the current polygon
+   */
+  const addPoint = (position: Vector3) => {
+    const currentPolygon = polygons[polygons.length - 1];
+    const updatedPolygons = [...polygons];
+    updatedPolygons[updatedPolygons.length - 1] = [...currentPolygon, position];
+    setPolygons(updatedPolygons);
+  }
 
-  const handlePointerMove = () => {
-    setIsDragging(true);
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handlePointerUp = (event: any) => {
-    event.stopPropagation();
-    if (isDragging) return;
-
-    // adding a new point
-    if (polygonToolMode === PolygonToolMode.CREATE) {
-      const { x, y, z } = event.point;
-      const currentPolygon = polygons[polygons.length - 1];
-      const newPoint = new Vector3(x, y, z);
-
-      if (currentPolygon.length > 0 && currentPolygon[0].distanceTo(newPoint) < 0.1) {
-        // Complete the current polygon and start a new one
-        setPolygons([...polygons, []]);
-      } else {
-        // Add the new point to the current polygon
-        const updatedPolygons = [...polygons];
-        updatedPolygons[updatedPolygons.length - 1] = [...currentPolygon, newPoint];
-        setPolygons(updatedPolygons);
-      }
+  /**
+   * Taking a point, check if it is the first one in the current polygon.
+   * If it is, close the polygon.
+   */
+  const tryPolygonCompletion = (position: Vector3) => {
+    const currentPolygon = polygons[polygons.length - 1];
+    debugger;
+    if (currentPolygon.length < 3) {
+      toast.warn('Cannot complete a polygon with less than 3 points', { type: 'error' });
+      return;
     }
 
-    // selection
-    if(polygonToolMode === PolygonToolMode.EDIT) {
-      const { x, y, z } = event.point;
-      const clickedPoint = new Vector3(x, y, z);
-
-      // check if a point is selected
-      for (let i = 0; i < polygons.length; i++) {
-        for (let j = 0; j < polygons[i].length; j++) {
-          if (polygons[i][j].distanceTo(clickedPoint) < 0.1) {
-            setSelectedPolygon([i, j]);
-            return;
-          }
-        }
-      }
-
-      // if no point is selected, deselect
-      setSelectedPolygon([null, null]);
+    if (!currentPolygon.some(point => point.equals(position))) {
+      toast.warn('Cannot complete a polygon with a point that is not in the current polygon', { type: 'error' });
+      return;
     }
-  };
 
+    // check if the new position is the first point
+    const firstPoint = currentPolygon[0];
+    if (firstPoint === position) {
+      // close the polygon
+      setPolygons([...polygons, []]);
+
+    }
+  }
+
+  // Enter handler: complete polygon
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Enter') {
@@ -94,6 +81,7 @@ const PolygonCreator: React.FC = () => {
     };
   }, [polygons]);
 
+  // Backspace handler: delete selected point
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // This is a handler for the backspace key
@@ -153,32 +141,22 @@ const PolygonCreator: React.FC = () => {
   return (
     <>
       {/* surface */}
-      <mesh
-        rotation={[Math.PI / 2, 0, 0]}
-        position={[0, polygonHeight, 0]}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-      >
-        <planeGeometry args={[polygonSize, polygonSize]} />
-        <meshStandardMaterial
-          color="lightblue"
-          side={DoubleSide}
-          opacity={0.5}
-          transparent={true}
-        />
-      </mesh>
+      <CreatorSurface
+        addPoint={addPoint}
+      />
 
       {/* points */}
       {polygons.map((polygon, polygonIndex) => (
         <React.Fragment key={polygonIndex}>
           {polygon.map((point, pointIndex) => (
-            <VertexObject
+            <PolygonVertex
               key={`${polygonIndex}-${pointIndex}`}
               position={point}
               setPosition={(newPosition) => setPointPosition(polygonIndex, pointIndex, newPosition)}
               isSelected={polygonIndex === selectedPolygon[0] && pointIndex === selectedPolygon[1]}
-              color={getPointColor(polygonIndex, pointIndex, polygon)} />
+              setAsSelected={() => setSelectedPolygon([polygonIndex, pointIndex])}
+              color={getPointColor(polygonIndex, pointIndex, polygon)}
+              tryPolygonCompletion={tryPolygonCompletion} />
           ))}
           {polygon.length > 1 && (
             <line>
