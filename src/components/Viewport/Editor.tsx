@@ -32,9 +32,9 @@ const Editor = ({ model }: EditorProps) => {
         </div>
         <div className="flex items-start justify-end p-2">
           {/* Top Right Corner Content */}
-          {/* <div className="h-28 w-28" ref={aref}>
-            <Stats parent={aref} />
-          </div> */}
+          <div className="h-28 w-28">
+            {/* <Stats parent={aref} /> */}
+          </div>
         </div>
         <div className="flex flex-col items-start justify-end p-2 gap-1">
           {/* Bottom Left Corner Content */}

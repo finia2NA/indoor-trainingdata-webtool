@@ -2,17 +2,27 @@ import React, { useState } from 'react';
 
 import { DoubleSide, Vector3 } from 'three';
 import { useEffect } from 'react';
-import useEditorStore, { EditorState } from '../../hooks/useEditorStore.ts';
+import useEditorStore, { EditorState, PolygonToolMode } from '../../hooks/useEditorStore.ts';
+import { toast } from 'react-toastify';
 
 
 const PolygonCreator: React.FC = () => {
-  const { polygonHeight, polygonSize } = useEditorStore((state) => state as EditorState);
+  const { polygonHeight, polygonSize, polygonToolMode } = useEditorStore((state) => state as EditorState);
 
   // STATE
   // helper to avoid adding a point when dragging
   const [isDragging, setIsDragging] = useState(false);
   // poly list
   const [polygons, setPolygons] = useState<Vector3[][]>([[]]);
+  // currently selected poly in <polygonsIndex, pointIndex> format
+  const [selectedPolygon, setSelectedPolygon] = useState<[number | null, number | null]>([null, null]);
+
+  // reset selected poly when switching out of edit mode
+  useEffect(() => {
+    if (polygonToolMode !== PolygonToolMode.EDIT) {
+      setSelectedPolygon([null, null]);
+    }
+  }, [polygonToolMode]);
 
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,9 +71,42 @@ const PolygonCreator: React.FC = () => {
     };
   }, [polygons]);
 
-  // ...existing code...
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // This is a handler for the backspace key
+      if (event.key !== 'Backspace') return;
+
+      // If no polygon is selected, do nothing
+      const [polygonIndex, pointIndex] = selectedPolygon;
+      if (polygonIndex === null || pointIndex === null) return;
+
+      // If the polygon has only 3 points, give a warning and do nothing
+      if (polygons[polygonIndex].length <= 3) {
+        toast.warn('Cannot delete a point in a polygon of 3 points', { type: 'error' });
+        return;
+      }
+
+      // Golden path: remove the selected point
+      const updatedPolygons = [...polygons];
+      updatedPolygons[polygonIndex] = updatedPolygons[polygonIndex].filter(
+        (_: unknown, index: number | null) => index !== pointIndex
+      );
+      setPolygons(updatedPolygons);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [polygons, selectedPolygon]);
 
   const getPointColor = (polygonIndex: number, pointIndex: number, polygon: Vector3[]) => {
+    // selected is yellow
+    if (polygonIndex === selectedPolygon[0] && pointIndex === selectedPolygon[1]) {
+      return "yellow";
+    }
+
+    // polygon has first and last highlighted if it is not closed
     if (polygonIndex === polygons.length - 1) {
       if (pointIndex === 0) {
         return "green";
@@ -72,9 +115,10 @@ const PolygonCreator: React.FC = () => {
       } else {
         return "red";
       }
-    } else {
-      return "red";
     }
+
+    // default is red
+    return "red";
   };
 
   return (

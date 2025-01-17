@@ -3,6 +3,7 @@ import StartPage from './pages/StartPage';
 import Error404Page from './pages/Error404Page';
 import ViewPage from './pages/ViewPage';
 import TopBar from './components/TopBar';
+import { Flip, ToastContainer } from 'react-toastify';
 
 function App() {
   return (
@@ -18,6 +19,12 @@ function App() {
           </Routes>
         </div >
       </Router>
+      <ToastContainer
+        position='bottom-right'
+        transition={Flip}
+        hideProgressBar
+        theme="dark"
+      />
     </>
   );
 }
