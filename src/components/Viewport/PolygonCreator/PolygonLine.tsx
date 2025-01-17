@@ -37,7 +37,6 @@ const PolygonLine = ({ start, end, polygonIndex, addPoint }: PolygonLineProps) =
 
     intersection.stopPropagation();
     console.log("Line clicked");
-    debugger;
     addPoint(intersection.point, polygonIndex, start)
   }
 

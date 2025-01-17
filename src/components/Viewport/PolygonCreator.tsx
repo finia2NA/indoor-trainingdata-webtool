@@ -115,6 +115,7 @@ const PolygonCreator: React.FC = () => {
         (_: unknown, index: number | null) => index !== pointIndex
       );
       setPolygons(updatedPolygons);
+      setSelectedPolygon([null, null]);
     };
 
     window.addEventListener('keydown', handleKeyDown);
