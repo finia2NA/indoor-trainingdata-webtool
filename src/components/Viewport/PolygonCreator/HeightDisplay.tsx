@@ -1,4 +1,4 @@
-import { BufferGeometry, DoubleSide, Vector3 } from "three";
+import { BufferGeometry, DoubleSide, Vector3, BufferAttribute } from "three";
 import usePolygonStore, { PolygonState } from "../../../hooks/usePolygonStore";
 import { useEffect, useMemo, useRef } from "react";
 
@@ -40,34 +40,20 @@ const PolygonHeightDisplay = ({ polygon, height }: PolygonHeightDisplayProps) =>
   const positions = useMemo(() => vertices.flatMap((vertex) => [vertex.x, vertex.y, vertex.z]), [vertices]);
   const indices = useMemo(() => faces.flat().flat(), [faces]);
 
-  // update buffer geometry
+  // update buffer geometry on change
   useEffect(() => {
-    if (bufferRef.current && bufferRef.current.attributes.position && bufferRef.current.index) {
-      bufferRef.current.attributes.position.needsUpdate = true;
-      bufferRef.current.index.needsUpdate = true;
-    }
+    if (!bufferRef.current) return;
+    const geometry = new BufferGeometry();
+    geometry.setAttribute("position", new BufferAttribute(new Float32Array(positions), 3));
+    geometry.setIndex(indices);
+    bufferRef.current.copy(geometry);
   }, [positions, indices]);
 
   console.log("updated!")
   return (
     <>
       <mesh>
-        <bufferGeometry ref={bufferRef}>
-          {/* Add positions */}
-          <bufferAttribute
-            attach="attributes-position"
-            array={new Float32Array(positions)}
-            count={vertices.length}
-            itemSize={3}
-          />
-          {/* Add indices */}
-          <bufferAttribute
-            attach="index"
-            array={new Uint16Array(indices)}
-            count={indices.length}
-            itemSize={1}
-          />
-        </bufferGeometry>
+        <bufferGeometry ref={bufferRef} />
         <meshStandardMaterial color="red" side={DoubleSide} />
       </mesh>
       {vertices.map((vertex, index) => (

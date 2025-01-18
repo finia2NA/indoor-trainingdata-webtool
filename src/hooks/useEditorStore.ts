@@ -22,10 +22,10 @@ export enum TransformMode {
 }
 
 export enum PolygonToolMode {
+  NONE = 'none', // no tool selected
   CREATE = 'create', // Adding new polygons
   EDIT = 'edit', // moving/deleting points
   SPLICE = 'splice', // inserting points on lines
-  NONE = 'none', // no tool selected
 }
 
 export type EditorState = {
@@ -82,7 +82,7 @@ const useEditorStore = create((set) => ({
   polygonSize: 5,
   setPolygonSize: (newSize: number) => set({ polygonSize: newSize }),
 
-  polygonToolMode: PolygonToolMode.CREATE,
+  polygonToolMode: PolygonToolMode.NONE,
   setPolygonToolMode: (mode: PolygonToolMode) => set({ polygonToolMode: mode }),
 }));
 
