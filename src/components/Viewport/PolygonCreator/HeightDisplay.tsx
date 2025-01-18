@@ -12,7 +12,6 @@ const PolygonHeightDisplay = ({ polygon, height }: PolygonHeightDisplayProps) =>
   // enable updates
   const bufferRef = useRef<BufferGeometry | null>(null);
 
-
   // Get verts
   const vertices = useMemo(() => {
     const upperVerts = polygon.map((point) => point.clone().add(new Vector3(0, height, 0)));
@@ -20,8 +19,8 @@ const PolygonHeightDisplay = ({ polygon, height }: PolygonHeightDisplayProps) =>
     return [...upperVerts, ...lowerVerts];
   }, [polygon, height]);
 
-  // Get side faces
   const faces = useMemo(() => {
+    // Get side faces
     const upper = (index: number) => index % polygon.length;
     const lower = (index: number) => (index % polygon.length) + polygon.length;
     const result = [];
@@ -31,10 +30,18 @@ const PolygonHeightDisplay = ({ polygon, height }: PolygonHeightDisplayProps) =>
         [upper(i), lower(i + 1), upper(i + 1)],
       ]);
     }
+    // Get upper faces
+    for (let i = 0; i < polygon.length; i++) {
+      result.push([
+        [upper(0), upper(i), upper(i + 1)],
+        [lower(0), lower(i + 1), lower(i)],
+      ]);
+
+    }
     return result;
   }, [polygon]);
 
-  // Get upper faces (TODO)
+
 
   // create data for geometry
   const positions = useMemo(() => vertices.flatMap((vertex) => [vertex.x, vertex.y, vertex.z]), [vertices]);
@@ -49,17 +56,16 @@ const PolygonHeightDisplay = ({ polygon, height }: PolygonHeightDisplayProps) =>
     bufferRef.current.copy(geometry);
   }, [positions, indices]);
 
-  console.log("updated!")
   return (
     <>
       <mesh>
         <bufferGeometry ref={bufferRef} />
-        <meshStandardMaterial color="red" side={DoubleSide} />
+        <meshStandardMaterial color="red" opacity={0.5} transparent={true} />
       </mesh>
       {vertices.map((vertex, index) => (
         <mesh key={index} position={vertex}>
-          <sphereGeometry args={[0.03, 16, 16]} />
-          <meshStandardMaterial color="blue" opacity={0.5} transparent={true} />
+          <sphereGeometry args={[0.02, 16, 16]} />
+          <meshStandardMaterial color="blue" />
         </mesh>
       ))}
     </>
