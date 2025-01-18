@@ -4,7 +4,7 @@ import WrappedOrbitControls from './WrappedOrbitControls';
 import useEditorStore, { EditorMode, EditorState } from '../../hooks/useEditorStore';
 import SwitchableCamera from './SwitchableCamera';
 import SceneObject from './SceneObject';
-import PolygonCreator from './PolygonCreator';
+import PolygonCreator from './PolygonCreator/PolygonCreator';
 import LabeledAxesHelper from './LabeledAxesHelper';
 
 interface ViewportProps {

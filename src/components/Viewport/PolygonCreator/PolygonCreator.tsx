@@ -5,12 +5,13 @@ import React, { Fragment, useState } from 'react';
 
 import { Vector3 } from 'three';
 import { useEffect } from 'react';
-import useEditorStore, { EditorState, PolygonToolMode } from '../../hooks/useEditorStore.ts';
+import useEditorStore, { EditorMode, EditorState, PolygonToolMode } from '../../../hooks/useEditorStore.ts';
 import { toast, ToastContentProps } from 'react-toastify';
-import PolygonVertex from './PolygonCreator/PolygonVertex.tsx';
-import CreatorSurface from './PolygonCreator/CreatorSurface.tsx';
-import PolygonLine from './PolygonCreator/PolygonLine.tsx';
-import usePolygonStore, { PolygonState } from '../../hooks/usePolygonStore.ts';
+import PolygonVertex from './PolygonVertex.tsx';
+import CreatorSurface from './CreatorSurface.tsx';
+import PolygonLine from './PolygonLine.tsx';
+import usePolygonStore, { PolygonState } from '../../../hooks/usePolygonStore.ts';
+import HeightDisplay from './HeightDisplay.tsx';
 
 const PolygonDeletionToast = ({ closeToast }: ToastContentProps) => {
   return (
@@ -191,9 +192,11 @@ const PolygonCreator: React.FC = () => {
   return (
     <>
       {/* surface */}
-      <CreatorSurface
-        addPoint={addPoint}
-      />
+      {editorMode === EditorMode.MAP && (
+        <CreatorSurface
+          addPoint={addPoint}
+        />
+      )}
 
       {/* points */}
       {polygons.map((polygon, polygonIndex) => (
@@ -231,6 +234,9 @@ const PolygonCreator: React.FC = () => {
           ))}
         </Fragment>
       ))}
+
+      {/* Height Display */}
+      <HeightDisplay />
 
       {/* Debug cube */}
       <mesh position={[0, 0, 0]} onClick={(e) => { e.stopPropagation(); console.log(polygons) }}>

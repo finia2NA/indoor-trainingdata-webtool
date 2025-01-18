@@ -34,7 +34,7 @@ const usePolygonStore = create<PolygonState>()(
       selectedPolygon: [null, null],
       setSelectedPolygon: (selectedPolygon) => set({ selectedPolygon }),
 
-      offset: 0,
+      offset: 1,
       setOffset: (offset) => set({ offset }),
     }),
     {
