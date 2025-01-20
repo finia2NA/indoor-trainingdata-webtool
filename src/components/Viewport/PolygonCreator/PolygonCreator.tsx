@@ -59,7 +59,6 @@ const PolygonCreator: React.FC = () => {
     if (firstPoint === position) {
       // close the polygon
       setPolygons([...polygons, []]);
-
     }
   }
 
@@ -124,6 +123,7 @@ const PolygonCreator: React.FC = () => {
     const updatedPolygons = [...polygons];
     updatedPolygons[polygonIndex][pointIndex] = newPosition;
     setPolygons(updatedPolygons);
+    // console.log('setting position');
   }
 
   return (

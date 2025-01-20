@@ -1,5 +1,5 @@
-import { BufferGeometry, DoubleSide, Vector3, BufferAttribute } from "three";
-import usePolygonStore, { PolygonState } from "../../../hooks/usePolygonStore";
+import { BufferGeometry, Vector3, BufferAttribute } from "three";
+import usePolygonStore from "../../../hooks/usePolygonStore";
 import { useEffect, useMemo, useRef } from "react";
 
 type PolygonHeightDisplayProps = {
@@ -80,7 +80,7 @@ const HeightDisplay = () => {
   return (
     <>
       {polygons.map((polygon, index) => (
-        <PolygonHeightDisplay key={index} polygon={polygon} height={offset} />
+        <PolygonHeightDisplay key={index} polygon={polygon.slice()} height={offset} />
       ))}
     </>
   );

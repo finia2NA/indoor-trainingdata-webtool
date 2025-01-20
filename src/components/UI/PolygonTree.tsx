@@ -75,8 +75,6 @@ const Polygontree = () => {
       })),
     }));
   }, [polygons]);
-  console.log(data);
-
 
 
   return (
