@@ -75,12 +75,7 @@ const PolygonHeightDisplay = ({ polygon, height }: PolygonHeightDisplayProps) =>
 
 
 const HeightDisplay = () => {
-  const { getPolygons, offset } = usePolygonStore((state) => ({
-    getPolygons: state.getPolygons,
-    offset: state.offset,
-  }));
-
-  const polygons = getPolygons();
+  const { polygons, offset } = usePolygonStore();
 
   return (
     <>

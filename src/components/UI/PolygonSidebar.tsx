@@ -1,6 +1,7 @@
 import useEditorStore, { EditorState } from "../../hooks/useEditorStore.ts";
 import { InteractiveInput } from '@designbyadrian/react-interactive-input';
 import SidebarSection from "./SidebarSection.tsx";
+import PolygonTree from "./PolygonTree.tsx";
 
 
 
@@ -40,9 +41,7 @@ const PolygonSidebar: React.FC = () => {
         ))}
       </SidebarSection>
       <SidebarSection className="m-2" title="Polygons">
-
-
-
+        <PolygonTree />
       </SidebarSection>
     </>
   );
