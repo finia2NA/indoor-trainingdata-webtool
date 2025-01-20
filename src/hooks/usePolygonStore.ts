@@ -39,7 +39,10 @@ const usePolygonStore = create<PolygonState>()(
       selectedPolygon: [null, null],
       setSelectedPolygon: (selectedPolygon) => set({ selectedPolygon }),
       deletePolygon: (index) => {
-        const updatedPolygons = [...get().polygons.slice(0, index), ...get().polygons.slice(index + 1)];
+        let updatedPolygons = [...get().polygons.slice(0, index), ...get().polygons.slice(index + 1)];
+        if (updatedPolygons.length === 0) {
+          updatedPolygons = [[]];
+        }
         set({ polygons: updatedPolygons });
       },
       deletePoint: (polygonIndex, pointIndex) => {
