@@ -33,7 +33,7 @@ const Viewport = ({ model }: ViewportProps) => {
       <directionalLight position={[10, 10, 5]} intensity={1} />
 
       <SceneObject model={model} />
-      {editorMode === EditorMode.MAP && <PolygonCreator />}
+      {[EditorMode.MAP, EditorMode.GENERATE].includes(editorMode) && <PolygonCreator />}
 
       <WrappedOrbitControls />
       {/* <OrbitControls /> */}

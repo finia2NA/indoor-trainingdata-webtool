@@ -173,7 +173,8 @@ const PolygonCreator: React.FC = () => {
       ))}
 
       {/* Height Display */}
-      <HeightDisplay />
+      {editorMode === EditorMode.GENERATE && <HeightDisplay />}
+
 
       {/* Debug cube */}
       <mesh position={[0, 0, 0]} onClick={(e) => { e.stopPropagation(); console.log(polygons) }}>

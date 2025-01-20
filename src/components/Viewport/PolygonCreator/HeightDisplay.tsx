@@ -1,6 +1,7 @@
-import { BufferGeometry, Vector3, BufferAttribute } from "three";
+import { BufferGeometry, Vector3, BufferAttribute, DoubleSide } from "three";
 import usePolygonStore from "../../../hooks/usePolygonStore";
 import { useEffect, useMemo, useRef } from "react";
+import earcut from 'earcut';
 
 type PolygonHeightDisplayProps = {
   polygon: Vector3[];
@@ -30,14 +31,26 @@ const PolygonHeightDisplay = ({ polygon, height }: PolygonHeightDisplayProps) =>
         [upper(i), lower(i + 1), upper(i + 1)],
       ]);
     }
-    // Get upper faces
-    for (let i = 0; i < polygon.length; i++) {
-      result.push([
-        [upper(0), upper(i), upper(i + 1)],
-        [lower(0), lower(i + 1), lower(i)],
-      ]);
 
+
+    // Get upper+lower faces
+    // advanced using earcut
+    const a = polygon.flatMap((point) => [point.x, point.y, point.z]);
+    const earcutIndices = earcut(a, undefined, 3);
+    for (let i = 0; i < earcutIndices.length; i += 3) {
+      result.push([
+        [lower(earcutIndices[i]), lower(earcutIndices[i + 2]), lower(earcutIndices[i + 1])],
+        [upper(earcutIndices[i]), upper(earcutIndices[i + 2]), upper(earcutIndices[i + 1])],
+      ]);
     }
+    // Naive: only works for convex polygons
+    // for (let i = 0; i < polygon.length; i++) {
+    //   result.push([
+    //     [upper(0), upper(i), upper(i + 1)],
+    //     [lower(0), lower(i + 1), lower(i)],
+    //   ]);
+    // }
+
     return result;
   }, [polygon]);
 
@@ -60,7 +73,7 @@ const PolygonHeightDisplay = ({ polygon, height }: PolygonHeightDisplayProps) =>
     <>
       <mesh>
         <bufferGeometry ref={bufferRef} />
-        <meshStandardMaterial color="red" opacity={0.5} transparent={true} />
+        <meshStandardMaterial color="red" opacity={0.5} side={DoubleSide} transparent={true} />
       </mesh>
       {vertices.map((vertex, index) => (
         <mesh key={index} position={vertex}>
