@@ -3,6 +3,7 @@ import useMultiTransformationStore from '../../hooks/useTransforms';
 import { LuExpand, LuMove, LuRotate3D } from "react-icons/lu";
 import useEditorStore, { EditorState } from '../../hooks/useEditorStore';
 import { InteractiveInput } from '@designbyadrian/react-interactive-input';
+import SidebarSection from './SidebarSection';
 
 
 
@@ -72,7 +73,7 @@ const SingleChannel = ({ name, values, onChange, step = 1, min = -100, max = 100
   )
 }
 
-const Channelbox = () => {
+const LayoutSidebar = () => {
   const { id } = useParams();
   const idnum = Number(id);
 
@@ -117,19 +118,17 @@ const Channelbox = () => {
 
   return (
     <>
-      <h2 className='text-2xl p-1'>Channelbox</h2>
-      <hr />
-      <div className='flex flex-col p-1 gap-1'>
+      <SidebarSection title="Channelbox">
         <SingleChannel name="Translate" min={-10} max={10} step={0.1}
           values={myTransformation.translation} onChange={translateSetter} />
         <SingleChannel name="Rotate" min={-Math.PI} max={Math.PI} step={0.05}
           values={myTransformation.rotation} onChange={rotateSetter} />
         <SingleChannel name="Scale" min={0.1} max={3} step={0.1}
           values={myTransformation.scale} onChange={scaleSetter} />
-      </div>
+      </SidebarSection>
     </>
   )
 
 };
 
-export default Channelbox;
+export default LayoutSidebar;

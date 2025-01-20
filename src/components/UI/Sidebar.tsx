@@ -1,5 +1,5 @@
 import useEditorStore, { EditorState } from "../../hooks/useEditorStore";
-import Channelbox from "./Channelbox";
+import LayoutSidebar from "./LayoutSidebar";
 import Progress from "./Progress";
 import PolygonSidebar from "./PolygonSidebar";
 
@@ -17,7 +17,7 @@ const Sidebar: React.FC = () => {
       <div className="text-white">
 
         {editorMode === 'layout' &&
-          <Channelbox />
+          <LayoutSidebar />
         }
         {editorMode === 'map' &&
           <PolygonSidebar />
