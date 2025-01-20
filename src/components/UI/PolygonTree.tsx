@@ -1,6 +1,6 @@
 import { Tree } from "react-arborist";
 import usePolygonStore from "../../hooks/usePolygonStore.ts";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { PiDotFill, PiFolder, PiPolygon, PiTrash } from "react-icons/pi";
 
 type NodeType = {
@@ -11,8 +11,6 @@ type NodeType = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dragHandle?: any
 };
-
-import { useState } from "react";
 
 function Node({ node, style, dragHandle }: NodeType) {
   const [isHovered, setIsHovered] = useState(false);
@@ -51,11 +49,8 @@ function Node({ node, style, dragHandle }: NodeType) {
   );
 }
 
-
 const Polygontree = () => {
-
   const { polygons } = usePolygonStore();
-
 
   const data = useMemo(() => {
     return polygons.map((polygon, polygonIndex) => ({
@@ -63,23 +58,17 @@ const Polygontree = () => {
       name: `Polygon ${polygonIndex}`,
       type: 'Polygon',
       children: polygon.map((point, pointIndex) => ({
-        id: `Point-${pointIndex}`,
+        id: `Poly-${polygonIndex}-Point-${pointIndex}`,
         name: `Point ${pointIndex}`,
         type: 'Point',
         coord: point,
-        // children: [
-        //   { id: `Coord-${polygonIndex}-${pointIndex}-x`, name: `x: ${point.x.toFixed(2)}` },
-        //   { id: `Coord-${polygonIndex}-${pointIndex}-y`, name: `y: ${point.y.toFixed(2)}` },
-        //   { id: `Coord-${polygonIndex}-${pointIndex}-z`, name: `z: ${point.z.toFixed(2)}` },
-        // ],
       })),
     }));
   }, [polygons]);
 
-
   return (
     <>
-      <Tree initialData={data}>
+      <Tree data={data}>
         {Node}
       </Tree>
     </>
