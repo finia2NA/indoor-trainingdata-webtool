@@ -1,7 +1,8 @@
-import useEditorStore, { EditorState } from "../../hooks/useEditorStore";
+import useEditorStore, { EditorMode, EditorState } from "../../../hooks/useEditorStore";
 import LayoutSidebar from "./LayoutSidebar";
-import Progress from "./Progress";
+import Progress from "../Progress";
 import PolygonSidebar from "./PolygonSidebar";
+import GenerateSidebar from "./GenerateSidebar";
 
 
 const Sidebar: React.FC = () => {
@@ -16,11 +17,14 @@ const Sidebar: React.FC = () => {
       <Progress />
       <div className="text-white">
 
-        {editorMode === 'layout' &&
+        {editorMode === EditorMode.LAYOUT &&
           <LayoutSidebar />
         }
-        {editorMode === 'map' &&
+        {editorMode === EditorMode.MAP &&
           <PolygonSidebar />
+        }
+        {editorMode === EditorMode.GENERATE &&
+          <GenerateSidebar />
         }
 
 

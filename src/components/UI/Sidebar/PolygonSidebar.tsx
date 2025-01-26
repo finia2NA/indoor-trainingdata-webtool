@@ -1,4 +1,4 @@
-import useEditorStore, { EditorState } from "../../hooks/useEditorStore.ts";
+import useEditorStore, { EditorState } from "../../../hooks/useEditorStore.ts";
 import { InteractiveInput } from '@designbyadrian/react-interactive-input';
 import SidebarSection from "./SidebarSection.tsx";
 import PolygonTree from "./PolygonTree.tsx";

@@ -1,5 +1,5 @@
 import { Tree } from "react-arborist";
-import usePolygonStore from "../../hooks/usePolygonStore.ts";
+import usePolygonStore from "../../../hooks/usePolygonStore";
 import { useMemo, useState } from "react";
 import { PiDotFill, PiFolder, PiPolygon, PiTrash } from "react-icons/pi";
 import { InteractiveInput } from "@designbyadrian/react-interactive-input";
