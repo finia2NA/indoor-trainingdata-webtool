@@ -9,7 +9,9 @@ const GenerateSidebar = () => {
 
   return (
     <SidebarSection title="Generate">
+      <label htmlFor="offset" className="block text-sm font-medium text-gray-700">Offset</label>
       <InteractiveInput
+        id="offset"
         className='w-32 text-right bg-dim_gray basis-1/3'
         type="number"
         min={0} max={1} step={0.01}
@@ -17,7 +19,14 @@ const GenerateSidebar = () => {
         onChange={(e) => setOffset(parseFloat(e.target.value))}
       />
 
+      {/* Mode: single, pair */}
+      {/* If pair, distance */}
 
+      {/* Angle */}
+
+      {/* Format */}
+
+      {/* #images */}
     </SidebarSection>
   )
 

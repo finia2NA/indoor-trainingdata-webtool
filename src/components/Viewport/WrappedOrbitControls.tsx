@@ -38,42 +38,42 @@ const WrappedOrbitControls = React.memo((props: OrbitControlsProps) => {
   }, [updateOrbitAngles]);
 
   // @ts-expect-error aaa 
-  const theRef = useRef<OrbitControls>(null);
+  const controlsRef = useRef<OrbitControls>(null);
 
   useEffect(() => {
-    if (theRef.current) {
+    if (controlsRef.current) {
       let updated = false;
 
-      if (theRef.current.azimuthAngle !== azimuthAngle) {
-        theRef.current.minAzimuthAngle = azimuthAngle;
-        theRef.current.maxAzimuthAngle = azimuthAngle;
+      if (controlsRef.current.azimuthAngle !== azimuthAngle) {
+        controlsRef.current.minAzimuthAngle = azimuthAngle;
+        controlsRef.current.maxAzimuthAngle = azimuthAngle;
         updated = true;
       }
-      if (theRef.current.polarAngle !== polarAngle) {
-        theRef.current.minPolarAngle = polarAngle;
-        theRef.current.maxPolarAngle = polarAngle;
+      if (controlsRef.current.polarAngle !== polarAngle) {
+        controlsRef.current.minPolarAngle = polarAngle;
+        controlsRef.current.maxPolarAngle = polarAngle;
         updated = true;
       }
 
       if (updated) {
-        theRef.current.update();
+        controlsRef.current.update();
       }
 
       // reset
-      theRef.current.minAzimuthAngle = -Infinity;
-      theRef.current.maxAzimuthAngle = Infinity;
-      theRef.current.minPolarAngle = 0;
-      theRef.current.maxPolarAngle = Math.PI;
+      controlsRef.current.minAzimuthAngle = -Infinity;
+      controlsRef.current.maxAzimuthAngle = Infinity;
+      controlsRef.current.minPolarAngle = 0;
+      controlsRef.current.maxPolarAngle = Math.PI;
     }
   }, [azimuthAngle, polarAngle]);
 
   return (isTransforming ? null :
     <OrbitControls
-      ref={theRef}
+      ref={controlsRef}
       onChange={() => {
-        if (theRef.current) {
-          updateAzimuthAngle(theRef.current.getAzimuthalAngle());
-          updatePolarAngle(theRef.current.getPolarAngle());
+        if (controlsRef.current) {
+          updateAzimuthAngle(controlsRef.current.getAzimuthalAngle());
+          updatePolarAngle(controlsRef.current.getPolarAngle());
         }
       }}
       {...props}

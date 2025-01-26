@@ -6,6 +6,7 @@ import SwitchableCamera from './SwitchableCamera';
 import SceneObject from './SceneObject';
 import PolygonCreator from './PolygonCreator/PolygonCreator';
 import LabeledAxesHelper from './LabeledAxesHelper';
+import { useRef } from 'react';
 
 interface ViewportProps {
   model: Model3D;
@@ -26,6 +27,9 @@ const raycasterParams = {
 const Viewport = ({ model }: ViewportProps) => {
 
   const { showGrid, editorMode } = useEditorStore((state) => (state as EditorState));
+  // const cameraRef = useRef(null);
+
+  // console.log(cameraRef)
 
   return (
     <Canvas raycaster={{ params: raycasterParams }}>
@@ -45,6 +49,7 @@ const Viewport = ({ model }: ViewportProps) => {
       }
       <color attach="background" args={['#484848']} />
 
+      {/* <SwitchableCamera ref={cameraRef} /> */}
       <SwitchableCamera />
     </Canvas>
   );
