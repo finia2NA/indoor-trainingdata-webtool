@@ -146,7 +146,7 @@ const ViewcubeViz = () => {
       <ambientLight />
       <pointLight position={[10, 10, 10]} />
       <Cube setOrbitAngles={setOrbitAngles} />
-      <WrappedOrbitControls enablePan={false} />
+      <WrappedOrbitControls enablePan={false} useCase='cube' />
     </Canvas>
   );
 };

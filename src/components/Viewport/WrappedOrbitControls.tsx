@@ -3,7 +3,11 @@ import React, { useEffect, useRef, useCallback } from "react";
 import useOrbitAngleStore from "../../hooks/useOrbitAngleStore";
 import useOrbitTransformSync from "../../hooks/useOrbitTransformSync";
 
-const WrappedOrbitControls = React.memo((props: OrbitControlsProps) => {
+interface WrappedOrbitControlsProps extends OrbitControlsProps {
+  useCase?: 'cube' | 'viewport';
+}
+
+const WrappedOrbitControls = React.memo((props: WrappedOrbitControlsProps) => {
 
   // get shared orbit state
   const { orbitAngles, updateOrbitAngles } = useOrbitAngleStore((state) => state);
@@ -70,6 +74,7 @@ const WrappedOrbitControls = React.memo((props: OrbitControlsProps) => {
   return (isTransforming ? null :
     <OrbitControls
       ref={controlsRef}
+      enableZoom={!(props.useCase === 'cube')}
       onChange={() => {
         if (controlsRef.current) {
           updateAzimuthAngle(controlsRef.current.getAzimuthalAngle());
