@@ -11,14 +11,14 @@ export class Model3D implements ModelWithoutContent {
   id?: number;
   name: string;
   size: number;
-  content: string;
+  content: Blob;
   transform: Transformation;
 
-  constructor(file: File, fileData: ArrayBuffer) {
+  constructor(file: File) {
     this.name = file.name;
     this.size = file.size;
 
-    this.content = new TextDecoder().decode(fileData);
+    this.content = file;
     this.transform = new Transformation();
   }
 }
@@ -31,13 +31,18 @@ class MyAppDatabase extends Dexie {
   constructor() {
     super('webtool');
     this.version(1).stores({
-      models: '++id, name, content, size, transform',
+      models: '++id, name, size, transform',
     });
   }
 
   // Data manipulation methods
   async addModel(model: Model3D): Promise<number> {
-    return await this.models.add(model);
+    return await this.models.put({
+      name: model.name,
+      size: model.size,
+      content: model.content,
+      transform: model.transform
+    });
   }
 
   /**

@@ -32,26 +32,23 @@ const SceneObject = ({ model }: SceneObjectProps) => {
     const filetype = model.name.split('.').pop();
     console.log(filetype);
 
-    const url = URL.createObjectURL(new Blob([model.content]));
+    const url = URL.createObjectURL(model.content);
+    console.log(url);
+
     switch (filetype) {
       case 'glb':
       case 'gltf':
         const gltfLoader = new GLTFLoader();
-        // gltfLoader.load(url, (gltf) => {
-        //   setObject3D(gltf.scene);
-        // });
-        gltfLoader.parse(model.content, '', (gltf) => {
+        gltfLoader.load(url, (gltf) => {
           setObject3D(gltf.scene);
         });
         break;
       case 'fbx':
+        console.warn('FBX files are not fully supported. Expect weird textures.');
         const fbxLoader = new FBXLoader();
-        // fbxLoader.load(url, (object) => {
-        //   setObject3D(object);
-        // });
-        // fbxLoader.parse(model.content, (object) => {
-        //   setObject3D(object);
-        // });
+        fbxLoader.load(url, (object) => {
+          setObject3D(object);
+        });
         break;
       default:
         console.error(`Unsupported file type: ${filetype}`);
