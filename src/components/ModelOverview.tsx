@@ -14,7 +14,7 @@ const ModelOverview = () => {
 
   const onRename = (name: string, id?: number) => {
     if (id === undefined) return;
-    console.log(id);
+    console.log(`Renaming project ${id} to ${name}`);
 
     const newName = prompt('Enter the new name for the model:', name);
     if (newName === null || newName === "") return;
@@ -24,7 +24,7 @@ const ModelOverview = () => {
 
   const onDelete = async (id?: number) => {
     if (id === undefined) return;
-    console.log(id);
+    console.log(`Deleting project ${id}`);
 
     await db.deleteModel(id);
   };

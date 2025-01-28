@@ -5,14 +5,12 @@ import db, { Model3D } from '../data/db';
 const UploadComponent: React.FC = () => {
   const onDrop = async (acceptedFiles: File[]) => {
     for (const file of acceptedFiles) {
-      const fileData = await file.arrayBuffer();
-
-      const model3D: Model3D = new Model3D(file, fileData);
+      const model3D: Model3D = new Model3D(file);
 
       // Add the file to the database
       // await db.addModel({ name, content, size });
       await db.addModel(model3D);
-      console.log(`File ${name} added to the database`);
+      console.log(`File ${model3D.name} added to the database`);
     }
   };
 
