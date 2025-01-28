@@ -8,6 +8,7 @@ import useEditorStore, { EditorState } from '../../hooks/useEditorStore';
 import { TransformControls } from '@react-three/drei';
 import useOrbitTransformSync from '../../hooks/useOrbitTransformSync';
 import Transformation from '../../data/Transformation';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
 interface SceneObjectProps {
   model: Model3D;
@@ -18,6 +19,7 @@ const SceneObject = ({ model }: SceneObjectProps) => {
   if (!model) throw new Error('No model provided');
   if (!model.id) throw new Error('No model id provided');
 
+
   // Getting current model transformation
   const { getTransformation, setTransformation } = useMultiTransformationStore();
   const transformation = getTransformation(model.id);
@@ -26,10 +28,34 @@ const SceneObject = ({ model }: SceneObjectProps) => {
   // Load scene and apply transformation
   const [object3D, setObject3D] = useState<Group<Object3DEventMap> | null>(null);
   useEffect(() => {
-    const loader = new GLTFLoader();
-    loader.parse(model.content, '', (gltf) => {
-      setObject3D(gltf.scene);
-    });
+
+    const filetype = model.name.split('.').pop();
+    console.log(filetype);
+
+    const url = URL.createObjectURL(new Blob([model.content]));
+    switch (filetype) {
+      case 'glb':
+      case 'gltf':
+        const gltfLoader = new GLTFLoader();
+        // gltfLoader.load(url, (gltf) => {
+        //   setObject3D(gltf.scene);
+        // });
+        gltfLoader.parse(model.content, '', (gltf) => {
+          setObject3D(gltf.scene);
+        });
+        break;
+      case 'fbx':
+        const fbxLoader = new FBXLoader();
+        // fbxLoader.load(url, (object) => {
+        //   setObject3D(object);
+        // });
+        // fbxLoader.parse(model.content, (object) => {
+        //   setObject3D(object);
+        // });
+        break;
+      default:
+        console.error(`Unsupported file type: ${filetype}`);
+    }
   }, [model]);
   // Apply transformation to object
   useEffect(() => {
