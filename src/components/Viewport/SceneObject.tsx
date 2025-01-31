@@ -30,10 +30,8 @@ const SceneObject = ({ model }: SceneObjectProps) => {
   useEffect(() => {
 
     const filetype = model.name.split('.').pop();
-    console.log(filetype);
 
     const url = URL.createObjectURL(model.content);
-    console.log(url);
 
     switch (filetype) {
       case 'glb':

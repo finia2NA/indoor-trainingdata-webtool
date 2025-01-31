@@ -1,7 +1,7 @@
 import { Model3D } from "../../data/db"
 import useEditorStore, { EditorMode, EditorState } from "../../hooks/useEditorStore";
 import { PolygonCreatorToggles, TransformToggles, ViewmodeToggles } from "./Multitoggle"
-import ViewcubeViz from "./ViewcubeViz"
+import ViewcubeViz from "./Minipanels/ViewcubeViz"
 import Viewport from "./Viewport"
 
 interface EditorProps {
