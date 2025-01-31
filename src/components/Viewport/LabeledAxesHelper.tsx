@@ -17,7 +17,7 @@ function htmlStyle(axis: string) {
 
 const LabeledAxesHelper: React.FC<LabeledAxesHelperProps> = ({ size = 5 }) => {
   const { showLabels } = useEditorStore((state) => (state as EditorState));
-  
+
   return (
     <>
       <axesHelper args={[size]} />

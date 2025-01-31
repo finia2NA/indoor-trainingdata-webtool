@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber';
-import WrappedOrbitControls from './WrappedOrbitControls';
+import WrappedOrbitControls from '../WrappedOrbitControls';
 import * as THREE from 'three';
-import useOrbitAngleStore from '../../hooks/useOrbitAngleStore';
+import useOrbitAngleStore from '../../../hooks/useOrbitAngleStore';
 
 // eslint-disable-next-line no-unused-vars
 enum CUBEFACE {
