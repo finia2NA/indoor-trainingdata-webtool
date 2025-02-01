@@ -6,7 +6,6 @@ import SwitchableCamera from './SwitchableCamera';
 import SceneObject from './SceneObject';
 import PolygonCreator from './PolygonCreator/PolygonCreator';
 import LabeledAxesHelper from './LabeledAxesHelper';
-import { useRef } from 'react';
 
 interface ViewportProps {
   model: Model3D;
@@ -37,6 +36,7 @@ const Viewport = ({ model }: ViewportProps) => {
       <directionalLight position={[10, 10, 5]} intensity={1} />
 
       <SceneObject model={model} />
+
       {[EditorMode.MAP, EditorMode.GENERATE].includes(editorMode) && <PolygonCreator />}
 
       <WrappedOrbitControls />
