@@ -5,10 +5,13 @@ import { useState } from "react";
 import { Slider } from "@mui/material";
 import AngleDisplay from "../../Viewport/Minipanels/AngleDisplay";
 import DistributionViz from "../../Viewport/Minipanels/DistributionViz";
+import { useParams } from "react-router-dom";
 
 
 const GenerateSidebar = () => {
-  const { offset, setOffset } = usePolygonStore();
+  const id = Number(useParams<{ id: string }>().id);
+  const { getOffset, setOffset } = usePolygonStore();
+  const offset = getOffset(id);
 
 
   const [angles, setAngles] = useState([-10, 10]);
@@ -44,7 +47,7 @@ const GenerateSidebar = () => {
             type="number"
             min={0} max={1} step={0.01}
             value={offset}
-            onChange={(e) => setOffset(parseFloat(e.target.value))}
+            onChange={(e) => setOffset(id, parseFloat(e.target.value))}
           />
         </div>
 

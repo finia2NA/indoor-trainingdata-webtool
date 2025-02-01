@@ -3,6 +3,7 @@ import usePolygonStore from "../../../hooks/usePolygonStore";
 import { useMemo, useState } from "react";
 import { PiDotFill, PiFolder, PiPolygon, PiTrash } from "react-icons/pi";
 import { InteractiveInput } from "@designbyadrian/react-interactive-input";
+import { useParams } from "react-router-dom";
 
 type CoordinateProps = {
   x: number,
@@ -53,8 +54,10 @@ const Coordinate = ({ x, y, z, handleLocationChange }: CoordinateProps) => {
 }
 
 function Node({ node, style, dragHandle }: NodeProps) {
+  const id = Number(useParams<{ id:string }>().id);
   const [isHovered, setIsHovered] = useState(false);
-  const { setPolygons, polygons, setSelectedPolygon, deletePolygon, deletePoint } = usePolygonStore();
+  const { getPolygons, setPolygons, setSelectedPolygon, deletePolygon, deletePoint } = usePolygonStore();
+  const polygons = getPolygons(id);
 
   const type = node.data.type;
 
@@ -73,17 +76,17 @@ function Node({ node, style, dragHandle }: NodeProps) {
 
   const handleNodeClick = () => {
     if (type === 'Point') {
-      setSelectedPolygon([node.data.polygonIndex, node.data.pointIndex]);
+      setSelectedPolygon(id, [node.data.polygonIndex, node.data.pointIndex]);
     }
   };
 
   const handleTrashClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (type === 'Point') {
-      deletePoint(node.data.polygonIndex, node.data.pointIndex);
+      deletePoint(id, node.data.polygonIndex, node.data.pointIndex);
     }
     if (type === 'Polygon') {
-      deletePolygon(node.data.polygonIndex);
+      deletePolygon(id, node.data.polygonIndex);
     }
   };
 
@@ -93,7 +96,7 @@ function Node({ node, style, dragHandle }: NodeProps) {
       const newLocation = oldLocation.clone().setComponent(index, newValue);
       const updatedPolygons = [...polygons];
       updatedPolygons[node.data.polygonIndex][node.data.pointIndex] = newLocation;
-      setPolygons(updatedPolygons);
+      setPolygons(id, updatedPolygons);
     }
   }
 
@@ -121,7 +124,10 @@ function Node({ node, style, dragHandle }: NodeProps) {
 }
 
 const Polygontree = () => {
-  const { polygons, selectedPolygon } = usePolygonStore();
+  const id = Number(useParams<{ id:string }>().id);
+  const { getPolygons, getSelectedPolygon} = usePolygonStore();
+  const polygons = getPolygons(id);
+  const selectedPolygon = getSelectedPolygon(id);
 
   const data = useMemo(() => {
     return polygons.map((polygon, polygonIndex) => ({

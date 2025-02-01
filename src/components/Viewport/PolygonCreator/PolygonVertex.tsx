@@ -1,6 +1,6 @@
 import { TransformControls } from "@react-three/drei";
 import { Mesh, Vector3 } from "three";
-import useOrbitTransformSync from "../../../hooks/useOrbitTransformSync";
+import useTransformingSync from "../../../hooks/useTransformingSync";
 import { useEffect, useRef, useState } from "react";
 import useEditorStore, { EditorState, PolygonToolMode } from "../../../hooks/useEditorStore";
 
@@ -16,7 +16,7 @@ interface VertexObjectProps {
 }
 
 const PolygonVertex: React.FC<VertexObjectProps> = ({ position, setPosition, isSelected, setAsSelected, color, tryPolygonCompletion }) => {
-  const { setIsTransforming } = useOrbitTransformSync();
+  const { setIsTransforming } = useTransformingSync();
   const { polygonToolMode } = useEditorStore((state) => state as EditorState);
 
   // keep a ref and  a state for manipulation

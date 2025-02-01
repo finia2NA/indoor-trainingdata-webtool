@@ -12,16 +12,19 @@ import CreatorSurface from './CreatorSurface.tsx';
 import PolygonLine from './PolygonLine.tsx';
 import usePolygonStore from '../../../hooks/usePolygonStore.ts';
 import HeightDisplay from './HeightDisplay.tsx';
+import { useParams } from 'react-router-dom';
 
 const PolygonCreator: React.FC = () => {
   const { polygonToolMode, setPolygonToolMode, editorMode } = useEditorStore((state) => state as EditorState);
-
-  const { polygons, deletePolygon, deletePoint, setPolygons, addPoint, selectedPolygon, setSelectedPolygon } = usePolygonStore();
+  const id = Number(useParams<{ id: string }>().id);
+  const { getPolygons, deletePolygon, deletePoint, setPolygons, addPoint, getSelectedPolygon, setSelectedPolygon } = usePolygonStore();
+  const polygons = getPolygons(id);
+  const selectedPolygon = getSelectedPolygon(id);
 
   // reset selected poly when switching out of edit mode
   useEffect(() => {
     if (polygonToolMode !== PolygonToolMode.EDIT) {
-      setSelectedPolygon([null, null]);
+      setSelectedPolygon(id, [null, null]);
     }
   }, [polygonToolMode, setSelectedPolygon]);
 
@@ -58,7 +61,7 @@ const PolygonCreator: React.FC = () => {
     const firstPoint = currentPolygon[0];
     if (firstPoint === position) {
       // close the polygon
-      setPolygons([...polygons, []]);
+      setPolygons(id, [...polygons, []]);
     }
   }
 
@@ -68,7 +71,7 @@ const PolygonCreator: React.FC = () => {
       if (event.key === 'Enter') {
         const currentPolygon = polygons[polygons.length - 1];
         if (currentPolygon.length > 2) {
-          setPolygons([...polygons, []]);
+          setPolygons(id, [...polygons, []]);
         }
       }
     };
@@ -88,8 +91,8 @@ const PolygonCreator: React.FC = () => {
       // If no point is selected, do nothing
       const [polygonIndex, pointIndex] = selectedPolygon;
       if (polygonIndex === null || pointIndex === null) return;
-      deletePoint(polygonIndex, pointIndex);
-      setSelectedPolygon([null, null]);
+      deletePoint(id, polygonIndex, pointIndex);
+      setSelectedPolygon(id, [null, null]);
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -122,7 +125,7 @@ const PolygonCreator: React.FC = () => {
   const setPointPosition = (polygonIndex: number, pointIndex: number, newPosition: Vector3) => {
     const updatedPolygons = [...polygons];
     updatedPolygons[polygonIndex][pointIndex] = newPosition;
-    setPolygons(updatedPolygons);
+    setPolygons(id, updatedPolygons);
     // console.log('setting position');
   }
 
@@ -131,7 +134,7 @@ const PolygonCreator: React.FC = () => {
       {/* surface */}
       {editorMode === EditorMode.MAP && (
         <CreatorSurface
-          addPoint={addPoint}
+          addPoint={pos => addPoint(id, pos)}
         />
       )}
 
@@ -145,7 +148,7 @@ const PolygonCreator: React.FC = () => {
                 position={point}
                 setPosition={(newPosition) => setPointPosition(polygonIndex, pointIndex, newPosition)}
                 isSelected={polygonIndex === selectedPolygon[0] && pointIndex === selectedPolygon[1]}
-                setAsSelected={() => setSelectedPolygon([polygonIndex, pointIndex])}
+                setAsSelected={() => setSelectedPolygon(id, [polygonIndex, pointIndex])}
                 color={getPointColor(polygonIndex, pointIndex, polygon)}
                 tryPolygonCompletion={tryPolygonCompletion} />
               {/* Line(s) */}
@@ -155,7 +158,7 @@ const PolygonCreator: React.FC = () => {
                   start={polygon[0]}
                   end={polygon[1]}
                   polygonIndex={polygonIndex}
-                  addPoint={addPoint}
+                  addPoint={pos => addPoint(id, pos)}
                 />
               )}
               {/* Closing the loop when we have more than 2 */}
@@ -164,7 +167,7 @@ const PolygonCreator: React.FC = () => {
                   start={point}
                   end={polygon[(pointIndex + 1) % polygon.length]}
                   polygonIndex={polygonIndex}
-                  addPoint={addPoint}
+                  addPoint={pos => addPoint(id, pos)}
                 />
               )}
             </Fragment>

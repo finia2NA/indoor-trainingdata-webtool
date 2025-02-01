@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import useMultiTransformationStore from '../../../hooks/useTransforms';
+import useMultiTransformationStore from '../../../hooks/useMultiTransformationStore';
 import { LuExpand, LuMove, LuRotate3D } from "react-icons/lu";
 import useEditorStore, { EditorState } from '../../../hooks/useEditorStore';
 import { InteractiveInput } from '@designbyadrian/react-interactive-input';

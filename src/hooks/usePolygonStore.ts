@@ -5,71 +5,148 @@ import { persist } from "zustand/middleware";
 import PolygonDeletionToast from "../components/UI/Toasts";
 
 export type PolygonState = {
-  // Polygons
-  polygons: Vector3[][]; // polygon -> point -> Vector3
-  // eslint-disable-next-line no-unused-vars
-  setPolygons: (polygons: Vector3[][]) => void;
+  // POLYGONS
+  multiPolygons: { [id: number]: Vector3[][] }; // model id -> polygon -> point -> Vector3
+  /**
+   * Gets the polygons for a given model id. Creates an empty polygon list if none exist.
+   * @param id The model id
+   * @returns The polygons for the model
+   */
+  getPolygons: (id: number) => Vector3[][];
+  /**
+   * Sets the polygons for a given model id. Overwrites.
+   * @param id The model id
+   * @param polygons The new polygons
+   */
+  setPolygons: (id: number, polygons: Vector3[][]) => void;
 
-  // Selected Polygon
-  selectedPolygon: [number | null, number | null];
-  // eslint-disable-next-line no-unused-vars
-  setSelectedPolygon: (selectedPolygon: [number | null, number | null]) => void;
+  // SELECTION
+  multiSelectedPolygons: { [id: number]: [number | null, number | null] };
+  /**
+   * Gets the selected polygon for a given model id. Creates an empty selection if none exist.
+   * @param id The model id
+   * @returns The selected polygon
+   */
+  getSelectedPolygon: (id: number) => [number | null, number | null];
+  setSelectedPolygon: (id: number, selectedPolygon: [number | null, number | null]) => void;
 
-  // Advanced Polygon Operations
-  // eslint-disable-next-line no-unused-vars
-  deletePolygon: (index: number) => void;
-  // eslint-disable-next-line no-unused-vars
-  deletePoint: (polygonIndex: number, pointIndex: number) => void;
-  // eslint-disable-next-line no-unused-vars
-  addPoint: (position: Vector3, polygonIndex?: number, afterPoint?: Vector3) => void;
+  // ADVANCED POLYGON OPERATIONS
+  deletePolygon: (id: number, index: number) => void;
+  deletePoint: (id: number, polygonIndex: number, pointIndex: number) => void;
+  addPoint: (id: number, position: Vector3, polygonIndex?: number, afterPoint?: Vector3) => void;
 
-  // Rendering offset height
-  offset: number;
-  // eslint-disable-next-line no-unused-vars
-  setOffset: (offset: number) => void;
+  // HEIGHT OFFSET (TODO: Move to separate store and rename)
+  multiOffsets: { [id: number]: number };
+  getOffset: (id: number) => number;
+  setOffset: (id: number, offset: number) => void;
 };
 
 const usePolygonStore = create<PolygonState>()(
   persist(
     (set, get) => ({
-      polygons: [[]],
-      setPolygons: (polygons) => {
-        set({ polygons });
-      },
-      selectedPolygon: [null, null],
-      setSelectedPolygon: (selectedPolygon) => set({ selectedPolygon }),
-      deletePolygon: (index) => {
-        let updatedPolygons = [...get().polygons.slice(0, index), ...get().polygons.slice(index + 1)];
-        if (updatedPolygons.length === 0) {
-          updatedPolygons = [[]];
+      multiPolygons: {},
+      multiSelectedPolygons: {},
+      multiOffsets: {},
+
+      // BASIC POLYGON OPERATIONS
+      getPolygons: (id) => {
+        const multiPolygons = get().multiPolygons;
+        if (!multiPolygons[id]) {
+          set({ multiPolygons: { ...multiPolygons, [id]: [[]] } });
+          return [[]];
         }
-        set({ polygons: updatedPolygons });
+        return multiPolygons[id];
       },
-      deletePoint: (polygonIndex, pointIndex) => {
+      setPolygons: (id, polygons) => {
+        set({ multiPolygons: { ...get().multiPolygons, [id]: polygons } });
+      },
+
+      // SELECTION
+      getSelectedPolygon: (id) => {
+        const multiSelectedPolygons = get().multiSelectedPolygons;
+        if (!multiSelectedPolygons[id]) {
+          set({ multiSelectedPolygons: { ...multiSelectedPolygons, [id]: [null, null] } });
+          return [null, null];
+        }
+        return multiSelectedPolygons[id];
+      },
+      setSelectedPolygon: (id, selectedPolygon) => {
+        set({ multiSelectedPolygons: { ...get().multiSelectedPolygons, [id]: selectedPolygon } });
+      },
+
+      // ADVANCED POLYGON OPERATIONS
+      deletePolygon: (id, index) => {
+        // let updatedPolygons = [...get().multiPolygons.slice(0, index), ...get().multiPolygons.slice(index + 1)];
+        // if (updatedPolygons.length === 0) {
+        //   updatedPolygons = [[]];
+        // }
+        // set({ multiPolygons: updatedPolygons });
+        let currentPolygons = get().getPolygons(id);
+        currentPolygons.splice(index, 1);
+        if (currentPolygons.length === 0) {
+          currentPolygons = [[]];
+        }
+        set({ multiPolygons: { ...get().multiPolygons, [id]: currentPolygons } });
+      },
+      deletePoint: (id, polygonIndex, pointIndex) => {
+        // if (polygonIndex === null || pointIndex === null) return;
+        // if (get().multiPolygons[polygonIndex].length <= 3) {
+        //   toast.warn(PolygonDeletionToast,
+        //     {
+        //       type: 'error',
+        //       onClose: (reason) => {
+        //         if (reason === "delete") {
+        //           get().deletePolygon(polygonIndex);
+        //           get().setSelectedPolygon([null, null]);
+        //         }
+        //       }
+        //     });
+        //   return;
+        // }
+        // const updatedPolygons = [...get().multiPolygons];
+        // updatedPolygons[polygonIndex] = updatedPolygons[polygonIndex].filter(
+        //   (_: unknown, index: number | null) => index !== pointIndex
+        // );
+        // set({ multiPolygons: updatedPolygons });
         if (polygonIndex === null || pointIndex === null) return;
-        if (get().polygons[polygonIndex].length <= 3) {
+        let currentPolygons = get().getPolygons(id);
+        if (currentPolygons[polygonIndex].length <= 3) {
           toast.warn(PolygonDeletionToast,
             {
               type: 'error',
               onClose: (reason) => {
                 if (reason === "delete") {
-                  get().deletePolygon(polygonIndex);
-                  get().setSelectedPolygon([null, null]);
+                  get().deletePolygon(id, polygonIndex);
+                  get().setSelectedPolygon(id, [null, null]);
                 }
               }
             });
           return;
         }
-        const updatedPolygons = [...get().polygons];
-        updatedPolygons[polygonIndex] = updatedPolygons[polygonIndex].filter(
-          (_: unknown, index: number | null) => index !== pointIndex
-        );
-        set({ polygons: updatedPolygons });
+        currentPolygons[polygonIndex].splice(pointIndex, 1);
+        set({ multiPolygons: { ...get().multiPolygons, [id]: currentPolygons } });
       },
-      addPoint: (position, polygonIndex?, afterPoint?) => {
-        const polygons = get().polygons;
-        const currentPolygon = polygonIndex !== undefined ? polygons[polygonIndex] : polygons[polygons.length - 1];
-        polygonIndex = polygonIndex ?? polygons.length - 1;
+
+      addPoint: (id, position, polygonIndex?, afterPoint?) => {
+        // const polygons = get().multiPolygons;
+        // const currentPolygon = polygonIndex !== undefined ? polygons[polygonIndex] : polygons[polygons.length - 1];
+        // polygonIndex = polygonIndex ?? polygons.length - 1;
+        // let newCurrentPolygon;
+
+        // if (afterPoint) {
+        //   const afterIndex = currentPolygon.indexOf(afterPoint);
+        //   newCurrentPolygon = [...currentPolygon.slice(0, afterIndex + 1), position, ...currentPolygon.slice(afterIndex + 1)];
+        // } else {
+        //   newCurrentPolygon = [...currentPolygon, position];
+        // }
+
+        // const updatedPolygons = [...polygons];
+        // updatedPolygons[polygonIndex] = newCurrentPolygon;
+
+        // get().setPolygons(updatedPolygons);
+        let currentPolygons = get().getPolygons(id);
+        const currentPolygon = polygonIndex !== undefined ? currentPolygons[polygonIndex] : currentPolygons[currentPolygons.length - 1];
+        polygonIndex = polygonIndex ?? currentPolygons.length - 1;
         let newCurrentPolygon;
 
         if (afterPoint) {
@@ -79,13 +156,22 @@ const usePolygonStore = create<PolygonState>()(
           newCurrentPolygon = [...currentPolygon, position];
         }
 
-        const updatedPolygons = [...polygons];
-        updatedPolygons[polygonIndex] = newCurrentPolygon;
-
-        get().setPolygons(updatedPolygons);
+        currentPolygons[polygonIndex] = newCurrentPolygon;
+        get().setPolygons(id, currentPolygons);
       },
-      offset: 1,
-      setOffset: (offset) => set({ offset }),
+
+      // HEIGHT OFFSET
+      getOffset: (id: number) => {
+        const multiOffsets = get().multiOffsets;
+        if (!multiOffsets[id]) {
+          set({ multiOffsets: { ...multiOffsets, [id]: 0 } });
+          return 0;
+        }
+        return multiOffsets[id];
+      },
+      setOffset: (id, offset) => {
+        set({ multiOffsets: { ...get().multiOffsets, [id]: offset } });
+      },
     }),
     {
       name: "polygon-storage",
@@ -94,8 +180,13 @@ const usePolygonStore = create<PolygonState>()(
           ...state,
           state: {
             ...state.state,
-            polygons: state.state.polygons.map((polygon) =>
-              polygon.map((point) => [point.x, point.y, point.z])
+            multiPolygons: Object.fromEntries(
+              Object.entries(state.state.multiPolygons).map(([id, polygons]) => [
+                id,
+                polygons.map((polygon) =>
+                  polygon.map((point) => [point.x, point.y, point.z])
+                ),
+              ])
             ),
           },
         };
@@ -107,8 +198,13 @@ const usePolygonStore = create<PolygonState>()(
           ...state,
           state: {
             ...state.state,
-            polygons: state.state.polygons.map((polygon: number[][]) =>
-              polygon.map((point) => new Vector3(point[0], point[1], point[2]))
+            multiPolygons: Object.fromEntries(
+              Object.entries(state.state.multiPolygons).map(([id, polygons]) => [
+                id,
+                (polygons as number[][][]).map((polygon: number[][]) =>
+                  polygon.map((point) => new Vector3(point[0], point[1], point[2]))
+                ),
+              ])
             ),
           },
         };

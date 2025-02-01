@@ -7,9 +7,9 @@ interface StoreState {
   setIsTransforming: (value: boolean) => void;
 }
 
-const useOrbitTransformSync = create<StoreState>((set) => ({
+const useTransformingSync = create<StoreState>((set) => ({
   isTransforming: false,
   setIsTransforming: (value) => set({ isTransforming: value }),
 }));
 
-export default useOrbitTransformSync;
+export default useTransformingSync;

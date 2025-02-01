@@ -1,7 +1,7 @@
 import { OrbitControls, OrbitControlsProps } from "@react-three/drei";
 import React, { useEffect, useRef, useCallback } from "react";
-import useOrbitAngleStore from "../../hooks/useOrbitAngleStore";
-import useOrbitTransformSync from "../../hooks/useOrbitTransformSync";
+import useOrbitAngleSync from "../../hooks/useOrbitAngleSync";
+import useTransformingSync from "../../hooks/useTransformingSync";
 
 interface WrappedOrbitControlsProps extends OrbitControlsProps {
   useCase?: 'cube' | 'viewport';
@@ -10,10 +10,10 @@ interface WrappedOrbitControlsProps extends OrbitControlsProps {
 const WrappedOrbitControls = React.memo((props: WrappedOrbitControlsProps) => {
 
   // get shared orbit state
-  const { orbitAngles, updateOrbitAngles } = useOrbitAngleStore((state) => state);
+  const { orbitAngles, updateOrbitAngles } = useOrbitAngleSync((state) => state);
 
   // we only want to apply the orbit control when the user is not transforming
-  const { isTransforming } = useOrbitTransformSync();
+  const { isTransforming } = useTransformingSync();
 
   // Default values
   const azimuthAngle = orbitAngles?.azimuthAngle ?? 0;
