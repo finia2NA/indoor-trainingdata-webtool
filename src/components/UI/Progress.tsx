@@ -1,3 +1,4 @@
+import { useNavigate, useParams } from 'react-router-dom';
 import useEditorStore, { EditorMode, EditorState } from '../../hooks/useEditorStore';
 
 interface ProgressArrowProps {
@@ -5,10 +6,17 @@ interface ProgressArrowProps {
 }
 
 const ProgressArrow: React.FC<ProgressArrowProps> = ({ text }) => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
 
-  const { editorMode, setEditorMode } = useEditorStore((state) => state as EditorState);
-
+  const { editorMode } = useEditorStore((state) => state as EditorState);
   const active = editorMode === text.toLowerCase();
+
+  const handleClick = () => {
+    if (id) {
+      navigate(`/view/${id}/${text.toLowerCase()}`);
+    }
+  };
 
   return (
     <button
@@ -19,15 +27,14 @@ const ProgressArrow: React.FC<ProgressArrowProps> = ({ text }) => {
         py-2
         font-medium
     `}
-    onClick={() => setEditorMode(text.toLowerCase() as EditorMode)}
+      onClick={handleClick}
     >
       {text}
     </button>
-  )
-}
+  );
+};
 
 const Progress = () => {
-
   return (
     <div className='w-full'>
       <div className='flex flex-row'>
@@ -36,7 +43,7 @@ const Progress = () => {
         <ProgressArrow text='Generate' />
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default Progress;

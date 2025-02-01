@@ -13,7 +13,7 @@ function App() {
         <div className="pt-16 h-full w-full bg-slate-300">
           <Routes>
             <Route path="/" element={<StartPage />} />
-            <Route path="/view/:id" element={<ViewPage />} />
+            <Route path="/view/:id/:editorMode?" element={<ViewPage />} />
             <Route path="/404" element={<Error404Page />} />
             <Route path="*" element={<Error404Page />} />
           </Routes>
