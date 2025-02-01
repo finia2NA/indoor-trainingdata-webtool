@@ -19,16 +19,18 @@ const SceneObject = ({ model }: SceneObjectProps) => {
   if (!model) throw new Error('No model provided');
   if (!model.id) throw new Error('No model id provided');
 
-
   // Getting current model transformation
   const { getTransformation, setTransformation } = useMultiTransformationStore();
   const transformation = getTransformation(model.id);
   if (!transformation) throw new Error('No transformation found for model');
 
+  // console.log("Object transformation", transformation);
+
+  // -------------------
+
   // Load scene and apply transformation
   const [object3D, setObject3D] = useState<Group<Object3DEventMap> | null>(null);
   useEffect(() => {
-
     const filetype = model.name.split('.').pop();
 
     const url = URL.createObjectURL(model.content);
@@ -60,12 +62,14 @@ const SceneObject = ({ model }: SceneObjectProps) => {
     object3D.scale.set(transformation.scale[0], transformation.scale[1], transformation.scale[2]);
   }, [object3D, transformation.translation, transformation.rotation, transformation.scale]);
 
+  // -------------------
+
   // Getting current UI transform mode
   const { transformMode } = useEditorStore((state) => (state as EditorState));
   const { setIsTransforming } = useTransformingSync();
 
+  // Specify what should happen when the object is transformed
   const objectRef = useRef<THREE.Object3D | null>(null);
-
   const onTransform = () => {
     if (!objectRef.current) return;
     if (!model.id) return;
@@ -85,6 +89,9 @@ const SceneObject = ({ model }: SceneObjectProps) => {
     setTransformation(model.id, newTransform);
   }
 
+  // -------------------
+
+  // render
   return (!object3D ?
     // Nothing if scene is not loaded
     null :

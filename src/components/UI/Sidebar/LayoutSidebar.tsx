@@ -20,70 +20,75 @@ interface SingleChannelProps {
 
 const SingleChannel = ({ name, values, onChange, step = 1, min = -100, max = 100 }: SingleChannelProps) => {
 
-  const { transformMode, setTransformMode } = useEditorStore((state) => state as EditorState);
-  const isActive = transformMode === name.toLowerCase();
+  // const { transformMode, setTransformMode } = useEditorStore((state) => state as EditorState);
+  // const isActive = transformMode === name.toLowerCase();
 
-  const individualChanger = (axis: number, val: number) => {
-    const newVal = [...values];
-    newVal[axis] = val;
-    onChange(newVal);
-  }
+  // const individualChanger = (axis: number, val: number) => {
+  //   const newVal = [...values];
+  //   newVal[axis] = val;
+  //   onChange(newVal);
+  // }
 
-  let icon = null
-  switch (name) {
-    case "Translate":
-      icon = <LuMove />
-      break;
-    case "Rotate":
-      icon = <LuRotate3D />
-      break;
-    case "Scale":
-      icon = <LuExpand />
-      break;
-    default:
-      throw new Error("Invalid channel name");
-  }
+  // let icon = null
+  // switch (name) {
+  //   case "Translate":
+  //     icon = <LuMove />
+  //     break;
+  //   case "Rotate":
+  //     icon = <LuRotate3D />
+  //     break;
+  //   case "Scale":
+  //     icon = <LuExpand />
+  //     break;
+  //   default:
+  //     throw new Error("Invalid channel name");
+  // }
 
-  return (
-    <div className='flex flex-row px-1 gap-1'>
-      <button className={`flex h-6 items-center ${isActive ? "text-orangeweb" : ""}`}
-        onClick={() => setTransformMode(name.toLowerCase() as EditorState["transformMode"])}
-      >
-        {icon}
-      </button>
-      <div className='flex flex-col gap-1'>
-        <button className={`flex h-6 items-center ${isActive ? "text-orangeweb" : ""}`}
-          onClick={() => setTransformMode(name.toLowerCase() as EditorState["transformMode"])}
-        >
-          <h3>{name}</h3>
-        </button>
-        <div className='flex flex-row gap-1 pl-1 pb-1'>
-          {values.map((val, idx) => (
-            <InteractiveInput
-              className='w-20 text-right bg-dim_gray  basis-1/3'
-              type="number" key={idx}
-              min={min} max={max} step={step}
-              // TODO: I want to limit the display to 3 decimal places, but without changing the actual value
-              value={val}
-              onChange={e => individualChanger(idx, Number(e.target.value))} />
-          ))}
-        </div>
-      </div>
-    </div >
-  )
+  // return (
+  //   <div className='flex flex-row px-1 gap-1'>
+  //     <button className={`flex h-6 items-center ${isActive ? "text-orangeweb" : ""}`}
+  //       onClick={() => setTransformMode(name.toLowerCase() as EditorState["transformMode"])}
+  //     >
+  //       {icon}
+  //     </button>
+  //     <div className='flex flex-col gap-1'>
+  //       <button className={`flex h-6 items-center ${isActive ? "text-orangeweb" : ""}`}
+  //         onClick={() => setTransformMode(name.toLowerCase() as EditorState["transformMode"])}
+  //       >
+  //         <h3>{name}</h3>
+  //       </button>
+  //       <div className='flex flex-row gap-1 pl-1 pb-1'>
+  //         {values.map((val, idx) => (
+  //           <InteractiveInput
+  //             className='w-20 text-right bg-dim_gray  basis-1/3'
+  //             type="number" key={idx}
+  //             min={min} max={max} step={step}
+  //             // TODO: I want to limit the display to 3 decimal places, but without changing the actual value
+  //             value={val}
+  //             onChange={e => individualChanger(idx, Number(e.target.value))} />
+  //         ))}
+  //       </div>
+  //     </div>
+  //   </div >
+  // )
+
+
+  console.log("Values", values);
+
+  return <>{values}<br /></>
 }
 
 const LayoutSidebar = () => {
-  const { id } = useParams();
-  const idnum = Number(id);
+  const id = Number(useParams<{ id: string }>().id);
 
   const { addTransformation, getTransformation, setTranslation, setRotation, setScale } = useMultiTransformationStore();
 
-  if (!getTransformation(idnum)) {
-    addTransformation(idnum);
+  if (!getTransformation(id)) {
+    addTransformation(id);
   }
 
-  const myTransformation = getTransformation(idnum);
+  const myTransformation = getTransformation(id);
+  console.log("Transformation", myTransformation);
   if (!myTransformation) {
     return <></>
   }
@@ -95,7 +100,7 @@ const LayoutSidebar = () => {
       }
       return val;
     });
-    setTranslation(idnum, sanitizedVals);
+    setTranslation(id, sanitizedVals);
   }
   const rotateSetter = (newVals: number[]) => {
     const sanitizedVals = newVals.map((val) => {
@@ -104,7 +109,7 @@ const LayoutSidebar = () => {
       }
       return val;
     });
-    setRotation(idnum, sanitizedVals);
+    setRotation(id, sanitizedVals);
   }
   const scaleSetter = (newVals: number[]) => {
     const sanitizedVals = newVals.map((val) => {
@@ -113,7 +118,7 @@ const LayoutSidebar = () => {
       }
       return val;
     });
-    setScale(idnum, sanitizedVals);
+    setScale(id, sanitizedVals);
   }
 
   return (
