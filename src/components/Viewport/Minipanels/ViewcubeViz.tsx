@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import WrappedOrbitControls from '../WrappedOrbitControls';
 import * as THREE from 'three';
-import useOrbitAngleStore from '../../../hooks/useOrbitAngleStore';
+import useOrbitAngleSync from '../../../hooks/useOrbitAngleSync';
 
 // eslint-disable-next-line no-unused-vars
 enum CUBEFACE {
@@ -139,7 +139,7 @@ const Cube = ({ setOrbitAngles }: CubeProps) => {
 
 const ViewcubeViz = () => {
 
-  const { setOrbitAngles } = useOrbitAngleStore((state) => state);
+  const { setOrbitAngles } = useOrbitAngleSync((state) => state);
 
   return (
     <Canvas className='bg-oxford_blue bg-opacity-60'>

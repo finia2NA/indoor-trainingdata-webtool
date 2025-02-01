@@ -7,7 +7,8 @@ interface ProgressArrowProps {
 
 const ProgressArrow: React.FC<ProgressArrowProps> = ({ text }) => {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  const id = Number(useParams<{ id:string }>().id);
+
 
   const { editorMode } = useEditorStore((state) => state as EditorState);
   const active = editorMode === text.toLowerCase();

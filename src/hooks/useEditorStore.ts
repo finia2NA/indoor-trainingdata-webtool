@@ -1,3 +1,11 @@
+/**
+ * Zustand hook that stores the state of the editor.
+ * This includes tools used and current editing step.
+ * Does not store fast-changing information like if currently transforming and Orbit-Angle
+ * Non-persistent.
+ */
+
+
 /* eslint-disable no-unused-vars */
 
 import { create } from 'zustand';

@@ -2,11 +2,11 @@ import { Model3D } from '../../data/db';
 import { useEffect, useRef, useState } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Group, Object3DEventMap } from 'three';
-import useMultiTransformationStore from '../../hooks/useTransforms';
+import useMultiTransformationStore from '../../hooks/useMultiTransformationStore';
 import * as THREE from 'three';
 import useEditorStore, { EditorState } from '../../hooks/useEditorStore';
 import { TransformControls } from '@react-three/drei';
-import useOrbitTransformSync from '../../hooks/useOrbitTransformSync';
+import useTransformingSync from '../../hooks/useTransformingSync';
 import Transformation from '../../data/Transformation';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
@@ -62,7 +62,7 @@ const SceneObject = ({ model }: SceneObjectProps) => {
 
   // Getting current UI transform mode
   const { transformMode } = useEditorStore((state) => (state as EditorState));
-  const { setIsTransforming } = useOrbitTransformSync();
+  const { setIsTransforming } = useTransformingSync();
 
   const objectRef = useRef<THREE.Object3D | null>(null);
 

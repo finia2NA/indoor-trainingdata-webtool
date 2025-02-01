@@ -1,3 +1,7 @@
+/**
+ * Dexie hook that returns a model. Currently not in use (check this before deletion).
+ */
+
 import { useLiveQuery } from "dexie-react-hooks";
 import { useNavigate } from "react-router-dom";
 import { isNumeric } from "../utils";
