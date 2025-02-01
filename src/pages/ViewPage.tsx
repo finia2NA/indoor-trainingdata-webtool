@@ -4,10 +4,14 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { isNumeric } from "../utils";
 import Sidebar from "../components/UI/Sidebar/Sidebar";
 import Editor from "../components/Viewport/Editor";
+import { useEffect } from "react";
+import useEditorStore, { EditorMode } from "../hooks/useEditorStore";
 
 const ViewPage = () => {
+  const { id, editorMode } = useParams();
   const navigate = useNavigate();
-  const { id } = useParams();
+  // @ts-ignore
+  const { setEditorMode } = useEditorStore((state) => state); //Q: Why does this cause a ts error? It doesn't every other file I use it in.
 
   // get our model, or redirect to 404 if it doesn't exist
   const model = useLiveQuery(
@@ -26,6 +30,13 @@ const ViewPage = () => {
     },
     [id]
   );
+
+  useEffect(() => {
+    if (!editorMode) {
+      navigate(`/view/${id}/layout`, { replace: true });
+    }
+    setEditorMode(editorMode as EditorMode);
+  }, [editorMode, id, navigate]);
 
   if (!model) {
     return <div>Loading...</div>;
