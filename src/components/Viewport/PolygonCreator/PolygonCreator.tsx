@@ -26,7 +26,7 @@ const PolygonCreator: React.FC = () => {
     if (polygonToolMode !== PolygonToolMode.EDIT) {
       setSelectedPolygon(id, [null, null]);
     }
-  }, [polygonToolMode, setSelectedPolygon]);
+  }, [polygonToolMode, setSelectedPolygon, id]);
 
   // When leaving the component, set the polygon tool to None
   useEffect(() => {
@@ -80,7 +80,7 @@ const PolygonCreator: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [polygons, setPolygons]);
+  }, [polygons, setPolygons, id]);
 
   // Backspace handler: delete selected point
   useEffect(() => {
@@ -99,7 +99,7 @@ const PolygonCreator: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [deletePoint, deletePolygon, polygons, selectedPolygon, setPolygons, setSelectedPolygon]);
+  }, [deletePoint, deletePolygon, polygons, selectedPolygon, setPolygons, setSelectedPolygon, id]);
 
   const getPointColor = (polygonIndex: number, pointIndex: number, polygon: Vector3[]) => {
     // selected is yellow

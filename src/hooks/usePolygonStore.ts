@@ -109,7 +109,7 @@ const usePolygonStore = create<PolygonState>()(
         // );
         // set({ multiPolygons: updatedPolygons });
         if (polygonIndex === null || pointIndex === null) return;
-        let currentPolygons = get().getPolygons(id);
+        const currentPolygons = get().getPolygons(id);
         if (currentPolygons[polygonIndex].length <= 3) {
           toast.warn(PolygonDeletionToast,
             {
@@ -144,7 +144,7 @@ const usePolygonStore = create<PolygonState>()(
         // updatedPolygons[polygonIndex] = newCurrentPolygon;
 
         // get().setPolygons(updatedPolygons);
-        let currentPolygons = get().getPolygons(id);
+        const currentPolygons = get().getPolygons(id);
         const currentPolygon = polygonIndex !== undefined ? currentPolygons[polygonIndex] : currentPolygons[currentPolygons.length - 1];
         polygonIndex = polygonIndex ?? currentPolygons.length - 1;
         let newCurrentPolygon;
