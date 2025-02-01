@@ -73,7 +73,7 @@ const SingleChannel = ({ name, values, onChange, step = 1, min = -100, max = 100
 }
 
 const LayoutSidebar = () => {
-  "use no memo"; // LATER: upgrade react compiler, see if that fixes this
+  "use no memo"; // LATER: upgrade react compiler, see if that fixes this // make a bug report
   const id = Number(useParams<{ id: string }>().id);
 
   const { addTransformation, getTransformation, setTranslation, setRotation, setScale } = useMultiTransformationStore();
