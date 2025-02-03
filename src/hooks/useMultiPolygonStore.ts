@@ -14,7 +14,7 @@ type MultiPolygonSelection = { [id: number]: PolygonSelection };
 
 type MultiOffsets = { [id: number]: number };
 
-export type PolygonState = {
+export type MultiPolygonState = {
   // POLYGONS
   multiPolygons: MultiPolygons;
   /**
@@ -51,7 +51,7 @@ export type PolygonState = {
   setOffset: (id: number, offset: number) => void;
 };
 
-const usePolygonStore = create<PolygonState>()(
+const useMultiPolygonStore = create<MultiPolygonState>()(
   persist(
     (set, get) => ({
       multiPolygons: {},
@@ -183,4 +183,4 @@ const usePolygonStore = create<PolygonState>()(
   )
 );
 
-export default usePolygonStore;
+export default useMultiPolygonStore;

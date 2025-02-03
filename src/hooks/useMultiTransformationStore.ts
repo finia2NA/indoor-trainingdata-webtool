@@ -2,10 +2,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import Transformation from '../data/Transformation';
 
-/* eslint-disable no-unused-vars */
-
 interface MultiTransformationState {
-  transformations: Record<number, Transformation>;
+  mulitTransformations: Record<number, Transformation>;
   getTransformation: (id: number) => Transformation | null;
   addTransformation: (id: number) => void;
 
@@ -19,10 +17,10 @@ interface MultiTransformationState {
 const useMultiTransformationStore = create<MultiTransformationState>()(
   persist(
     (set, get) => ({
-      transformations: {},
+      mulitTransformations: {},
 
       getTransformation: (id: number) => {
-        const obj = get().transformations[id];
+        const obj = get().mulitTransformations[id];
         if (!obj) {
           return null;
         }
@@ -30,8 +28,8 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
       },
 
       addTransformation: (id: number) => set((state) => ({
-        transformations: {
-          ...state.transformations,
+        mulitTransformations: {
+          ...state.mulitTransformations,
           [id]: new Transformation(),
         },
       })),
@@ -43,8 +41,8 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
 
         // Use the provided transformation to replace the current one
         return {
-          transformations: {
-            ...state.transformations,
+          mulitTransformations: {
+            ...state.mulitTransformations,
             [id]: transformation.copy(),
           },
         };
@@ -61,8 +59,8 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
 
         // return the new state
         return {
-          transformations: {
-            ...state.transformations,
+          mulitTransformations: {
+            ...state.mulitTransformations,
             [id]: newTransformation,
           },
         };
@@ -78,8 +76,8 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
         newTransformation.rotation = rotation;
 
         return {
-          transformations: {
-            ...state.transformations,
+          mulitTransformations: {
+            ...state.mulitTransformations,
             [id]: newTransformation,
           },
         };
@@ -95,8 +93,8 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
         newTransformation.scale = scale;
 
         return {
-          transformations: {
-            ...state.transformations,
+          mulitTransformations: {
+            ...state.mulitTransformations,
             [id]: newTransformation,
           },
         };

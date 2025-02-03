@@ -10,7 +10,7 @@ import { toast } from 'react-toastify';
 import PolygonVertex from './PolygonVertex.tsx';
 import CreatorSurface from './CreatorSurface.tsx';
 import PolygonLine from './PolygonLine.tsx';
-import usePolygonStore from '../../../hooks/usePolygonStore.ts';
+import useMultiPolygonStore from '../../../hooks/useMultiPolygonStore.ts';
 import HeightDisplay from './HeightDisplay.tsx';
 import { useParams } from 'react-router-dom';
 
@@ -18,7 +18,7 @@ const PolygonCreator: React.FC = () => {
   "use no memo"
   const { polygonToolMode, setPolygonToolMode, editorMode } = useEditorStore((state) => state as EditorState);
   const id = Number(useParams<{ id: string }>().id);
-  const { getPolygons, deletePolygon, deletePoint, setPolygons, addPoint, getSelectedPolygon, setSelectedPolygon } = usePolygonStore();
+  const { getPolygons, deletePolygon, deletePoint, setPolygons, addPoint, getSelectedPolygon, setSelectedPolygon } = useMultiPolygonStore();
   const polygons = getPolygons(id);
   const selectedPolygon = getSelectedPolygon(id);
 

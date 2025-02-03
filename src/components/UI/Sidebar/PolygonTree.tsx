@@ -1,5 +1,5 @@
 import { Tree } from "react-arborist";
-import usePolygonStore from "../../../hooks/usePolygonStore";
+import useMultiPolygonStore from "../../../hooks/useMultiPolygonStore";
 import { useMemo, useState } from "react";
 import { PiDotFill, PiFolder, PiPolygon, PiTrash } from "react-icons/pi";
 import { InteractiveInput } from "@designbyadrian/react-interactive-input";
@@ -55,7 +55,7 @@ const Coordinate = ({ x, y, z, handleLocationChange }: CoordinateProps) => {
 function Node({ node, style, dragHandle }: NodeProps) {
   const id = Number(useParams<{ id:string }>().id);
   const [isHovered, setIsHovered] = useState(false);
-  const { getPolygons, setPolygons, setSelectedPolygon, deletePolygon, deletePoint } = usePolygonStore();
+  const { getPolygons, setPolygons, setSelectedPolygon, deletePolygon, deletePoint } = useMultiPolygonStore();
   const polygons = getPolygons(id);
 
   const type = node.data.type;
@@ -124,7 +124,7 @@ function Node({ node, style, dragHandle }: NodeProps) {
 
 const Polygontree = () => {
   const id = Number(useParams<{ id:string }>().id);
-  const { getPolygons, getSelectedPolygon} = usePolygonStore();
+  const { getPolygons, getSelectedPolygon} = useMultiPolygonStore();
   const polygons = getPolygons(id);
   const selectedPolygon = getSelectedPolygon(id);
 
