@@ -7,7 +7,6 @@ import PolygonTree from "./PolygonTree.tsx";
 
 
 const PolygonSidebar: React.FC = () => {
-
   const { polygonHeight, setPolygonHeight, polygonSize, setPolygonSize } = useEditorStore((state) => state as EditorState);
 
 

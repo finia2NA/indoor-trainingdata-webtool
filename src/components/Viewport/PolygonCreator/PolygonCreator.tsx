@@ -15,6 +15,7 @@ import HeightDisplay from './HeightDisplay.tsx';
 import { useParams } from 'react-router-dom';
 
 const PolygonCreator: React.FC = () => {
+  "use no memo"
   const { polygonToolMode, setPolygonToolMode, editorMode } = useEditorStore((state) => state as EditorState);
   const id = Number(useParams<{ id: string }>().id);
   const { getPolygons, deletePolygon, deletePoint, setPolygons, addPoint, getSelectedPolygon, setSelectedPolygon } = usePolygonStore();
@@ -34,8 +35,6 @@ const PolygonCreator: React.FC = () => {
       setPolygonToolMode(PolygonToolMode.NONE);
     }
   }, [setPolygonToolMode]);
-
-
 
 
   // FUNCTIONS FOR CHILDREN
