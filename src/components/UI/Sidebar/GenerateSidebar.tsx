@@ -1,33 +1,64 @@
 import { InteractiveInput } from "@designbyadrian/react-interactive-input";
-import useMultiPolygonStore from "../../../hooks/useMultiPolygonStore";
 import SidebarSection from "./SidebarSection";
-import { useState } from "react";
 import { Slider } from "@mui/material";
 import AngleDisplay from "../../Viewport/Minipanels/AngleDisplay";
 import DistributionViz from "../../Viewport/Minipanels/DistributionViz";
 import { useParams } from "react-router-dom";
+import useMultiGenerationStore, { GenPair } from "../../../hooks/useMultiGenerationStore";
 
 
 const GenerateSidebar = () => {
   const id = Number(useParams<{ id: string }>().id);
-  const { getOffset, setOffset } = useMultiPolygonStore();
-  const offset = getOffset(id);
 
+  // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
+  let offset, angles, anglesConcentration, pair, distanceOffset, distanceConcentration, angleOffset, angleConcentration, numImages, imageSize;
+  let setHeightOffset, setAnglesRange, setAnglesConcentration, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setNumImages, setImageSize;
+  {
+    // getting values from store
+    const {
+      getHeightOffset,
+      setHeightOffset: storeSetHeightOffset,
+      getAnglesRange,
+      setAnglesRange: storeSetAnglesRange,
+      getAnglesConcentration,
+      setAnglesConcentration: storeSetAnglesConcentration,
+      getDoPairGeneration,
+      setDoPairGeneration: storeSetDoPairGeneration,
+      getPairDistanceRange,
+      setPairDistanceRange: storeSetPairDistanceRange,
+      getPairDistanceConcentration,
+      setPairDistanceConcentration: storeSetPairDistanceConcentration,
+      getPairAngle,
+      setPairAngle: storeSetPairAngle,
+      getPairAngleConcentration,
+      setPairAngleConcentration: storeSetPairAngleConcentration,
+      getNumImages,
+      setNumImages: storeSetNumImages,
+      getImageDimensions,
+      setImageDimensions: storeSetImageDimensions,
+    } = useMultiGenerationStore();
+    offset = getHeightOffset(id);
+    angles = getAnglesRange(id);
+    anglesConcentration = getAnglesConcentration(id);
+    pair = getDoPairGeneration(id);
+    distanceOffset = getPairDistanceRange(id);
+    distanceConcentration = getPairDistanceConcentration(id);
+    angleOffset = getPairAngle(id);
+    angleConcentration = getPairAngleConcentration(id);
+    numImages = getNumImages(id);
+    imageSize = getImageDimensions(id);
 
-  const [angles, setAngles] = useState([-10, 10]);
-  const [anglesConcentration, setAnglesConcentration] = useState(0.5);
-
-  const [pair, setPair] = useState(false);
-  const [distanceOffset, setDistanceOffset] = useState([0, 0.2]);
-  const [distanceConcentration, setDistanceConcentration] = useState(0.5);
-  const [angleOffset, setAngleOffset] = useState(10);
-  const [angleConcentration, setAngleConcentration] = useState(0.5);
-
-
-  const [numImages, setNumImages] = useState(1000);
-  const [imageSize, setImageSize] = useState([256, 256]);
-
-  // TODO: make add global stored states
+    setHeightOffset = (offset: number) => storeSetHeightOffset(id, offset);
+    setAnglesRange = (angles: GenPair) => storeSetAnglesRange(id, angles);
+    setAnglesConcentration = (concentration: number) => storeSetAnglesConcentration(id, concentration);
+    setDoPair = (doPair: boolean) => storeSetDoPairGeneration(id, doPair);
+    setPairDistanceRange = (distanceRange: GenPair) => storeSetPairDistanceRange(id, distanceRange);
+    setPairDistanceConcentration = (concentration: number) => storeSetPairDistanceConcentration(id, concentration);
+    setPairAngleRange = (val: number) => storeSetPairAngle(id, val);
+    setAngleConcentration = (concentration: number) => storeSetPairAngleConcentration(id, concentration);
+    setNumImages = (numImages: number) => storeSetNumImages(id, numImages);
+    setImageSize = (size: [number, number]) => storeSetImageDimensions(id, size);
+  }
 
   return (
     <SidebarSection title="Generate">
@@ -47,7 +78,7 @@ const GenerateSidebar = () => {
             type="number"
             min={0} max={1} step={0.01}
             value={offset}
-            onChange={(e) => setOffset(id, parseFloat(e.target.value))}
+            onChange={(e) => setHeightOffset(parseFloat(e.target.value))}
           />
         </div>
 
@@ -60,7 +91,7 @@ const GenerateSidebar = () => {
                 // TODO: theming (color prop)
                 getAriaLabel={() => 'Angles Range'}
                 value={angles}
-                onChange={(_, value) => setAngles(value as number[])}
+                onChange={(_, value) => setAnglesRange(value as GenPair)}
                 valueLabelDisplay="auto"
                 getAriaValueText={(value) => `${value}°`}
                 min={-90}
@@ -93,7 +124,7 @@ const GenerateSidebar = () => {
               id="pair"
               type="checkbox"
               checked={pair}
-              onChange={(e) => setPair(e.target.checked)}
+              onChange={(e) => setDoPair(e.target.checked)}
             />
           </div>
           {pair &&
@@ -103,7 +134,7 @@ const GenerateSidebar = () => {
                 <Slider
                   getAriaLabel={() => 'Distance Range'}
                   value={distanceOffset}
-                  onChange={(_, value) => setDistanceOffset(value as number[])}
+                  onChange={(_, value) => setPairDistanceRange(value as GenPair)}
                   valueLabelDisplay="auto"
                   getAriaValueText={(value) => `${value}m`}
                   min={0}
@@ -116,7 +147,7 @@ const GenerateSidebar = () => {
               <Slider
                 getAriaLabel={() => 'Distance Distribution'}
                 value={distanceConcentration}
-                onChange={(_, value) => setDistanceConcentration(value as number)}
+                onChange={(_, value) => setPairDistanceConcentration(value as number)}
                 valueLabelDisplay="auto"
                 min={0}
                 max={1}
@@ -128,13 +159,12 @@ const GenerateSidebar = () => {
               <Slider
                 getAriaLabel={() => 'Angle Offset'}
                 value={angleOffset}
-                onChange={(_, value) => setAngleOffset(value as number)}
+                onChange={(_, value) => setPairAngleRange(value as number)}
                 valueLabelDisplay="auto"
                 getAriaValueText={(value) => `${value}°`}
                 min={0}
                 max={180}
               />
-
               <label htmlFor="dist" className="mr-2 w-20">Angle Distribution</label>
               <Slider
                 getAriaLabel={() => 'Angle Offset Distribution'}
@@ -181,7 +211,7 @@ const GenerateSidebar = () => {
                 max={2048}
                 value={size}
                 onChange={(e) => {
-                  const newSize = [...imageSize];
+                  const newSize = [...imageSize] as GenPair;
                   newSize[index] = parseInt(e.target.value);
                   setImageSize(newSize);
                 }}

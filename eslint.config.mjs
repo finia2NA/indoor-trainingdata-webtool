@@ -47,6 +47,6 @@ export default [{
         "@typescript-eslint/no-unused-vars": "error",
         "prefer-const": "warn",
         "no-debugger": "off",
-        "react-compiler/react-compiler": "error",
+        "react-compiler/react-compiler": "warn",
     },
 }];

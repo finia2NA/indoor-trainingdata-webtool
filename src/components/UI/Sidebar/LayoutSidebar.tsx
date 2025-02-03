@@ -82,7 +82,6 @@ const LayoutSidebar = () => {
   }
 
   const myTransformation = getTransformation(id);
-  console.log("Transformation", myTransformation);
   if (!myTransformation) {
     return <></>
   }
