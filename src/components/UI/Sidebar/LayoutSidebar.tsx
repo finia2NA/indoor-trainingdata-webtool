@@ -11,7 +11,6 @@ import SidebarSection from './SidebarSection';
 interface SingleChannelProps {
   name: string,
   values: number[],
-  // eslint-disable-next-line no-unused-vars
   onChange: (val: number[]) => void,
   step?: number,
   min?: number,

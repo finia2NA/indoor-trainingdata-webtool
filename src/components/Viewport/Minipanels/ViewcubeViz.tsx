@@ -3,9 +3,7 @@ import WrappedOrbitControls from '../WrappedOrbitControls';
 import * as THREE from 'three';
 import useOrbitAngleSync from '../../../hooks/useOrbitAngleSync';
 
-// eslint-disable-next-line no-unused-vars
 enum CUBEFACE {
-  // eslint-disable-next-line no-unused-vars
   RIGHT = "right", LEFT = "left", TOP = "top", BOTTOM = "bottom", FRONT = "front", BACK = "back"
 }
 
@@ -105,7 +103,6 @@ const createTextTexture = (text: string) => {
 };
 
 interface CubeProps {
-  // eslint-disable-next-line no-unused-vars
   setOrbitAngles: (angles: { azimuthAngle: number; polarAngle: number }) => void;
 }
 

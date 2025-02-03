@@ -9,7 +9,6 @@ type CoordinateProps = {
   x: number,
   y: number,
   z: number,
-  // eslint-disable-next-line no-unused-vars
   handleLocationChange: (newValue: number, index: number) => void
 };
 

@@ -46,20 +46,23 @@ export type EditorState = {
   transformMode: TransformMode;
   setTransformMode: (mode: TransformMode) => void;
 
+  polygonToolMode: PolygonToolMode;
+  setPolygonToolMode: (mode: PolygonToolMode) => void;
+
   showGrid: boolean;
   setShowGrid: (display: boolean) => void;
 
   showLabels: boolean;
   setShowLabel: (label: boolean) => void;
 
+  // TODO: rename this and below to surface_, to distinguish from drawn polygon offset etc.
   polygonHeight: number;
   setPolygonHeight: (newHeight: number) => void;
 
   polygonSize: number;
   setPolygonSize: (newSize: number) => void;
 
-  polygonToolMode: PolygonToolMode;
-  setPolygonToolMode: (mode: PolygonToolMode) => void;
+  resetEditorConfig: () => void;
 };
 
 // --------------------------------------------
@@ -92,6 +95,17 @@ const useEditorStore = create((set) => ({
 
   polygonToolMode: PolygonToolMode.NONE,
   setPolygonToolMode: (mode: PolygonToolMode) => set({ polygonToolMode: mode }),
+
+  resetEditorConfig: () => set({
+    perspectiveMode: Perspective.PERSPECTIVE,
+    editorMode: EditorMode.LAYOUT,
+    transformMode: TransformMode.NONE,
+    showGrid: true,
+    showLabels: false,
+    polygonHeight: 0,
+    polygonSize: 5,
+    polygonToolMode: PolygonToolMode.NONE,
+  }),
 }));
 
 export default useEditorStore;
