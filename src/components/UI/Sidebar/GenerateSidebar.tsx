@@ -5,14 +5,16 @@ import AngleDisplay from "../../Viewport/Minipanels/AngleDisplay";
 import DistributionViz from "../../Viewport/Minipanels/DistributionViz";
 import { useParams } from "react-router-dom";
 import useMultiGenerationStore, { GenPair } from "../../../hooks/useMultiGenerationStore";
+import { ResetConfirmationToast } from "../Toasts";
+import { toast } from "react-toastify";
 
 
 const GenerateSidebar = () => {
   const id = Number(useParams<{ id: string }>().id);
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
-  let offset, angles, anglesConcentration, pair, distanceOffset, distanceConcentration, angleOffset, angleConcentration, numImages, imageSize;
-  let setHeightOffset, setAnglesRange, setAnglesConcentration, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setNumImages, setImageSize;
+  let offset, angles, anglesConcentration, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, numImages, imageSize;
+  let setHeightOffset, setAnglesRange, setAnglesConcentration, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setNumImages, setImageSize, reset;
   {
     // getting values from store
     const {
@@ -36,15 +38,16 @@ const GenerateSidebar = () => {
       setNumImages: storeSetNumImages,
       getImageDimensions,
       setImageDimensions: storeSetImageDimensions,
+      reset: storeReset
     } = useMultiGenerationStore();
     offset = getHeightOffset(id);
     angles = getAnglesRange(id);
     anglesConcentration = getAnglesConcentration(id);
     pair = getDoPairGeneration(id);
-    distanceOffset = getPairDistanceRange(id);
-    distanceConcentration = getPairDistanceConcentration(id);
-    angleOffset = getPairAngle(id);
-    angleConcentration = getPairAngleConcentration(id);
+    pairDistanceRange = getPairDistanceRange(id);
+    pairDistanceConcentration = getPairDistanceConcentration(id);
+    pairAngleOffset = getPairAngle(id);
+    pairAngleConcentration = getPairAngleConcentration(id);
     numImages = getNumImages(id);
     imageSize = getImageDimensions(id);
 
@@ -58,6 +61,19 @@ const GenerateSidebar = () => {
     setAngleConcentration = (concentration: number) => storeSetPairAngleConcentration(id, concentration);
     setNumImages = (numImages: number) => storeSetNumImages(id, numImages);
     setImageSize = (size: [number, number]) => storeSetImageDimensions(id, size);
+    reset = () => storeReset(id);
+  }
+
+  const resetHandler = () => {
+    toast.warn(ResetConfirmationToast,
+      {
+        type: 'warning',
+        onClose: (reason) => {
+          if (reason === 'reset') {
+            reset();
+          }
+        }
+      });
   }
 
   return (
@@ -113,7 +129,7 @@ const GenerateSidebar = () => {
               step={0.01}
             />
           </div>
-          <DistributionViz concentration={anglesConcentration} />
+          <DistributionViz concentration={anglesConcentration} minVal={angles[0]} maxVal={angles[1]} />
         </SidebarSection>
 
         {/* Pairwise */}
@@ -133,7 +149,7 @@ const GenerateSidebar = () => {
                 <label htmlFor="distance" className="mr-2 w-20">Distance Range</label>
                 <Slider
                   getAriaLabel={() => 'Distance Range'}
-                  value={distanceOffset}
+                  value={pairDistanceRange}
                   onChange={(_, value) => setPairDistanceRange(value as GenPair)}
                   valueLabelDisplay="auto"
                   getAriaValueText={(value) => `${value}m`}
@@ -146,19 +162,19 @@ const GenerateSidebar = () => {
               <label htmlFor="dist" className="mr-2 w-20">Distance Distribution</label>
               <Slider
                 getAriaLabel={() => 'Distance Distribution'}
-                value={distanceConcentration}
+                value={pairDistanceConcentration}
                 onChange={(_, value) => setPairDistanceConcentration(value as number)}
                 valueLabelDisplay="auto"
                 min={0}
                 max={1}
                 step={0.01}
               />
-              <DistributionViz concentration={distanceConcentration} />
+              <DistributionViz concentration={pairDistanceConcentration} startAtZero minVal={pairDistanceRange[0]} maxVal={pairDistanceRange[1]} />
 
               <label htmlFor="dist" className="mr-2 w-20">Angle Offset</label>
               <Slider
                 getAriaLabel={() => 'Angle Offset'}
-                value={angleOffset}
+                value={pairAngleOffset}
                 onChange={(_, value) => setPairAngleRange(value as number)}
                 valueLabelDisplay="auto"
                 getAriaValueText={(value) => `${value}°`}
@@ -168,14 +184,14 @@ const GenerateSidebar = () => {
               <label htmlFor="dist" className="mr-2 w-20">Angle Distribution</label>
               <Slider
                 getAriaLabel={() => 'Angle Offset Distribution'}
-                value={angleConcentration}
+                value={pairAngleConcentration}
                 onChange={(_, value) => setAngleConcentration(value as number)}
                 valueLabelDisplay="auto"
                 min={0}
                 max={1}
                 step={0.01}
               />
-              <DistributionViz concentration={angleConcentration} />
+              <DistributionViz concentration={pairAngleConcentration} startAtZero minVal={0} maxVal={pairAngleOffset} />
             </div>
           }
         </SidebarSection>
@@ -220,7 +236,17 @@ const GenerateSidebar = () => {
           </div>
         </div>
       </SidebarSection>
+      <SidebarSection title="Generate" level={3}>
+        <div className="flex flex-row gap-2 justify-around">
+          <button className="bg-orangeweb p-1 px-4">Generate</button>
+          <button
+            className="bg-tropical_indigo p-1 px-4"
+            onClick={resetHandler}
+          >Reset</button>
+        </div>
+      </SidebarSection>
     </SidebarSection>
+
   )
 
 }
