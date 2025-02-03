@@ -10,8 +10,8 @@ import useEditorStore, { EditorMode } from "../hooks/useEditorStore";
 const ViewPage = () => {
   const { id, editorMode } = useParams();
   const navigate = useNavigate();
-  // @ts-ignore
-  const { setEditorMode } = useEditorStore((state) => state); //Q: Why does this cause a ts error? It doesn't every other file I use it in.
+  // @ts-expect-error //Q: Why does this cause a ts error? It doesn't every other file I use it in.
+  const { setEditorMode, resetEditorConfig } = useEditorStore((state) => state);
 
   // get our model, or redirect to 404 if it doesn't exist
   const model = useLiveQuery(
@@ -31,12 +31,18 @@ const ViewPage = () => {
     [id]
   );
 
+  // When id changes, reset the editor
+  // FIXME: does the 2nd useEffect always run 2nd? it needs to to keep the editormode in sync with the url. Investigate this.
+  useEffect(() => {
+    resetEditorConfig();
+  }, [resetEditorConfig, id]);
+
   useEffect(() => {
     if (!editorMode) {
       navigate(`/view/${id}/layout`, { replace: true });
     }
     setEditorMode(editorMode as EditorMode);
-  }, [editorMode, id, navigate]);
+  }, [editorMode, setEditorMode, id, navigate]);
 
   if (!model) {
     return <div>Loading...</div>;

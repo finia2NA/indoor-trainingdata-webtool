@@ -4,7 +4,6 @@ import { DoubleSide, Vector3 } from "three";
 
 
 type CreatorSurfaceProps = {
-  // eslint-disable-next-line no-unused-vars
   addPoint: (position: Vector3) => void;
 }
 

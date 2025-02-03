@@ -4,24 +4,34 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import PolygonDeletionToast from "../components/UI/Toasts";
 
+export type Polygon = Vector3[];
+export type PolygonList = Polygon[];
+// model id -> polygon -> point -> Vector3
+export type MultiPolygons = { [id: number]: PolygonList };
+
+type PolygonSelection = [number | null, number | null];
+type MultiPolygonSelection = { [id: number]: PolygonSelection };
+
+type MultiOffsets = { [id: number]: number };
+
 export type PolygonState = {
   // POLYGONS
-  multiPolygons: { [id: number]: Vector3[][] }; // model id -> polygon -> point -> Vector3
+  multiPolygons: MultiPolygons;
   /**
    * Gets the polygons for a given model id. Creates an empty polygon list if none exist.
    * @param id The model id
    * @returns The polygons for the model
    */
-  getPolygons: (id: number) => Vector3[][];
+  getPolygons: (id: number) => PolygonList;
   /**
    * Sets the polygons for a given model id. Overwrites.
    * @param id The model id
    * @param polygons The new polygons
    */
-  setPolygons: (id: number, polygons: Vector3[][]) => void;
+  setPolygons: (id: number, polygons: PolygonList) => void;
 
   // SELECTION
-  multiSelectedPolygons: { [id: number]: [number | null, number | null] };
+  multiSelectedPolygons: MultiPolygonSelection;
   /**
    * Gets the selected polygon for a given model id. Creates an empty selection if none exist.
    * @param id The model id
@@ -36,7 +46,7 @@ export type PolygonState = {
   addPoint: (id: number, position: Vector3, polygonIndex?: number, afterPoint?: Vector3) => void;
 
   // HEIGHT OFFSET (TODO: Move to separate store and rename)
-  multiOffsets: { [id: number]: number };
+  multiOffsets: MultiOffsets;
   getOffset: (id: number) => number;
   setOffset: (id: number, offset: number) => void;
 };

@@ -3,7 +3,6 @@ import { create } from 'zustand';
 
 interface StoreState {
   isTransforming: boolean;
-  // eslint-disable-next-line no-unused-vars
   setIsTransforming: (value: boolean) => void;
 }
 

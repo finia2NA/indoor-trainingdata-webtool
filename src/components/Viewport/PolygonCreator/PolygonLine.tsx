@@ -6,7 +6,6 @@ type PolygonLineProps = {
   start: Vector3;
   end: Vector3;
   polygonIndex: number;
-  // eslint-disable-next-line no-unused-vars
   addPoint: (position: Vector3, polygonIndex: number, after: Vector3) => void;
 }
 

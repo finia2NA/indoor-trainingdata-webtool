@@ -6,12 +6,10 @@ import useEditorStore, { EditorState, PolygonToolMode } from "../../../hooks/use
 
 interface VertexObjectProps {
   position: Vector3;
-  // eslint-disable-next-line no-unused-vars
   setPosition: (position: Vector3) => void;
   isSelected: boolean;
   setAsSelected: () => void;
   color: string;
-  // eslint-disable-next-line no-unused-vars
   tryPolygonCompletion: (position: Vector3) => void;
 }
 

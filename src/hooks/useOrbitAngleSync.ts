@@ -6,9 +6,7 @@ import { create } from 'zustand';
 
 interface OrbitAngleSync {
   orbitAngles: { azimuthAngle: number; polarAngle: number };
-  // eslint-disable-next-line no-unused-vars
   setOrbitAngles: (angles: { azimuthAngle: number; polarAngle: number }) => void;
-  // eslint-disable-next-line no-unused-vars
   updateOrbitAngles: (update: (prev: { azimuthAngle: number; polarAngle: number }) => { azimuthAngle: number; polarAngle: number }) => void;
 }
 
