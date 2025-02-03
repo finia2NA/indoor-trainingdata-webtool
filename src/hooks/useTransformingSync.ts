@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 
 
-interface StoreState {
+type TransformingSyncState = {
   isTransforming: boolean;
   setIsTransforming: (value: boolean) => void;
-}
+};
 
-const useTransformingSync = create<StoreState>((set) => ({
+const useTransformingSync = create<TransformingSyncState>((set) => ({
   isTransforming: false,
   setIsTransforming: (value) => set({ isTransforming: value }),
 }));

@@ -102,9 +102,9 @@ const createTextTexture = (text: string) => {
   return texture;
 };
 
-interface CubeProps {
+type CubeProps = {
   setOrbitAngles: (angles: { azimuthAngle: number; polarAngle: number }) => void;
-}
+};
 
 
 const Cube = ({ setOrbitAngles }: CubeProps) => {

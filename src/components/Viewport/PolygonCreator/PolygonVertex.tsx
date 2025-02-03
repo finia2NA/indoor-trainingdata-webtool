@@ -4,14 +4,14 @@ import useTransformingSync from "../../../hooks/useTransformingSync";
 import { useEffect, useRef, useState } from "react";
 import useEditorStore, { EditorState, PolygonToolMode } from "../../../hooks/useEditorStore";
 
-interface VertexObjectProps {
+type VertexObjectProps = {
   position: Vector3;
   setPosition: (position: Vector3) => void;
   isSelected: boolean;
   setAsSelected: () => void;
   color: string;
   tryPolygonCompletion: (position: Vector3) => void;
-}
+};
 
 const PolygonVertex: React.FC<VertexObjectProps> = ({ position, setPosition, isSelected, setAsSelected, color, tryPolygonCompletion }) => {
   const { setIsTransforming } = useTransformingSync();

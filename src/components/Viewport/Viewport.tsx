@@ -7,7 +7,7 @@ import SceneObject from './SceneObject';
 import PolygonCreator from './PolygonCreator/PolygonCreator';
 import LabeledAxesHelper from './LabeledAxesHelper';
 
-interface ViewportProps {
+type ViewportProps = {
   model: Model3D;
 }
 

@@ -3,9 +3,9 @@ import { Html } from '@react-three/drei'
 import useEditorStore, { EditorState } from '../../hooks/useEditorStore';
 
 
-interface LabeledAxesHelperProps {
+type LabeledAxesHelperProps = {
   size?: number;
-}
+};
 
 function htmlStyle(axis: string) {
   return {

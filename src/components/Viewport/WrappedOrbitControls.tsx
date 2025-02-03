@@ -3,9 +3,9 @@ import React, { useEffect, useRef, useCallback } from "react";
 import useOrbitAngleSync from "../../hooks/useOrbitAngleSync";
 import useTransformingSync from "../../hooks/useTransformingSync";
 
-interface WrappedOrbitControlsProps extends OrbitControlsProps {
+type WrappedOrbitControlsProps = OrbitControlsProps & {
   useCase?: 'cube' | 'viewport';
-}
+};
 
 const WrappedOrbitControls = React.memo((props: WrappedOrbitControlsProps) => {
 

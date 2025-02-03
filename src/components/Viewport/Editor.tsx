@@ -4,7 +4,7 @@ import { PolygonCreatorToggles, TransformToggles, ViewmodeToggles } from "./Mult
 import ViewcubeViz from "./Minipanels/ViewcubeViz"
 import Viewport from "./Viewport"
 
-interface EditorProps {
+type EditorProps = {
   model: Model3D;
 }
 
