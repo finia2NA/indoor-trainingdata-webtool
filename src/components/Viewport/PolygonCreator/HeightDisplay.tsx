@@ -1,5 +1,5 @@
 import { BufferGeometry, Vector3, BufferAttribute, DoubleSide } from "three";
-import usePolygonStore from "../../../hooks/usePolygonStore";
+import useMultiPolygonStore from "../../../hooks/useMultiPolygonStore";
 import { useEffect, useMemo, useRef } from "react";
 import earcut from 'earcut';
 import { useParams } from "react-router-dom";
@@ -90,7 +90,7 @@ const PolygonHeightDisplay = ({ polygon, height }: PolygonHeightDisplayProps) =>
 
 const HeightDisplay = () => {
   const id = Number(useParams<{ id: string }>().id);
-  const { getPolygons, getOffset } = usePolygonStore();
+  const { getPolygons, getOffset } = useMultiPolygonStore();
   const polygons = getPolygons(id);
   const offset = getOffset(id);
 

@@ -1,5 +1,5 @@
 import { InteractiveInput } from "@designbyadrian/react-interactive-input";
-import usePolygonStore from "../../../hooks/usePolygonStore";
+import useMultiPolygonStore from "../../../hooks/useMultiPolygonStore";
 import SidebarSection from "./SidebarSection";
 import { useState } from "react";
 import { Slider } from "@mui/material";
@@ -10,7 +10,7 @@ import { useParams } from "react-router-dom";
 
 const GenerateSidebar = () => {
   const id = Number(useParams<{ id: string }>().id);
-  const { getOffset, setOffset } = usePolygonStore();
+  const { getOffset, setOffset } = useMultiPolygonStore();
   const offset = getOffset(id);
 
 
