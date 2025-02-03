@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import Transformation from '../data/Transformation';
 
-interface MultiTransformationState {
+type MultiTransformationState = {
   mulitTransformations: Record<number, Transformation>;
   getTransformation: (id: number) => Transformation | null;
   addTransformation: (id: number) => void;
@@ -12,7 +12,7 @@ interface MultiTransformationState {
   setTranslation: (id: number, translation: number[]) => void;
   setRotation: (id: number, rotation: number[]) => void;
   setScale: (id: number, scale: number[]) => void;
-}
+};
 
 const useMultiTransformationStore = create<MultiTransformationState>()(
   persist(

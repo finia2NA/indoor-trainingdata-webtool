@@ -8,7 +8,7 @@ import SidebarSection from './SidebarSection';
 
 
 
-interface SingleChannelProps {
+type SingleChannelProps = {
   name: string,
   values: number[],
   onChange: (val: number[]) => void,

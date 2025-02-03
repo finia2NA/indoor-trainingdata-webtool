@@ -10,9 +10,9 @@ import useTransformingSync from '../../hooks/useTransformingSync';
 import Transformation from '../../data/Transformation';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
-interface SceneObjectProps {
+type SceneObjectProps = {
   model: Model3D;
-}
+};
 
 const SceneObject = ({ model }: SceneObjectProps) => {
   // Error handling (I think this is actually against the rules of hooks 😅)

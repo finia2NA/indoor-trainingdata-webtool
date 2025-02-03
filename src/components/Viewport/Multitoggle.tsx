@@ -5,19 +5,19 @@ import { TbPerspective, TbPerspectiveOff } from "react-icons/tb";
 import { MdOutlineGridOn, MdOutlineGridOff, MdLabel, MdLabelOff, MdOutlineAddLocationAlt, MdOutlinePolyline } from "react-icons/md";
 
 
-interface Item {
+type Item = {
   id: string;
   title?: string;
   icon: IconType;
   active: boolean;
   onClick: () => void;
   endsSection?: boolean;
-}
+};
 
-interface MultitoggleProps {
+type MultitoggleProps = {
   items: Item[];
   direction?: 'row' | 'column';
-}
+};
 
 const Multitoggle = ({ items, direction }: MultitoggleProps) => {
 

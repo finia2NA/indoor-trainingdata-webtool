@@ -1,13 +1,13 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import useEditorStore, { EditorMode, EditorState } from '../../hooks/useEditorStore';
+import useEditorStore, { EditorState } from '../../hooks/useEditorStore';
 
-interface ProgressArrowProps {
+type ProgressArrowProps = {
   text: string;
-}
+};
 
 const ProgressArrow: React.FC<ProgressArrowProps> = ({ text }) => {
   const navigate = useNavigate();
-  const id = Number(useParams<{ id:string }>().id);
+  const id = Number(useParams<{ id: string }>().id);
 
 
   const { editorMode } = useEditorStore((state) => state as EditorState);
