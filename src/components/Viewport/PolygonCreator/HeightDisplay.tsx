@@ -3,6 +3,7 @@ import useMultiPolygonStore from "../../../hooks/useMultiPolygonStore";
 import { useEffect, useMemo, useRef } from "react";
 import earcut from 'earcut';
 import { useParams } from "react-router-dom";
+import useMultiGenerationStore from "../../../hooks/useMultiGenerationStore";
 
 type PolygonHeightDisplayProps = {
   polygon: Vector3[];
@@ -90,9 +91,10 @@ const PolygonHeightDisplay = ({ polygon, height }: PolygonHeightDisplayProps) =>
 
 const HeightDisplay = () => {
   const id = Number(useParams<{ id: string }>().id);
-  const { getPolygons, getOffset } = useMultiPolygonStore();
+  const { getPolygons } = useMultiPolygonStore();
+  const { getHeightOffset } = useMultiGenerationStore();
   const polygons = getPolygons(id);
-  const offset = getOffset(id);
+  const offset = getHeightOffset(id);
 
   return (
     <>

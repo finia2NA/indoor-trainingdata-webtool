@@ -12,8 +12,6 @@ export type MultiPolygons = { [id: number]: PolygonList };
 type PolygonSelection = [number | null, number | null];
 type MultiPolygonSelection = { [id: number]: PolygonSelection };
 
-type MultiOffsets = { [id: number]: number };
-
 export type MultiPolygonState = {
   // POLYGONS
   multiPolygons: MultiPolygons;
@@ -44,11 +42,6 @@ export type MultiPolygonState = {
   deletePolygon: (id: number, index: number) => void;
   deletePoint: (id: number, polygonIndex: number, pointIndex: number) => void;
   addPoint: (id: number, position: Vector3, polygonIndex?: number, afterPoint?: Vector3) => void;
-
-  // HEIGHT OFFSET (TODO: Move to separate store and rename)
-  multiOffsets: MultiOffsets;
-  getOffset: (id: number) => number;
-  setOffset: (id: number, offset: number) => void;
 };
 
 const useMultiPolygonStore = create<MultiPolygonState>()(
@@ -128,19 +121,6 @@ const useMultiPolygonStore = create<MultiPolygonState>()(
 
         currentPolygons[polygonIndex] = newCurrentPolygon;
         get().setPolygons(id, currentPolygons);
-      },
-
-      // HEIGHT OFFSET
-      getOffset: (id: number) => {
-        const multiOffsets = get().multiOffsets;
-        if (!multiOffsets[id]) {
-          set({ multiOffsets: { ...multiOffsets, [id]: 0 } });
-          return 0;
-        }
-        return multiOffsets[id];
-      },
-      setOffset: (id, offset) => {
-        set({ multiOffsets: { ...get().multiOffsets, [id]: offset } });
       },
     }),
     {
