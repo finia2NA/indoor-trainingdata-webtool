@@ -86,11 +86,6 @@ const usePolygonStore = create<PolygonState>()(
 
       // ADVANCED POLYGON OPERATIONS
       deletePolygon: (id, index) => {
-        // let updatedPolygons = [...get().multiPolygons.slice(0, index), ...get().multiPolygons.slice(index + 1)];
-        // if (updatedPolygons.length === 0) {
-        //   updatedPolygons = [[]];
-        // }
-        // set({ multiPolygons: updatedPolygons });
         let currentPolygons = get().getPolygons(id);
         currentPolygons.splice(index, 1);
         if (currentPolygons.length === 0) {
@@ -99,25 +94,6 @@ const usePolygonStore = create<PolygonState>()(
         set({ multiPolygons: { ...get().multiPolygons, [id]: currentPolygons } });
       },
       deletePoint: (id, polygonIndex, pointIndex) => {
-        // if (polygonIndex === null || pointIndex === null) return;
-        // if (get().multiPolygons[polygonIndex].length <= 3) {
-        //   toast.warn(PolygonDeletionToast,
-        //     {
-        //       type: 'error',
-        //       onClose: (reason) => {
-        //         if (reason === "delete") {
-        //           get().deletePolygon(polygonIndex);
-        //           get().setSelectedPolygon([null, null]);
-        //         }
-        //       }
-        //     });
-        //   return;
-        // }
-        // const updatedPolygons = [...get().multiPolygons];
-        // updatedPolygons[polygonIndex] = updatedPolygons[polygonIndex].filter(
-        //   (_: unknown, index: number | null) => index !== pointIndex
-        // );
-        // set({ multiPolygons: updatedPolygons });
         if (polygonIndex === null || pointIndex === null) return;
         const currentPolygons = get().getPolygons(id);
         if (currentPolygons[polygonIndex].length <= 3) {
@@ -138,22 +114,6 @@ const usePolygonStore = create<PolygonState>()(
       },
 
       addPoint: (id, position, polygonIndex?, afterPoint?) => {
-        // const polygons = get().multiPolygons;
-        // const currentPolygon = polygonIndex !== undefined ? polygons[polygonIndex] : polygons[polygons.length - 1];
-        // polygonIndex = polygonIndex ?? polygons.length - 1;
-        // let newCurrentPolygon;
-
-        // if (afterPoint) {
-        //   const afterIndex = currentPolygon.indexOf(afterPoint);
-        //   newCurrentPolygon = [...currentPolygon.slice(0, afterIndex + 1), position, ...currentPolygon.slice(afterIndex + 1)];
-        // } else {
-        //   newCurrentPolygon = [...currentPolygon, position];
-        // }
-
-        // const updatedPolygons = [...polygons];
-        // updatedPolygons[polygonIndex] = newCurrentPolygon;
-
-        // get().setPolygons(updatedPolygons);
         const currentPolygons = get().getPolygons(id);
         const currentPolygon = polygonIndex !== undefined ? currentPolygons[polygonIndex] : currentPolygons[currentPolygons.length - 1];
         polygonIndex = polygonIndex ?? currentPolygons.length - 1;
