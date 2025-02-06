@@ -10,7 +10,7 @@ function App() {
     <>
       <Router>
         <TopBar />
-        <div className="pt-16 h-full w-full bg-slate-300">
+        <div className="pt-16 h-screen w-full bg-slate-300 overflow-hidden">
           <Routes>
             <Route path="/" element={<StartPage />} />
             <Route path="/view/:id/:editorMode?" element={<ViewPage />} />

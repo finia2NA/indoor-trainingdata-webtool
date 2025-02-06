@@ -54,7 +54,7 @@ const ViewPage = () => {
       <div className="flex-grow flex-shrink h-1/2 md:h-auto md:basis-3/4 min-h-[400px] min-w-0">
         <Editor model={model as Model3D} />
       </div>
-      <div className="flex-grow flex-shrink h-1/2 md:h-auto md:basis-1/4 md:min-w-[400px]">
+      <div className="flex-grow flex-shrink h-1/2 md:h-auto md:basis-1/4 md:min-w-[400px] overflow-auto">
         <Sidebar />
       </div>
     </div>
