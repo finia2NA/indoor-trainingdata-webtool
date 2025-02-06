@@ -30,7 +30,7 @@ const PolygonSidebar: React.FC = () => {
           <div key={el.name} className="flex items-center mb-2">
             <label className="mr-2 w-20">{el.name}</label>
             <InteractiveInput
-              className='w-32 text-right bg-dim_gray basis-1/3'
+              className='w-32 text-center bg-dim_gray basis-1/3'
               type="number"
               min={el.min} max={el.max} step={el.step}
               value={el.value}
