@@ -11,23 +11,13 @@ const Sidebar: React.FC = () => {
 
   return (
     <div
-      className="
-       w-full bg-oxford_blue
+      className="h-full w-full overflow-y-auto bg-oxford_blue
       ">
       <Progress />
       <div className="text-white">
-
-        {editorMode === EditorMode.LAYOUT &&
-          <LayoutSidebar />
-        }
-        {editorMode === EditorMode.MAP &&
-          <PolygonSidebar />
-        }
-        {editorMode === EditorMode.GENERATE &&
-          <GenerateSidebar />
-        }
-
-
+        {editorMode === EditorMode.LAYOUT && <LayoutSidebar />}
+        {editorMode === EditorMode.MAP && <PolygonSidebar />}
+        {editorMode === EditorMode.GENERATE && <GenerateSidebar />}
       </div>
     </div>
   );
