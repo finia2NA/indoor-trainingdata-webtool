@@ -1,3 +1,5 @@
+// TODO: make secondary not purple, rename by function instead of color
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
