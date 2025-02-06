@@ -3,7 +3,6 @@ import { createTheme } from '@mui/material/styles';
 // @ts-expect-error idc
 import tailwindConfig from "../tailwind.config"
 const colors = tailwindConfig.theme.extend.colors
-debugger;
 
 
 const theme = createTheme({

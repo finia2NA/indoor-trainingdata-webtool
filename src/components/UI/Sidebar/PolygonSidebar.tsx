@@ -24,7 +24,7 @@ const PolygonSidebar: React.FC = () => {
   ];
 
   return (
-    <>
+    <div className="flex flex-col gap-1">
       <SidebarSection className="m-2" title="Surface Controls">
         {surfaceElements.map((el) => (
           <div key={el.name} className="flex items-center mb-2">
@@ -42,7 +42,7 @@ const PolygonSidebar: React.FC = () => {
       <SidebarSection className="m-2" title="Polygons">
         <PolygonTree />
       </SidebarSection>
-    </>
+    </div>
   );
 };
 
