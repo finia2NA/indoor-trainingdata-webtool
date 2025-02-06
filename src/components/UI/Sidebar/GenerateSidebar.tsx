@@ -104,7 +104,7 @@ const GenerateSidebar = () => {
             <div className="w-10/12">
               <label htmlFor="angle" className="mr-2 w-20">Angles Range</label>
               <Slider
-                // TODO: theming (color prop)
+                color="secondary"
                 getAriaLabel={() => 'Angles Range'}
                 value={angles}
                 onChange={(_, value) => setAnglesRange(value as GenPair)}
@@ -119,7 +119,7 @@ const GenerateSidebar = () => {
           <div className="w-10/12">
             <label htmlFor="dist" className="mr-2 w-20">Angles Distribution</label>
             <Slider
-              // TODO: theming (color prop)
+              color="secondary"
               getAriaLabel={() => 'Angles Distribution'}
               value={anglesConcentration}
               onChange={(_, value) => setAnglesConcentration(value as number)}
@@ -148,6 +148,7 @@ const GenerateSidebar = () => {
               <div className="flex items-center mb-2">
                 <label htmlFor="distance" className="mr-2 w-20">Distance Range</label>
                 <Slider
+                  color="secondary"
                   getAriaLabel={() => 'Distance Range'}
                   value={pairDistanceRange}
                   onChange={(_, value) => setPairDistanceRange(value as GenPair)}
@@ -161,6 +162,7 @@ const GenerateSidebar = () => {
 
               <label htmlFor="dist" className="mr-2 w-20">Distance Distribution</label>
               <Slider
+                color="secondary"
                 getAriaLabel={() => 'Distance Distribution'}
                 value={pairDistanceConcentration}
                 onChange={(_, value) => setPairDistanceConcentration(value as number)}
@@ -173,6 +175,7 @@ const GenerateSidebar = () => {
 
               <label htmlFor="dist" className="mr-2 w-20">Angle Offset</label>
               <Slider
+                color="secondary"
                 getAriaLabel={() => 'Angle Offset'}
                 value={pairAngleOffset}
                 onChange={(_, value) => setPairAngleRange(value as number)}
@@ -183,6 +186,7 @@ const GenerateSidebar = () => {
               />
               <label htmlFor="dist" className="mr-2 w-20">Angle Distribution</label>
               <Slider
+                color="secondary"
                 getAriaLabel={() => 'Angle Offset Distribution'}
                 value={pairAngleConcentration}
                 onChange={(_, value) => setAngleConcentration(value as number)}

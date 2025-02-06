@@ -4,10 +4,13 @@ import Error404Page from './pages/Error404Page';
 import ViewPage from './pages/ViewPage';
 import TopBar from './components/TopBar';
 import { Flip, ToastContainer } from 'react-toastify';
+import theme from "./muiTheme"
+import { ThemeProvider } from '@mui/material/styles';
 
 function App() {
   return (
     <>
+    <ThemeProvider theme={theme}>
       <Router>
         <TopBar />
         <div className="pt-16 h-screen w-full bg-slate-300 overflow-hidden">
@@ -25,6 +28,7 @@ function App() {
         hideProgressBar
         theme="dark"
       />
+    </ThemeProvider>
     </>
   );
 }
