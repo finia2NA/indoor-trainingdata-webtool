@@ -90,7 +90,7 @@ const GenerateSidebar = () => {
           <label htmlFor="offset" className="mr-2 w-20">Offset</label>
           <InteractiveInput
             id="offset"
-            className='w-32 text-right bg-dim_gray basis-1/3'
+            className='w-32 text-center bg-dim_gray basis-1/3'
             type="number"
             min={0} max={1} step={0.01}
             value={offset}
@@ -209,7 +209,7 @@ const GenerateSidebar = () => {
           <label htmlFor="numImages" className="mr-2 w-20">Number of Images</label>
           <InteractiveInput
             id="numImages"
-            className='w-32 text-right bg-dim_gray basis-1/3'
+            className='w-32 text-center bg-dim_gray basis-1/3'
             type="number"
             min={1} step={1}
             value={numImages}
@@ -224,7 +224,7 @@ const GenerateSidebar = () => {
               <InteractiveInput
                 key={index}
                 id="imageSize"
-                className='w-16 text-right bg-dim_gray basis-1/4'
+                className='w-16 text-center bg-dim_gray basis-1/4'
                 type="number"
                 min={32}
                 step={16}
