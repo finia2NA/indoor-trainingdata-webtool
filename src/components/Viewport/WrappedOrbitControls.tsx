@@ -3,8 +3,13 @@ import React, { useEffect, useRef, useCallback } from "react";
 import useOrbitAngleSync from "../../hooks/useOrbitAngleSync";
 import useTransformingSync from "../../hooks/useTransformingSync";
 
+export enum OrbitUsecase {
+  CUBE = 'cube',
+  VIEWPORT = 'viewport'
+}
+
 type WrappedOrbitControlsProps = OrbitControlsProps & {
-  useCase?: 'cube' | 'viewport';
+  useCase?: OrbitUsecase;
 };
 
 const WrappedOrbitControls = React.memo((props: WrappedOrbitControlsProps) => {
@@ -82,6 +87,7 @@ const WrappedOrbitControls = React.memo((props: WrappedOrbitControlsProps) => {
         }
       }}
       {...props}
+      target={props.useCase === "viewport" ? props.target : undefined}
     />
   )
 });

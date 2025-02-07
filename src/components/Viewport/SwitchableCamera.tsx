@@ -1,10 +1,10 @@
 import { OrthographicCamera, PerspectiveCamera } from "@react-three/drei";
 import useEditorStore, { EditorState, Perspective } from "../../hooks/useEditorStore";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import * as THREE from "three";
 
-// const SwitchableCamera = forwardRef((_, ref) => {
-const SwitchableCamera = () => {
+// Wrap component with forwardRef to expose active camera ref
+const SwitchableCamera = forwardRef((props, ref) => {
 
   const { perspectiveMode } = useEditorStore((state) => (state as EditorState));
   const perspectiveRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -13,12 +13,10 @@ const SwitchableCamera = () => {
   useEffect(() => {
     if (!perspectiveRef.current || !orthoRef.current) return;
     if (perspectiveMode === Perspective.PERSPECTIVE) {
-      // FIXME: fix eslint error
       perspectiveRef.current.position.x = orthoRef.current.position.x;
       perspectiveRef.current.position.y = orthoRef.current.position.y;
       perspectiveRef.current.position.z = orthoRef.current.position.z;
     }
-
     if (perspectiveMode === Perspective.ORTHOGRAPHIC) {
       orthoRef.current.position.x = perspectiveRef.current.position.x;
       orthoRef.current.position.y = perspectiveRef.current.position.y;
@@ -26,7 +24,9 @@ const SwitchableCamera = () => {
     }
   }, [perspectiveMode]);
 
-
+  useImperativeHandle(ref, () =>
+    perspectiveMode === Perspective.PERSPECTIVE ? perspectiveRef.current : orthoRef.current,
+    [perspectiveMode]);
 
   return (
     <>
@@ -44,7 +44,6 @@ const SwitchableCamera = () => {
       />
     </>
   );
-  // });
-}
+});
 
 export default SwitchableCamera;
