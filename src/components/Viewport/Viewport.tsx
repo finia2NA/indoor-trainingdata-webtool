@@ -27,12 +27,11 @@ const raycasterParams = {
 const Viewport = ({ model }: ViewportProps) => {
 
   const { showGrid, editorMode } = useEditorStore((state) => (state as EditorState));
-  // const cameraRef = useRef(null);
-
-  // console.log(cameraRef)
 
   return (
-    <Canvas raycaster={{ params: raycasterParams }}>
+    <Canvas
+      raycaster={{ params: raycasterParams }}
+    >
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 5]} intensity={1} />
 
