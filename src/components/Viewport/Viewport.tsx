@@ -9,6 +9,8 @@ import LabeledAxesHelper from './LabeledAxesHelper';
 import CameraPosLogging from './CameraPoseLogging';
 import { useRef, useState } from 'react';
 import { Camera, Vector3 } from 'three';
+import { saveAs } from 'file-saver';
+
 
 type ViewportProps = {
   model: Model3D;
@@ -32,6 +34,7 @@ const Viewport = ({ model }: ViewportProps) => {
 
   const { showGrid, editorMode } = useEditorStore((state) => (state as EditorState));
   const cameraRef = useRef<Camera | null>();
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [orbitTarget, setOrbitTarget] = useState<Vector3>(new Vector3(0, 0, 0));
 
   const setNewPose = () => {
@@ -49,38 +52,57 @@ const Viewport = ({ model }: ViewportProps) => {
     }
   };
 
+  const takeScreenshot = async () => {
+    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
 
-  return (
-    <>
-      <button
-        onClick={setNewPose}
-      >asdfasdfasdfasfasdfasdfasdfadf</button>
-      <Canvas
-        raycaster={{ params: raycasterParams }}
-      >
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 5]} intensity={1} />
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve(blob);
+      });
+    });
 
-        <SceneObject model={model} />
+    if (blob) {
+      saveAs(blob, 'screenshot.png');
+    }
+  }
 
-        {[EditorMode.MAP, EditorMode.GENERATE].includes(editorMode) && <PolygonCreator />}
 
-        <WrappedOrbitControls
-          useCase={OrbitUsecase.VIEWPORT}
-          target={orbitTarget}
-        />
-        {showGrid &&
-          <>
-            <gridHelper args={[10, 10]} />
-            <LabeledAxesHelper size={5} />
-          </>
-        }
-        <color attach="background" args={['#484848']} />
 
-        <SwitchableCamera ref={cameraRef} />
-        <CameraPosLogging />
-      </Canvas>
-    </>
+  return (<>
+    <div className='flex flex-row'>
+      <button onClick={setNewPose}>new pose</button>
+      <button onClick={takeScreenshot}>screenshot</button>
+    </div >
+
+    <Canvas
+      gl={{ preserveDrawingBuffer: true }}
+      raycaster={{ params: raycasterParams }}
+      ref={canvasRef}
+    >
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[10, 10, 5]} intensity={1} />
+
+      <SceneObject model={model} />
+
+      {[EditorMode.MAP, EditorMode.GENERATE].includes(editorMode) && <PolygonCreator />}
+
+      <WrappedOrbitControls
+        useCase={OrbitUsecase.VIEWPORT}
+        target={orbitTarget}
+      />
+      {showGrid &&
+        <>
+          <gridHelper args={[10, 10]} />
+          <LabeledAxesHelper size={5} />
+        </>
+      }
+      <color attach="background" args={['#484848']} />
+
+      <SwitchableCamera ref={cameraRef} />
+      <CameraPosLogging />
+    </Canvas>
+  </>
   );
 }
 
