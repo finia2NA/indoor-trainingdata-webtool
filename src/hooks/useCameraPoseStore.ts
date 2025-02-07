@@ -3,19 +3,19 @@
 import { create } from 'zustand';
 
 type CameraPoseState = {
-  cameraPosition: [number, number, number];
-  setCameraPosition: (position: [number, number, number]) => void;
+  reactiveCameraPosition: [number, number, number];
+  setReactiveCameraPosition: (position: [number, number, number]) => void;
 
-  cameraRotation: [number, number, number];
-  setCameraRotation: (rotation: [number, number, number]) => void;
+  reactiveCameraRotation: [number, number, number];
+  setReactiveCameraRotation: (rotation: [number, number, number]) => void;
 };
 
 const useCameraPoseStore = create<CameraPoseState>((set) => ({
-  cameraPosition: [0, 0, 0],
-  setCameraPosition: (position) => set({ cameraPosition: position }),
+  reactiveCameraPosition: [0, 0, 0],
+  setReactiveCameraPosition: (position) => set({ reactiveCameraPosition: position }),
 
-  cameraRotation: [0, 0, 0],
-  setCameraRotation: (rotation) => set({ cameraRotation: rotation }),
+  reactiveCameraRotation: [0, 0, 0],
+  setReactiveCameraRotation: (rotation) => set({ reactiveCameraRotation: rotation }),
 }));
 
 export default useCameraPoseStore;

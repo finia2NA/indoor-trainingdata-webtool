@@ -19,8 +19,8 @@ const toZeroPad = (inStr: string) => {
 }
 
 const CameraPoseDisplay = () => {
-  const { cameraPosition, cameraRotation } = useCameraPoseStore();
-  const pos = cameraPosition.map(toNPrecision);
+  const { reactiveCameraPosition: cameraPosition, reactiveCameraRotation: cameraRotation } = useCameraPoseStore();
+  const pos = cameraPosition.map(x => toNPrecision(x, 3));
   const rot = cameraRotation.map(toDegrees).map(x => toNPrecision(x, 1)).map(toZeroPad);
 
   return (
