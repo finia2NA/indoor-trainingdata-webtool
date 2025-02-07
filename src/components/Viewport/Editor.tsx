@@ -3,6 +3,7 @@ import useEditorStore, { EditorMode, EditorState } from "../../hooks/useEditorSt
 import { PolygonCreatorToggles, TransformToggles, ViewmodeToggles } from "./Multitoggle"
 import ViewcubeViz from "./Minipanels/ViewcubeViz"
 import Viewport from "./Viewport"
+import CameraPoseDisplay from "./CameraPoseDisplay";
 
 type EditorProps = {
   model: Model3D;
@@ -45,6 +46,7 @@ const Editor = ({ model }: EditorProps) => {
         </div>
         <div className="flex items-end justify-end p-2">
           {/* Bottom Right Corner Content */}
+          <CameraPoseDisplay />
         </div>
       </div>
     </div>

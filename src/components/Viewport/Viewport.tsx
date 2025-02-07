@@ -6,6 +6,7 @@ import SwitchableCamera from './SwitchableCamera';
 import SceneObject from './SceneObject';
 import PolygonCreator from './PolygonCreator/PolygonCreator';
 import LabeledAxesHelper from './LabeledAxesHelper';
+import CameraPosLogging from './CameraPoseLogging';
 
 type ViewportProps = {
   model: Model3D;
@@ -51,6 +52,7 @@ const Viewport = ({ model }: ViewportProps) => {
 
       {/* <SwitchableCamera ref={cameraRef} /> */}
       <SwitchableCamera />
+      <CameraPosLogging />
     </Canvas>
   );
 }

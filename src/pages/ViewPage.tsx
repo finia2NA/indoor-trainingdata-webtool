@@ -50,11 +50,11 @@ const ViewPage = () => {
 
   // TODO: proper sizing
   return (
-    <div className="flex flex-col md:flex-row h-full w-full">
-      <div className="flex-grow flex-shrink h-1/2 md:h-auto md:basis-3/4 min-h-[400px] min-w-0">
+    <div className="flex flex-col lg:flex-row h-full w-full">
+      <div className="flex-grow flex-shrink h-1/2 lg:h-auto lg:basis-3/4 min-h-[400px] min-w-0">
         <Editor model={model as Model3D} />
       </div>
-      <div className="flex-grow flex-shrink h-1/2 md:h-auto md:basis-1/4 md:min-w-[400px] overflow-auto">
+      <div className="flex-grow flex-shrink h-1/2 lg:h-auto lg:basis-1/4 lg:min-w-[400px] overflow-auto">
         <Sidebar />
       </div>
     </div>

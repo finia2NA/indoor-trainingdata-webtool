@@ -1,4 +1,4 @@
-import { Sphere, Line, Html } from '@react-three/drei';
+import { Sphere, Line, Html, OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { Vector3 } from 'three';
 
@@ -31,11 +31,14 @@ const AngleLines = ({ radius }: { radius: number }) => {
   });
 
   return (
+    // TODO: why when placing the lines over the sphere are they still not visible?
+    // <group position={[0, 0, 3]}>
     <>
       {lines.map((el, index) => (
-        <Line key={index} points={[el.start, el.end]} color={el.color} lineWidth={1} />
+        <Line key={index} points={[el.start, el.end]} color={el.color} lineWidth={1} depthTest={false} />
       ))}
     </>
+    // </group>
   )
 }
 
@@ -90,6 +93,7 @@ const AngleDisplay = ({ minAngle, maxAngle }: AngleDisplayProps) => {
         ]}
         position={[0, 0, 0]}
       />
+      <OrbitControls />
     </Canvas>
   )
 }
