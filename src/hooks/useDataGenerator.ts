@@ -2,7 +2,6 @@ import { Vector3 } from "three";
 import { create } from "zustand";
 
 type DataGeneratorState = {
-  // Orbit target needed for camera orbit controls
   orbitTarget: Vector3;
   setOrbitTarget: (target: Vector3) => void;
 
