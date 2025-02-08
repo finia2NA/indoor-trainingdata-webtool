@@ -34,7 +34,7 @@ const Coordinate = ({ x, y, z }: CoordinateProps) => {
     // <div className="flex flex-row gap-1">
     //   {data.map((item, index) => (
     //     <InteractiveInput
-    //       className="w-16 h-4 bg-dim_gray p-0"
+    //       className="w-16 h-4 bg-inactive p-0"
     //       key={index}
     //       type="number"
     //       value={item.value}
@@ -107,7 +107,7 @@ function Node({ node, style, dragHandle }: NodeProps) {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`flex row justify-between p-1 place-items-center ${node.data.isSelected ? 'bg-tropical_indigo' : 'hover:bg-[#31364d]'}`}
+        className={`flex row justify-between p-1 place-items-center ${node.data.isSelected ? 'bg-secondary' : 'hover:bg-[#31364d]'}`}
         onClick={handleNodeClick}
       >
         <div className="flex flex-row gap-1 place-items-center">

@@ -8,13 +8,13 @@ const colors = tailwindConfig.theme.extend.colors
 const theme = createTheme({
   palette: {
     primary: {
-      main: colors.orangeweb.DEFAULT,
+      main: colors.primary.DEFAULT,
     },
     secondary: {
-      main: colors.tropical_indigo.DEFAULT,
+      main: colors.secondary.DEFAULT,
     },
     background: {
-      default: colors.oxford_blue.DEFAULT,
+      default: colors.bg.DEFAULT,
     },
   },
   typography: {

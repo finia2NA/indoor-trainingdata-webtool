@@ -44,13 +44,13 @@ const SingleChannel = ({ name, values, onChange, step = 1, min = -100, max = 100
 
   return (
     <div className='flex flex-row px-1 gap-1'>
-      <button className={`flex h-6 items-center ${isActive ? "text-orangeweb" : ""}`}
+      <button className={`flex h-6 items-center ${isActive ? "text-primary" : ""}`}
         onClick={() => setTransformMode(name.toLowerCase() as EditorState["transformMode"])}
       >
         {icon}
       </button>
       <div className='flex flex-col gap-1'>
-        <button className={`flex h-6 items-center ${isActive ? "text-orangeweb" : ""}`}
+        <button className={`flex h-6 items-center ${isActive ? "text-primary" : ""}`}
           onClick={() => setTransformMode(name.toLowerCase() as EditorState["transformMode"])}
         >
           <h3>{name}</h3>
@@ -58,7 +58,7 @@ const SingleChannel = ({ name, values, onChange, step = 1, min = -100, max = 100
         <div className='flex flex-row gap-1 pl-1 pb-1'>
           {values.map((val, idx) => (
             <InteractiveInput
-              className='w-20 bg-dim_gray  basis-1/3 text-center'
+              className='w-20 bg-inactive  basis-1/3 text-center'
               type="number" key={idx}
               min={min} max={max} step={step}
               // TODO: I want to limit the display to 3 decimal places, but without changing the actual value
