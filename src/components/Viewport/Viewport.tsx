@@ -10,7 +10,8 @@ import CameraPosLogging from './CameraPoseLogging';
 import { useRef, useEffect, useCallback } from 'react';
 import { Camera, Vector3 } from 'three';
 import { saveAs } from 'file-saver';
-import { useDataGeneratorStore } from '../../hooks/useDataGenerator';
+import { useDataGeneratorStore } from '../../hooks/useDataGeneratorUtils';
+import WASDControls from './WASDControls';
 
 type ViewportProps = {
   model: Model3D;
@@ -89,7 +90,9 @@ const Viewport = ({ model }: ViewportProps) => {
         <color attach="background" args={['#484848']} />
 
         <SwitchableCamera ref={cameraRef} />
+
         <CameraPosLogging />
+        {/* <WASDControls /> */}
       </Canvas>
     </>
   );
