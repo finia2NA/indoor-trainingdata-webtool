@@ -2,6 +2,9 @@ import { OrbitControls, OrbitControlsProps } from "@react-three/drei";
 import React, { useEffect, useRef, useCallback } from "react";
 import useOrbitAngleSync from "../../hooks/useOrbitAngleSync";
 import useTransformingSync from "../../hooks/useTransformingSync";
+// @ts-expect-error No types, no idea where they are
+import { OrbitControls as ThreeOrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { useFrame } from "@react-three/fiber";
 
 export enum OrbitUsecase {
   CUBE = 'cube',
@@ -45,9 +48,7 @@ const WrappedOrbitControls = React.memo((props: WrappedOrbitControlsProps) => {
       });
     }
   }, [updateOrbitAngles]);
-
-  // @ts-expect-error aaa 
-  const controlsRef = useRef<OrbitControls>(null);
+  const controlsRef = useRef<ThreeOrbitControls>(null);
 
   useEffect(() => {
     if (controlsRef.current) {
@@ -75,6 +76,14 @@ const WrappedOrbitControls = React.memo((props: WrappedOrbitControlsProps) => {
       controlsRef.current.maxPolarAngle = Math.PI;
     }
   }, [azimuthAngle, polarAngle]);
+
+  useFrame(() => {
+    if (props.useCase === 'cube') return
+
+    const a = controlsRef.current.target;
+
+    console.log(a)
+  });
 
   return (isTransforming ? null :
     <OrbitControls
