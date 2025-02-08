@@ -7,10 +7,13 @@ import { useParams } from "react-router-dom";
 import useMultiGenerationStore, { GenPair } from "../../../hooks/useMultiGenerationStore";
 import { ResetConfirmationToast } from "../Toasts";
 import { toast } from "react-toastify";
+import useScreenshotUtils from "../../../hooks/useDataGenerator";
 
 
 const GenerateSidebar = () => {
   const id = Number(useParams<{ id: string }>().id);
+
+  const { setTrulyRandomPose } = useScreenshotUtils();
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
   let offset, angles, anglesConcentration, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, numImages, imageSize;
@@ -242,7 +245,10 @@ const GenerateSidebar = () => {
       </SidebarSection>
       <SidebarSection title="Generate" level={3}>
         <div className="flex flex-row gap-2 justify-around">
-          <button className="bg-orangeweb p-1 px-4">Generate</button>
+          <button
+            className="bg-orangeweb p-1 px-4"
+            onClick={() => setTrulyRandomPose()}
+          >Generate</button>
           <button
             className="bg-tropical_indigo p-1 px-4"
             onClick={resetHandler}

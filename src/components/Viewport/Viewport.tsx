@@ -7,10 +7,10 @@ import SceneObject from './SceneObject';
 import PolygonCreator from './PolygonCreator/PolygonCreator';
 import LabeledAxesHelper from './LabeledAxesHelper';
 import CameraPosLogging from './CameraPoseLogging';
-import { useRef, useState } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { Camera, Vector3 } from 'three';
 import { saveAs } from 'file-saver';
-
+import { useDataGeneratorStore } from '../../hooks/useDataGenerator';
 
 type ViewportProps = {
   model: Model3D;
@@ -27,32 +27,21 @@ const raycasterParams = {
   Sprite: undefined
 }
 
-const randomValue = () => Math.random() * 10 - 5;
-
-
 const Viewport = ({ model }: ViewportProps) => {
-
   const { showGrid, editorMode } = useEditorStore((state) => (state as EditorState));
+
+  const { orbitTarget, setOrbitTarget, registerSetPose, registerTakeScreenshot } = useDataGeneratorStore();
   const cameraRef = useRef<Camera | null>();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [orbitTarget, setOrbitTarget] = useState<Vector3>(new Vector3(0, 0, 0));
 
-  const setNewPose = () => {
+  const setPose = useCallback((pos: Vector3, target: Vector3) => {
     if (cameraRef.current) {
-      // Set random position and rotation.
-      const newX = randomValue();
-      const newY = randomValue();
-      const newZ = randomValue();
-      const newPositionVector = new Vector3(newX, newY, newZ);
-
-      const targetOffset = new Vector3(Math.random(), Math.random(), Math.random()).normalize().add(newPositionVector);
-      setOrbitTarget(targetOffset);
-
-      cameraRef.current.position.set(newX, newY, newZ);
+      cameraRef.current.position.set(pos.x, pos.y, pos.z);
+      setOrbitTarget(target);
     }
-  };
+  }, [setOrbitTarget]);
 
-  const takeScreenshot = async () => {
+  const takeScreenshot = useCallback(async () => {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
 
@@ -65,44 +54,44 @@ const Viewport = ({ model }: ViewportProps) => {
     if (blob) {
       saveAs(blob, 'screenshot.png');
     }
-  }
+  }, []);
 
+  // Register callbacks in the store once
+  useEffect(() => {
+    registerSetPose(setPose);
+    registerTakeScreenshot(takeScreenshot);
+  }, [setPose, takeScreenshot, registerSetPose, registerTakeScreenshot]);
 
+  return (
+    <>
+      <Canvas
+        gl={{ preserveDrawingBuffer: true }}
+        raycaster={{ params: raycasterParams }}
+        ref={canvasRef}
+      >
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[10, 10, 5]} intensity={1} />
 
-  return (<>
-    <div className='flex flex-row'>
-      <button onClick={setNewPose}>new pose</button>
-      <button onClick={takeScreenshot}>screenshot</button>
-    </div >
+        <SceneObject model={model} />
 
-    <Canvas
-      gl={{ preserveDrawingBuffer: true }}
-      raycaster={{ params: raycasterParams }}
-      ref={canvasRef}
-    >
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} intensity={1} />
+        {[EditorMode.MAP, EditorMode.GENERATE].includes(editorMode) && <PolygonCreator />}
 
-      <SceneObject model={model} />
+        <WrappedOrbitControls
+          useCase={OrbitUsecase.VIEWPORT}
+          target={orbitTarget}
+        />
+        {showGrid &&
+          <>
+            <gridHelper args={[10, 10]} />
+            <LabeledAxesHelper size={5} />
+          </>
+        }
+        <color attach="background" args={['#484848']} />
 
-      {[EditorMode.MAP, EditorMode.GENERATE].includes(editorMode) && <PolygonCreator />}
-
-      <WrappedOrbitControls
-        useCase={OrbitUsecase.VIEWPORT}
-        target={orbitTarget}
-      />
-      {showGrid &&
-        <>
-          <gridHelper args={[10, 10]} />
-          <LabeledAxesHelper size={5} />
-        </>
-      }
-      <color attach="background" args={['#484848']} />
-
-      <SwitchableCamera ref={cameraRef} />
-      <CameraPosLogging />
-    </Canvas>
-  </>
+        <SwitchableCamera ref={cameraRef} />
+        <CameraPosLogging />
+      </Canvas>
+    </>
   );
 }
 
