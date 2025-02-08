@@ -93,7 +93,7 @@ const AngleDisplay = ({ minAngle, maxAngle }: AngleDisplayProps) => {
         ]}
         position={[0, 0, 0]}
       />
-      <OrbitControls />
+      {/* <OrbitControls /> */}
     </Canvas>
   )
 }

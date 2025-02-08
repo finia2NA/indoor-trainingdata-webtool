@@ -41,7 +41,7 @@ const CameraPoseDisplay = () => {
         <h3 className="text-sm">Camera Pose</h3>
       </div>
       {isOpen && (
-        <div className="bg-oxford_blue bg-opacity-60 text-gray-100 px-2 py-3 gap-2 font-mono text-sm">
+        <div className="bg-bg bg-opacity-60 text-gray-100 px-2 py-3 gap-2 font-mono text-sm">
           <h4 className="text-gray-400">Camera Position</h4>
           <p>{`[${pos[0]}, ${pos[1]}, ${pos[2]}]`}</p>
           <h4 className="text-gray-400">Camera Rotation</h4>

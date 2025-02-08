@@ -7,7 +7,7 @@ const TopBar = () => {
   return (
     <div className="
     p-4 w-full fixed top-0 max-h-16
-    bg-oxford_blue text-white
+    bg-bg text-white
     flex flex-row
     items-center
     justify-between
@@ -15,7 +15,7 @@ const TopBar = () => {
       {location.pathname !== '/' && (
         <Link to="/" className="text-blue-500 underline">
           <div className='bg-white rounded-full p-2'>
-            <MdArrowBackIosNew className='text-oxford_blue' />
+            <MdArrowBackIosNew className='text-bg' />
           </div>
         </Link>
       )}

@@ -20,7 +20,7 @@ const SidebarSection: React.FC<SidebarSectionProps> = ({ title, children, level 
   }
   const textsize = sizes[level as keyof typeof sizes];
   return (
-    <div className='rounded-xl outline outline-tropical_indigo-700/20 m-1 p-1'>
+    <div className='rounded-xl outline outline-secondary-700/20 m-1 p-1'>
       {React.createElement(`h${level}`, { className: `${textsize} p-1` }, title)}
       <hr />
       <div className={`flex flex-col p-1 gap-1 ${className}`}>

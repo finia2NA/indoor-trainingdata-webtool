@@ -11,7 +11,7 @@ const Sidebar: React.FC = () => {
 
   return (
     <div
-      className="h-full w-full overflow-y-auto bg-oxford_blue
+      className="h-full w-full overflow-y-auto bg-bg
       ">
       <Progress />
       <div className="text-white">

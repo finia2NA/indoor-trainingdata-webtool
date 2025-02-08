@@ -17,7 +17,7 @@ const UploadComponent: React.FC = () => {
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
   return (
-    <div {...getRootProps()} className='border-2 border-dashed border-orangeweb rounded-md p-5 text-center cursor-pointer'>
+    <div {...getRootProps()} className='border-2 border-dashed border-primary rounded-md p-5 text-center cursor-pointer'>
       <input {...getInputProps()} />
       <p>Drag + drop some files here, or click to select files</p>
     </div>

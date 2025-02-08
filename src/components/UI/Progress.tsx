@@ -23,7 +23,7 @@ const ProgressArrow: React.FC<ProgressArrowProps> = ({ text }) => {
     <button
       className={
         `basis-1/3
-        ${active ? 'bg-orangeweb' : 'bg-dim_gray'}
+        ${active ? 'bg-primary' : 'bg-inactive'}
         text-white
         py-2
         font-medium

@@ -23,7 +23,7 @@ const Multitoggle = ({ items, direction }: MultitoggleProps) => {
 
   return (
     <div className={`
-    bg-oxford_blue bg-opacity-60
+    bg-bg bg-opacity-60
     px-2 py-3 gap-2
     flex flex-${direction === 'row' ? 'row' : 'col'}
     pointer-events-auto`}>
@@ -32,8 +32,8 @@ const Multitoggle = ({ items, direction }: MultitoggleProps) => {
           className={`rounded-full p-1
           text-white outline-none
           border-transparent border-[1px]
-          hover:transform hover:scale-105 hover:border-orangeweb-800
-          ${item.active ? "bg-orangeweb" : "bg-dim_gray"}
+          hover:transform hover:scale-105 hover:border-primary-800
+          ${item.active ? "bg-primary" : "bg-inactive"}
           `}
           onClick={item.onClick}
           key={item.id}

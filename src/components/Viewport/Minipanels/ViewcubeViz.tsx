@@ -139,7 +139,7 @@ const ViewcubeViz = () => {
   const { setOrbitAngles } = useOrbitAngleSync((state) => state);
 
   return (
-    <Canvas className='bg-oxford_blue bg-opacity-60'>
+    <Canvas className='bg-bg bg-opacity-60'>
       <ambientLight />
       <pointLight position={[10, 10, 10]} />
       <Cube setOrbitAngles={setOrbitAngles} />
