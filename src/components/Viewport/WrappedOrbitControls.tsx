@@ -4,6 +4,7 @@ import useOrbitAngleSync from "../../hooks/useOrbitAngleSync";
 import useTransformingSync from "../../hooks/useTransformingSync";
 // @ts-expect-error No types, no idea where they are
 import { OrbitControls as ThreeOrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import useCameraPoseStore from "../../hooks/useCameraPoseStore";
 import { useFrame } from "@react-three/fiber";
 
 export enum OrbitUsecase {
@@ -19,6 +20,7 @@ const WrappedOrbitControls = React.memo((props: WrappedOrbitControlsProps) => {
 
   // get shared orbit state
   const { orbitAngles, updateOrbitAngles } = useOrbitAngleSync((state) => state);
+  const { setReactiveTarget } = useCameraPoseStore();
 
   // we only want to apply the orbit control when the user is not transforming
   const { isTransforming } = useTransformingSync();
@@ -78,11 +80,10 @@ const WrappedOrbitControls = React.memo((props: WrappedOrbitControlsProps) => {
   }, [azimuthAngle, polarAngle]);
 
   useFrame(() => {
-    if (props.useCase === 'cube') return
-
-    const a = controlsRef.current.target;
-
-    console.log(a)
+    if (props.useCase !== OrbitUsecase.VIEWPORT) return;
+    if (controlsRef.current && controlsRef.current.target) {
+      setReactiveTarget(controlsRef.current.target.toArray());
+    }
   });
 
   return (isTransforming ? null :

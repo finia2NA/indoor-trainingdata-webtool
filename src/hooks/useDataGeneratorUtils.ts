@@ -23,7 +23,7 @@ export const useDataGeneratorStore = create<DataGeneratorState>((set) => ({
   registerTakeScreenshot: (cb) => set({ takeScreenshot: cb }),
 }));
 
-const useScreenshotUtils = () => {
+const useDataGeneratorUtils = () => {
   const { takeScreenshot, setPose } = useDataGeneratorStore();
 
   const setTrulyRandomPose = (min?: Vector3, max?: Vector3) => {
@@ -52,4 +52,4 @@ const useScreenshotUtils = () => {
   return { takeScreenshot, setPose, setTrulyRandomPose };
 }
 
-export default useScreenshotUtils;
+export default useDataGeneratorUtils;

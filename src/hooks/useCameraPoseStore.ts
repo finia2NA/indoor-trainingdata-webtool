@@ -8,6 +8,9 @@ type CameraPoseState = {
 
   reactiveCameraRotation: [number, number, number];
   setReactiveCameraRotation: (rotation: [number, number, number]) => void;
+
+  reactiveTarget: [number, number, number];
+  setReactiveTarget: (target: [number, number, number]) => void;
 };
 
 const useCameraPoseStore = create<CameraPoseState>((set) => ({
@@ -16,6 +19,9 @@ const useCameraPoseStore = create<CameraPoseState>((set) => ({
 
   reactiveCameraRotation: [0, 0, 0],
   setReactiveCameraRotation: (rotation) => set({ reactiveCameraRotation: rotation }),
+
+  reactiveTarget: [0, 0, 0],
+  setReactiveTarget: (target) => set({ reactiveTarget: target }),
 }));
 
 export default useCameraPoseStore;
