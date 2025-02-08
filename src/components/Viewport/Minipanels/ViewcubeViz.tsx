@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import WrappedOrbitControls from '../WrappedOrbitControls';
+import WrappedOrbitControls, { OrbitUsecase } from '../WrappedOrbitControls';
 import * as THREE from 'three';
 import useOrbitAngleSync from '../../../hooks/useOrbitAngleSync';
 
@@ -143,7 +143,7 @@ const ViewcubeViz = () => {
       <ambientLight />
       <pointLight position={[10, 10, 10]} />
       <Cube setOrbitAngles={setOrbitAngles} />
-      <WrappedOrbitControls enablePan={false} useCase='cube' />
+      <WrappedOrbitControls enablePan={false} useCase={OrbitUsecase.CUBE} />
     </Canvas>
   );
 };

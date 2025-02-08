@@ -3,8 +3,7 @@ import useEditorStore, { EditorState, Perspective } from "../../hooks/useEditorS
 import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import * as THREE from "three";
 
-// Wrap component with forwardRef to expose active camera ref
-const SwitchableCamera = forwardRef((props, ref) => {
+const SwitchableCamera = forwardRef((_props, ref) => {
 
   const { perspectiveMode } = useEditorStore((state) => (state as EditorState));
   const perspectiveRef = useRef<THREE.PerspectiveCamera | null>(null);

@@ -2,7 +2,6 @@ import { Tree } from "react-arborist";
 import useMultiPolygonStore from "../../../hooks/useMultiPolygonStore";
 import { useMemo, useState } from "react";
 import { PiDotFill, PiFolder, PiPolygon, PiTrash } from "react-icons/pi";
-import { InteractiveInput } from "@designbyadrian/react-interactive-input";
 import { useParams } from "react-router-dom";
 
 type CoordinateProps = {
@@ -21,7 +20,8 @@ type NodeProps = {
   dragHandle?: any
 };
 
-const Coordinate = ({ x, y, z, handleLocationChange }: CoordinateProps) => {
+// const Coordinate = ({ x, y, z, handleLocationChange }: CoordinateProps) => {
+const Coordinate = ({ x, y, z }: CoordinateProps) => {
 
   const data = [
     { name: 'x', value: x },
@@ -53,7 +53,7 @@ const Coordinate = ({ x, y, z, handleLocationChange }: CoordinateProps) => {
 }
 
 function Node({ node, style, dragHandle }: NodeProps) {
-  const id = Number(useParams<{ id:string }>().id);
+  const id = Number(useParams<{ id: string }>().id);
   const [isHovered, setIsHovered] = useState(false);
   const { getPolygons, setPolygons, setSelectedPolygon, deletePolygon, deletePoint } = useMultiPolygonStore();
   const polygons = getPolygons(id);
@@ -123,8 +123,8 @@ function Node({ node, style, dragHandle }: NodeProps) {
 }
 
 const Polygontree = () => {
-  const id = Number(useParams<{ id:string }>().id);
-  const { getPolygons, getSelectedPolygon} = useMultiPolygonStore();
+  const id = Number(useParams<{ id: string }>().id);
+  const { getPolygons, getSelectedPolygon } = useMultiPolygonStore();
   const polygons = getPolygons(id);
   const selectedPolygon = getSelectedPolygon(id);
 
