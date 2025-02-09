@@ -5,7 +5,7 @@ import React, { Fragment } from 'react';
 
 import { Vector3 } from 'three';
 import { useEffect } from 'react';
-import useEditorStore, { EditorMode, EditorState, PolygonToolMode } from '../../../hooks/useEditorStore.ts';
+import useEditorStore, { EditorMode, PolygonToolMode } from '../../../hooks/useEditorStore.ts';
 import { toast } from 'react-toastify';
 import PolygonVertex from './PolygonVertex.tsx';
 import CreatorSurface from './CreatorSurface.tsx';
@@ -17,7 +17,7 @@ import TriangulizationDisplay from './TriangulizationDisplay.tsx';
 
 const PolygonCreator: React.FC = () => {
   "use no memo"
-  const { polygonToolMode, setPolygonToolMode, editorMode } = useEditorStore((state) => state as EditorState);
+  const { polygonToolMode, setPolygonToolMode, editorMode, showTriangulation } = useEditorStore();
   const id = Number(useParams<{ id: string }>().id);
   const { getPolygons, deletePolygon, deletePoint, setPolygons, addPoint, getSelectedPolygon, setSelectedPolygon } = useMultiPolygonStore();
   const polygons = getPolygons(id);
@@ -173,7 +173,9 @@ const PolygonCreator: React.FC = () => {
               )}
             </Fragment>
           ))}
-          <TriangulizationDisplay polygon={polygon} />
+          {showTriangulation &&
+            <TriangulizationDisplay polygon={polygon} />
+          }
         </Fragment>
       ))}
 

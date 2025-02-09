@@ -1,8 +1,10 @@
 import { IconType } from "react-icons";
-import useEditorStore, { EditorState, Perspective, PolygonToolMode, TransformMode } from "../../hooks/useEditorStore";
+import useEditorStore, { EditorMode, EditorState, Perspective, PolygonToolMode, TransformMode } from "../../hooks/useEditorStore";
 import { LuExpand, LuMousePointer2, LuMove, LuRotate3D } from "react-icons/lu";
 import { TbPerspective, TbPerspectiveOff } from "react-icons/tb";
 import { MdOutlineGridOn, MdOutlineGridOff, MdLabel, MdLabelOff, MdOutlineAddLocationAlt, MdOutlinePolyline } from "react-icons/md";
+import { GiMeshNetwork } from "react-icons/gi";
+
 
 
 type Item = {
@@ -20,13 +22,14 @@ type MultitoggleProps = {
 };
 
 const Multitoggle = ({ items, direction }: MultitoggleProps) => {
-
   return (
     <div className={`
     bg-bg bg-opacity-60
     px-2 py-3 gap-2
     flex flex-${direction === 'row' ? 'row' : 'col'}
-    pointer-events-auto`}>
+    pointer-events-auto
+    ${direction === 'row' ? "w-28" : ""}
+    flex-wrap`}>
       {items.map((item) => (
         <button
           className={`rounded-full p-1
@@ -128,7 +131,7 @@ export const PolygonCreatorToggles = () => {
 export const ViewmodeToggles = () => {
   // Perspective stuff
   // state
-  const { perspectiveMode, setPerspectiveMode, showLabels: showLabel, setShowLabel } = useEditorStore((state) => (state as EditorState));
+  const { editorMode, perspectiveMode, setPerspectiveMode, showLabels: showLabel, setShowLabel, showGrid, setShowGrid, showTriangulation, setShowTriangulation } = useEditorStore();
 
   // icons
   const PerspectiveOrthographicIcon = perspectiveMode === Perspective.ORTHOGRAPHIC ? TbPerspectiveOff : TbPerspective;
@@ -144,9 +147,11 @@ export const ViewmodeToggles = () => {
     setShowLabel(newLabel);
   }
 
-  // Grid stuff
-  // state
-  const { showGrid, setShowGrid } = useEditorStore((state) => (state as EditorState));
+  const toggleShowTriangulation = () => {
+    const newTriangulation = !showTriangulation;
+    setShowTriangulation(newTriangulation);
+  }
+
   // icon
   const GridIcon = showGrid ? MdOutlineGridOn : MdOutlineGridOff;
   // onClick
@@ -175,8 +180,19 @@ export const ViewmodeToggles = () => {
       active: showLabel,
       onClick: toggleShowLabel,
     }
-
   ];
+
+  if (editorMode !== EditorMode.LAYOUT) {
+    items.push(
+      {
+        id: 'triangulation',
+        title: 'Toggle Triangulation',
+        icon: () => <GiMeshNetwork />,
+        active: showTriangulation,
+        onClick: toggleShowTriangulation,
+      }
+    )
+  }
 
   return (
     <Multitoggle items={items} direction="row" />
