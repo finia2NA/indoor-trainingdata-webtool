@@ -13,6 +13,7 @@ import PolygonLine from './PolygonLine.tsx';
 import useMultiPolygonStore from '../../../hooks/useMultiPolygonStore.ts';
 import HeightDisplay from './HeightDisplay.tsx';
 import { useParams } from 'react-router-dom';
+import TriangulizationDisplay from './TriangulizationDisplay.tsx';
 
 const PolygonCreator: React.FC = () => {
   "use no memo"
@@ -171,6 +172,7 @@ const PolygonCreator: React.FC = () => {
               )}
             </Fragment>
           ))}
+          <TriangulizationDisplay polygon={polygon} />
         </Fragment>
       ))}
 
