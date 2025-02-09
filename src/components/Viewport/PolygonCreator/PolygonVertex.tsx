@@ -1,4 +1,4 @@
-import { TransformControls } from "@react-three/drei";
+import { Html, TransformControls } from "@react-three/drei";
 import { Mesh, Vector3 } from "three";
 import useTransformingSync from "../../../hooks/useTransformingSync";
 import { useEffect, useRef, useState } from "react";
@@ -9,13 +9,14 @@ type VertexObjectProps = {
   setPosition: (position: Vector3) => void;
   isSelected: boolean;
   setAsSelected: () => void;
+  pointIndex: number;
   color: string;
   tryPolygonCompletion: (position: Vector3) => void;
 };
 
-const PolygonVertex: React.FC<VertexObjectProps> = ({ position, setPosition, isSelected, setAsSelected, color, tryPolygonCompletion }) => {
+const PolygonVertex: React.FC<VertexObjectProps> = ({ position, setPosition, isSelected, setAsSelected, pointIndex, color, tryPolygonCompletion }) => {
   const { setIsTransforming } = useTransformingSync();
-  const { polygonToolMode } = useEditorStore((state) => state as EditorState);
+  const { polygonToolMode, showLabels } = useEditorStore((state) => state as EditorState);
 
   // keep a ref and  a state for manipulation
   const sphereRef = useRef<Mesh>(null);
@@ -59,6 +60,12 @@ const PolygonVertex: React.FC<VertexObjectProps> = ({ position, setPosition, isS
         <sphereGeometry args={[0.04, 16, 16]} />
         <meshBasicMaterial color={color} />
       </mesh>
+      {showLabels &&
+        <Html position={position} style={{ pointerEvents: 'none' }}>
+          <div style={{ height: "0.2em" }} />
+          <div style={{ color: color, fontSize: '0.7em' }}>{pointIndex}</div>
+        </Html>
+      }
       {isSelected &&
         <TransformControls
           object={sphereObject || undefined}

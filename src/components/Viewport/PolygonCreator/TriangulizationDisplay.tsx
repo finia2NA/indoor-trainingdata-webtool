@@ -14,6 +14,7 @@ const TriangulizationDisplay = ({ polygon }: TriangulizationDisplayProps) => {
   for (let i = 0; i < earcutIndices.length; i += 3) {
     lineIndices.push([earcutIndices[i], earcutIndices[i + 1]]);
     lineIndices.push([earcutIndices[i + 1], earcutIndices[i + 2]]);
+    lineIndices.push([earcutIndices[i + 2], earcutIndices[i]]);
   }
 
   const linePoints = lineIndices.map((line) => line.map((index) => polygon[index]));

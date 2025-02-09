@@ -79,6 +79,11 @@ const GenerateSidebar = () => {
       });
   }
 
+  const heightOffsetHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // NOTE: limiting in this way does not appear to work
+    setHeightOffset(Math.max(parseFloat(e.target.value), 0));
+  }
+
   return (
     <SidebarSection title="Generate">
       <SidebarSection title="Poses" level={3}>
@@ -97,7 +102,7 @@ const GenerateSidebar = () => {
             type="number"
             min={0} max={1} step={0.01}
             value={offset}
-            onChange={(e) => setHeightOffset(parseFloat(e.target.value))}
+            onChange={heightOffsetHandler}
           />
         </div>
 

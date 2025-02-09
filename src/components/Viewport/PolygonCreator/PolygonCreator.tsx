@@ -146,6 +146,7 @@ const PolygonCreator: React.FC = () => {
               {/* Vert */}
               <PolygonVertex
                 position={point}
+                pointIndex={pointIndex}
                 setPosition={(newPosition) => setPointPosition(polygonIndex, pointIndex, newPosition)}
                 isSelected={polygonIndex === selectedPolygon[0] && pointIndex === selectedPolygon[1]}
                 setAsSelected={() => setSelectedPolygon(id, [polygonIndex, pointIndex])}
