@@ -153,23 +153,27 @@ const PolygonCreator: React.FC = () => {
                 color={getPointColor(polygonIndex, pointIndex, polygon)}
                 tryPolygonCompletion={tryPolygonCompletion} />
               {/* Line(s) */}
-              {/* One line when we have just 2 points */}
-              {polygon.length === 2 && (
-                <PolygonLine
-                  startPoint={polygon[0]}
-                  startIndex={0}
-                  endPoint={polygon[1]}
-                  polygonIndex={polygonIndex}
-                />
-              )}
-              {/* Closing the loop when we have more than 2 */}
-              {polygon.length > 2 && (
-                <PolygonLine
-                  startPoint={point}
-                  startIndex={pointIndex}
-                  endPoint={polygon[(pointIndex + 1) % polygon.length]}
-                  polygonIndex={polygonIndex}
-                />
+              {!showTriangulation && (
+                <>
+                  {/* One line when we have just 2 points */}
+                  {polygon.length === 2 && (
+                    <PolygonLine
+                      startPoint={polygon[0]}
+                      startIndex={0}
+                      endPoint={polygon[1]}
+                      polygonIndex={polygonIndex}
+                    />
+                  )}
+                  {/* Closing the loop when we have more than 2 */}
+                  {polygon.length > 2 && (
+                    <PolygonLine
+                      startPoint={point}
+                      startIndex={pointIndex}
+                      endPoint={polygon[(pointIndex + 1) % polygon.length]}
+                      polygonIndex={polygonIndex}
+                    />
+                  )}
+                </>
               )}
             </Fragment>
           ))}

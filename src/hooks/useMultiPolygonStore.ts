@@ -123,10 +123,8 @@ const useMultiPolygonStore = create<MultiPolygonState>()(
             .slice(0, afterPointIndex + 1)
             .concat([position])
             .concat(currentPolygon.slice(afterPointIndex + 1));
-
-          console.log("newPolygon", newPolygon);
-          const newAllPolygons = allPolygons.map((polygon, index) => (index === polygonIndex ? newPolygon : polygon));
-          get().setPolygons(id, newAllPolygons);
+          allPolygons[polygonIndex] = newPolygon;
+          get().setPolygons(id, allPolygons);
         } else {
           // Error case: we need either both or none of the splice arguments
           console.error("Invalid arguments for addPoint: need to provide both polygonIndex and afterPoint or neither");
