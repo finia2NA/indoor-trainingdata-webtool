@@ -11,6 +11,8 @@ import { useRef, useEffect, useCallback } from 'react';
 import { Camera, Vector3 } from 'three';
 import { saveAs } from 'file-saver';
 import { useDataGeneratorStore } from '../../hooks/useDataGeneratorUtils';
+import useMultiPolygonStore from '../../hooks/useMultiPolygonStore';
+import { useParams } from 'react-router-dom';
 
 type ViewportProps = {
   model: Model3D;
@@ -33,7 +35,11 @@ const Viewport = ({ model }: ViewportProps) => {
   const { orbitTarget, setOrbitTarget, registerSetPose, registerTakeScreenshot } = useDataGeneratorStore();
   const cameraRef = useRef<Camera | null>();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { setSelectedPolygon } = useMultiPolygonStore();
+  const id = Number(useParams<{ id: string }>().id);
 
+
+  // enabling setting pose from outside
   const setPose = useCallback((pos: Vector3, target: Vector3) => {
     if (cameraRef.current) {
       cameraRef.current.position.set(pos.x, pos.y, pos.z);
@@ -55,8 +61,6 @@ const Viewport = ({ model }: ViewportProps) => {
       saveAs(blob, 'screenshot.png');
     }
   }, []);
-
-  // Register callbacks in the store once
   useEffect(() => {
     registerSetPose(setPose);
     registerTakeScreenshot(takeScreenshot);
@@ -68,6 +72,7 @@ const Viewport = ({ model }: ViewportProps) => {
         gl={{ preserveDrawingBuffer: true }}
         raycaster={{ params: raycasterParams }}
         ref={canvasRef}
+        onPointerMissed={() => setSelectedPolygon(id, [null, null])}
       >
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 10, 5]} intensity={1} />
