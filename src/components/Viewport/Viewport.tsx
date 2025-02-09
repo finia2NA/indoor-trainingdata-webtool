@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import { Model3D } from '../../data/db';
 import WrappedOrbitControls, { OrbitUsecase } from './WrappedOrbitControls';
-import useEditorStore, { EditorMode, EditorState } from '../../hooks/useEditorStore';
+import useEditorStore, { EditorMode } from '../../hooks/useEditorStore';
 import SwitchableCamera from './SwitchableCamera';
 import SceneObject from './SceneObject';
 import PolygonCreator from './PolygonCreator/PolygonCreator';
@@ -11,7 +11,6 @@ import { useRef, useEffect, useCallback } from 'react';
 import { Camera, Vector3 } from 'three';
 import { saveAs } from 'file-saver';
 import { useDataGeneratorStore } from '../../hooks/useDataGeneratorUtils';
-import WASDControls from './WASDControls';
 
 type ViewportProps = {
   model: Model3D;
@@ -29,7 +28,7 @@ const raycasterParams = {
 }
 
 const Viewport = ({ model }: ViewportProps) => {
-  const { showGrid, editorMode } = useEditorStore((state) => (state as EditorState));
+  const { showGrid, editorMode } = useEditorStore();
 
   const { orbitTarget, setOrbitTarget, registerSetPose, registerTakeScreenshot } = useDataGeneratorStore();
   const cameraRef = useRef<Camera | null>();

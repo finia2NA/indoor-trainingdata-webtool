@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Group, Object3DEventMap } from 'three';
 import useMultiTransformationStore from '../../hooks/useMultiTransformationStore';
 import * as THREE from 'three';
-import useEditorStore, { EditorState } from '../../hooks/useEditorStore';
+import useEditorStore from '../../hooks/useEditorStore';
 import { TransformControls } from '@react-three/drei';
 import useTransformingSync from '../../hooks/useTransformingSync';
 import Transformation from '../../data/Transformation';
@@ -69,7 +69,7 @@ const SceneObject = ({ model }: SceneObjectProps) => {
   // -------------------
 
   // Getting current UI transform mode
-  const { transformMode } = useEditorStore((state) => (state as EditorState));
+  const { transformMode } = useEditorStore();
   const { setIsTransforming } = useTransformingSync();
 
   // Specify what should happen when the object is transformed

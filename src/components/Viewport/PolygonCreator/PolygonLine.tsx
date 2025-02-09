@@ -17,7 +17,7 @@ const PolygonLine = ({ start, end, polygonIndex, addPoint }: PolygonLineProps) =
   // when the mode is splice, it is yellow when hovered
   const onPointerEnter = () => {
     if (polygonToolMode !== PolygonToolMode.SPLICE) return;
-    console.log(start,end,polygonIndex)
+    console.log(start, end, polygonIndex)
     setMyColor("yellow");
   }
   // when not hovered, it is black

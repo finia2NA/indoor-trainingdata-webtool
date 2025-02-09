@@ -6,8 +6,6 @@
  */
 
 
-/* eslint-disable no-unused-vars */
-
 import { create } from 'zustand';
 
 // Data definition
@@ -55,6 +53,9 @@ export type EditorState = {
   showLabels: boolean;
   setShowLabel: (label: boolean) => void;
 
+  showTriangulation: boolean;
+  setShowTriangulation: (show: boolean) => void;
+
   // TODO: rename this and below to surface_, to distinguish from drawn polygon offset etc.
   polygonHeight: number;
   setPolygonHeight: (newHeight: number) => void;
@@ -68,7 +69,7 @@ export type EditorState = {
 // --------------------------------------------
 
 // Store creation
-const useEditorStore = create((set) => ({
+const useEditorStore = create<EditorState>((set) => ({
   perspectiveMode: Perspective.PERSPECTIVE,
   setPerspectiveMode: (mode: Perspective) => set({ perspectiveMode: mode }),
 
@@ -86,6 +87,9 @@ const useEditorStore = create((set) => ({
 
   showLabels: false,
   setShowLabel: (showLabels: boolean) => set({ showLabels }),
+
+  showTriangulation: false,
+  setShowTriangulation: (show: boolean) => set({ showTriangulation: show }),
 
   polygonHeight: 0,
   setPolygonHeight: (newHeight: number) => set({ polygonHeight: newHeight }),

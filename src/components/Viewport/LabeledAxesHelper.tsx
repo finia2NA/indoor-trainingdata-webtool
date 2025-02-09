@@ -1,7 +1,6 @@
 import React from 'react';
 import { Html } from '@react-three/drei'
-import useEditorStore, { EditorState } from '../../hooks/useEditorStore';
-
+import useEditorStore from '../../hooks/useEditorStore';
 
 type LabeledAxesHelperProps = {
   size?: number;
@@ -16,7 +15,7 @@ function htmlStyle(axis: string) {
 }
 
 const LabeledAxesHelper: React.FC<LabeledAxesHelperProps> = ({ size = 5 }) => {
-  const { showLabels } = useEditorStore((state) => (state as EditorState));
+  const { showLabels } = useEditorStore();
 
   return (
     <>

@@ -1,11 +1,11 @@
 import { OrthographicCamera, PerspectiveCamera } from "@react-three/drei";
-import useEditorStore, { EditorState, Perspective } from "../../hooks/useEditorStore";
+import useEditorStore, { Perspective } from "../../hooks/useEditorStore";
 import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import * as THREE from "three";
 
 const SwitchableCamera = forwardRef((_props, ref) => {
 
-  const { perspectiveMode } = useEditorStore((state) => (state as EditorState));
+  const { perspectiveMode } = useEditorStore();
   const perspectiveRef = useRef<THREE.PerspectiveCamera | null>(null);
   const orthoRef = useRef<THREE.OrthographicCamera | null>(null);
 
