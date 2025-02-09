@@ -32,6 +32,65 @@ class Triangulation {
       ]);
     }
   }
+
+  getArea() {
+    let area = 0;
+    for (let i = 0; i < this.triangles.length; i++) {
+      const triangle = this.triangles[i];
+      const a = triangle[0].position;
+      const b = triangle[1].position;
+      const c = triangle[2].position;
+      const ab = b.clone().sub(a);
+      const ac = c.clone().sub(a);
+      const cross = new Vector3().crossVectors(ab, ac);
+      area += 0.5 * cross.length();
+    }
+    return area;
+  }
+
+  getRandomPoint() {
+    // First, get a triangle weighted by area
+    // We do this by first computing a goal area as a fraction of the total shape area,
+    // then iterating over the triangles and taking the first one that pushes us over the goal area
+    const totalArea = this.getArea();
+    const randomArea = Math.random() * totalArea;
+    let currentArea = 0;
+    let triangleIndex = 0;
+    for (let i = 0; i < this.triangles.length; i++) {
+      const triangle = this.triangles[i];
+      const a = triangle[0].position;
+      const b = triangle[1].position;
+      const c = triangle[2].position;
+      const ab = b.clone().sub(a);
+      const ac = c.clone().sub(a);
+      const cross = new Vector3().crossVectors(ab, ac);
+      const triangleArea = 0.5 * cross.length();
+      if (currentArea + triangleArea > randomArea) {
+        triangleIndex = i;
+        break;
+      }
+      currentArea += triangleArea;
+    }
+
+    // Now, get a random point in the triangle
+    // https://theswissbay.ch/pdf/Gentoomen%20Library/Game%20Development/Programming/Graphics%20Gems%201.pdf
+    const triangle = this.triangles[triangleIndex];
+    const A = triangle[0].position;
+    const B = triangle[1].position;
+    const C = triangle[2].position;
+    const s = Math.random();
+    const t = Math.random();
+    const aCoeff = 1 - Math.sqrt(t);
+    const bCoeff = (1 - s) * Math.sqrt(t);
+    const cCoeff = s * Math.sqrt(t);
+
+    const q =
+      A.clone().multiplyScalar(aCoeff)
+        .add(B.clone().multiplyScalar(bCoeff))
+        .add(C.clone().multiplyScalar(cCoeff));
+
+    return q;
+  }
 }
 
 export default Triangulation; 
