@@ -1,6 +1,6 @@
 import { Tree } from "react-arborist";
 import useMultiPolygonStore from "../../../hooks/useMultiPolygonStore";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { PiDotFill, PiFolder, PiPolygon, PiTrash } from "react-icons/pi";
 import { useParams } from "react-router-dom";
 
@@ -125,26 +125,25 @@ function Node({ node, style, dragHandle }: NodeProps) {
 const Polygontree = () => {
   const id = Number(useParams<{ id: string }>().id);
   const { getPolygons, getSelectedPolygon } = useMultiPolygonStore();
-  const polygons = getPolygons(id);
-  const selectedPolygon = getSelectedPolygon(id);
 
-  const data = useMemo(() => {
-    return polygons.map((polygon, polygonIndex) => ({
-      id: `Poly-${polygonIndex}`,
-      name: `Polygon ${polygonIndex}`,
+  const selectedPolygon = getSelectedPolygon(id);
+  const polygons = getPolygons(id);
+
+  const data = polygons.map((polygon, polygonIndex) => ({
+    id: `Poly-${polygonIndex}`,
+    name: `Polygon ${polygonIndex}`,
+    polygonIndex: polygonIndex,
+    type: 'Polygon',
+    children: polygon.map((point, pointIndex) => ({
+      id: `Poly-${polygonIndex}-Point-${pointIndex}`,
+      name: `Point ${pointIndex}`,
       polygonIndex: polygonIndex,
-      type: 'Polygon',
-      children: polygon.map((point, pointIndex) => ({
-        id: `Poly-${polygonIndex}-Point-${pointIndex}`,
-        name: `Point ${pointIndex}`,
-        polygonIndex: polygonIndex,
-        pointIndex: pointIndex,
-        isSelected: pointIndex === selectedPolygon[1] && polygonIndex === selectedPolygon[0],
-        type: 'Point',
-        coord: point,
-      })),
-    }));
-  }, [polygons, selectedPolygon]);
+      pointIndex: pointIndex,
+      isSelected: pointIndex === selectedPolygon[1] && polygonIndex === selectedPolygon[0],
+      type: 'Point',
+      coord: point,
+    })),
+  }));
 
   return (
     <>
