@@ -41,7 +41,7 @@ export type MultiPolygonState = {
   // ADVANCED POLYGON OPERATIONS
   deletePolygon: (id: number, index: number) => void;
   deletePoint: (id: number, polygonIndex: number, pointIndex: number) => void;
-  addPoint: (id: number, position: Vector3, polygonIndex?: number, afterPoint?: Vector3) => void;
+  addPoint: (id: number, position: Vector3, polygonIndex?: number, afterPointIndex?: number) => void;
 };
 
 const useMultiPolygonStore = create<MultiPolygonState>()(
@@ -106,21 +106,33 @@ const useMultiPolygonStore = create<MultiPolygonState>()(
         set({ multiPolygons: { ...get().multiPolygons, [id]: currentPolygons } });
       },
 
-      addPoint: (id, position, polygonIndex?, afterPoint?) => {
-        const currentPolygons = get().getPolygons(id);
-        const currentPolygon = polygonIndex !== undefined ? currentPolygons[polygonIndex] : currentPolygons[currentPolygons.length - 1];
-        polygonIndex = polygonIndex ?? currentPolygons.length - 1;
-        let newCurrentPolygon;
+      addPoint: (id, position, polygonIndex?, afterPointIndex?) => {
 
-        if (afterPoint) {
-          const afterIndex = currentPolygon.indexOf(afterPoint);
-          newCurrentPolygon = [...currentPolygon.slice(0, afterIndex + 1), position, ...currentPolygon.slice(afterIndex + 1)];
+        if (polygonIndex === undefined && afterPointIndex === undefined) {
+          // Simple case: no polygonIndex, afterPoint provided
+          const allPolygons = get().getPolygons(id);
+          const currentPolygon = allPolygons[allPolygons.length - 1];
+          const newCurrentPolygon = [...currentPolygon, position];
+          allPolygons[allPolygons.length - 1] = newCurrentPolygon;
+          get().setPolygons(id, allPolygons);
+        } else if (polygonIndex !== undefined && afterPointIndex !== undefined) {
+          // Complex case: splicing into a polygon
+          const allPolygons = get().getPolygons(id);
+          const currentPolygon = allPolygons[polygonIndex];
+          const newPolygon = currentPolygon
+            .slice(0, afterPointIndex + 1)
+            .concat([position])
+            .concat(currentPolygon.slice(afterPointIndex + 1));
+
+          console.log("newPolygon", newPolygon);
+          const newAllPolygons = allPolygons.map((polygon, index) => (index === polygonIndex ? newPolygon : polygon));
+          get().setPolygons(id, newAllPolygons);
         } else {
-          newCurrentPolygon = [...currentPolygon, position];
+          // Error case: we need either both or none of the splice arguments
+          console.error("Invalid arguments for addPoint: need to provide both polygonIndex and afterPoint or neither");
+          return;
         }
 
-        currentPolygons[polygonIndex] = newCurrentPolygon;
-        get().setPolygons(id, currentPolygons);
       },
     }),
     {
