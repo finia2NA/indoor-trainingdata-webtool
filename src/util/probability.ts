@@ -32,18 +32,18 @@ export function createDistribution(a: number) {
   };
 }
 
-// TODO: I am sure there is a better way to do this
-export const takeRandomSample = (dist: (x: number) => number, granularity: number = 1000) => {
-  const maxValue = dist(0);
-  const sampleArray = [];
-  for (let i = 0; i < granularity; i++) {
-    const position = Math.random() * 2 - 1;
-    const value = dist(position);
-    const normalizedValue = value / maxValue;
-    sampleArray.push(...Array(Math.round(normalizedValue * 100)).fill(position));
+// source: Monte Carlo Statistical Methods by Christian P. Robert and George Casella
+export const takeRandomSample = (dist: (x: number) => number, maxTries: number = 1000) => {
+  const maxValue = dist(0); // Approximate upper bound
+
+  for (let i = 0; i < maxTries; i++) {
+    const x = Math.random() * 2 - 1; // Sample from a uniform proposal distribution in range [-1,1]
+    const u = Math.random(); // Uniform random number in [0,1]
+
+    if (u < dist(x) / maxValue) {
+      return x;
+    }
   }
 
-  const sampleLength = sampleArray.length;
-  const sampleIndex = Math.floor(Math.random() * sampleLength);
-  return sampleArray[sampleIndex];
-}
+  throw new Error("Sampling failed after maximum attempts.");
+};
