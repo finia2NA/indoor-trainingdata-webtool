@@ -156,19 +156,19 @@ const PolygonCreator: React.FC = () => {
               {/* One line when we have just 2 points */}
               {polygon.length === 2 && (
                 <PolygonLine
-                  start={polygon[0]}
-                  end={polygon[1]}
+                  startPoint={polygon[0]}
+                  startIndex={0}
+                  endPoint={polygon[1]}
                   polygonIndex={polygonIndex}
-                  addPoint={pos => addPoint(id, pos)}
                 />
               )}
               {/* Closing the loop when we have more than 2 */}
               {polygon.length > 2 && (
                 <PolygonLine
-                  start={point}
-                  end={polygon[(pointIndex + 1) % polygon.length]}
+                  startPoint={point}
+                  startIndex={pointIndex}
+                  endPoint={polygon[(pointIndex + 1) % polygon.length]}
                   polygonIndex={polygonIndex}
-                  addPoint={pos => addPoint(id, pos)}
                 />
               )}
             </Fragment>

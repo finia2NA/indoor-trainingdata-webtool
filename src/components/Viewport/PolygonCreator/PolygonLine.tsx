@@ -1,23 +1,27 @@
+import { useParams } from 'react-router-dom';
 import { useEffect, useState } from "react";
 import { Vector3 } from "three";
 import useEditorStore, { EditorState, PolygonToolMode } from "../../../hooks/useEditorStore";
+import useMultiPolygonStore from '../../../hooks/useMultiPolygonStore';
 
 type PolygonLineProps = {
-  start: Vector3;
-  end: Vector3;
+  startPoint: Vector3;
+  startIndex: number;
+  endPoint: Vector3;
   polygonIndex: number;
-  addPoint: (position: Vector3, polygonIndex: number, after: Vector3) => void;
 }
 
-const PolygonLine = ({ start, end, polygonIndex, addPoint }: PolygonLineProps) => {
+const PolygonLine = ({ startPoint, startIndex, endPoint, polygonIndex }: PolygonLineProps) => {
   const { polygonToolMode } = useEditorStore((state) => state as EditorState);
+  const { addPoint } = useMultiPolygonStore();
+  const id = Number(useParams<{ id: string }>().id);
 
   // Color
   const [myColor, setMyColor] = useState("black");
   // when the mode is splice, it is yellow when hovered
   const onPointerEnter = () => {
     if (polygonToolMode !== PolygonToolMode.SPLICE) return;
-    console.log(start, end, polygonIndex)
+    console.log(startPoint, endPoint, polygonIndex)
     setMyColor("yellow");
   }
   // when not hovered, it is black
@@ -37,10 +41,9 @@ const PolygonLine = ({ start, end, polygonIndex, addPoint }: PolygonLineProps) =
 
     intersection.stopPropagation();
     console.log("Line clicked");
-    addPoint(intersection.point, polygonIndex, start)
+    console.log(polygonIndex, startIndex, startIndex);
+    addPoint(id, intersection.point, polygonIndex, startIndex)
   }
-
-
 
   return (
     <line onClick={onLineClick}
@@ -49,7 +52,7 @@ const PolygonLine = ({ start, end, polygonIndex, addPoint }: PolygonLineProps) =
     >
       <bufferGeometry
         attach="geometry"
-        ref={(geometry) => geometry && geometry.setFromPoints([start, end])}
+        ref={(geometry) => geometry && geometry.setFromPoints([startPoint, endPoint])}
       />
       <lineBasicMaterial attach="material" color={myColor} />
     </line>
