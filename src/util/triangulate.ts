@@ -10,6 +10,7 @@ class Triangulation {
   polygon: Vector3[];
   lines: [IndexedPoint, IndexedPoint][];
   triangles: [IndexedPoint, IndexedPoint, IndexedPoint][];
+  #area: number | null = null;
 
   constructor(polygon: Vector3[]) {
     this.polygon = polygon;
@@ -34,6 +35,9 @@ class Triangulation {
   }
 
   getArea() {
+    if (this.#area !== null) {
+      return this.#area;
+    }
     let area = 0;
     for (let i = 0; i < this.triangles.length; i++) {
       const triangle = this.triangles[i];
@@ -45,6 +49,7 @@ class Triangulation {
       const cross = new Vector3().crossVectors(ab, ac);
       area += 0.5 * cross.length();
     }
+    this.#area = area;
     return area;
   }
 

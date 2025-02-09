@@ -13,7 +13,7 @@ import useDataGeneratorUtils from "../../../hooks/useDataGeneratorUtils";
 const GenerateSidebar = () => {
   const id = Number(useParams<{ id: string }>().id);
 
-  const { setTrulyRandomPose } = useDataGeneratorUtils();
+  const { generate } = useDataGeneratorUtils();
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
   let offset, angles, anglesConcentration, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, numImages, imageSize;
@@ -252,7 +252,7 @@ const GenerateSidebar = () => {
         <div className="flex flex-row gap-2 justify-around">
           <button
             className="bg-primary p-1 px-4"
-            onClick={() => setTrulyRandomPose()}
+            onClick={() => generate()}
           >Generate</button>
           <button
             className="bg-danger p-1 px-4"

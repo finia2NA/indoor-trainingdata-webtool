@@ -1,18 +1,15 @@
 import { Canvas } from '@react-three/fiber';
 import { Model3D } from '../../data/db';
 import WrappedOrbitControls, { OrbitUsecase } from './WrappedOrbitControls';
-import useEditorStore, { EditorMode } from '../../hooks/useEditorStore';
+import useEditorStore, { EditorMode, EditorState } from '../../hooks/useEditorStore';
 import SwitchableCamera from './SwitchableCamera';
 import SceneObject from './SceneObject';
 import PolygonCreator from './PolygonCreator/PolygonCreator';
 import LabeledAxesHelper from './LabeledAxesHelper';
 import CameraPosLogging from './CameraPoseLogging';
 import { useRef, useEffect, useCallback } from 'react';
-import { Camera, Vector3 } from 'three';
-import { saveAs } from 'file-saver';
-import { useDataGeneratorStore } from '../../hooks/useDataGeneratorUtils';
-import useMultiPolygonStore from '../../hooks/useMultiPolygonStore';
-import { useParams } from 'react-router-dom';
+import { Camera, PerspectiveCamera, Vector3 } from 'three';
+import { ScreenShotResult, useDataGeneratorStore } from '../../hooks/useDataGeneratorUtils';
 
 type ViewportProps = {
   model: Model3D;
@@ -30,16 +27,12 @@ const raycasterParams = {
 }
 
 const Viewport = ({ model }: ViewportProps) => {
-  const { showGrid, editorMode } = useEditorStore();
+  const { showGrid, editorMode } = useEditorStore((state) => (state as EditorState));
 
   const { orbitTarget, setOrbitTarget, registerSetPose, registerTakeScreenshot } = useDataGeneratorStore();
   const cameraRef = useRef<Camera | null>();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const { setSelectedPolygon } = useMultiPolygonStore();
-  const id = Number(useParams<{ id: string }>().id);
 
-
-  // enabling setting pose from outside
   const setPose = useCallback((pos: Vector3, target: Vector3) => {
     if (cameraRef.current) {
       cameraRef.current.position.set(pos.x, pos.y, pos.z);
@@ -47,20 +40,38 @@ const Viewport = ({ model }: ViewportProps) => {
     }
   }, [setOrbitTarget]);
 
-  const takeScreenshot = useCallback(async () => {
-    if (!canvasRef.current) return;
+  const takeScreenshot = useCallback(async (screenshotWidth: number, screenshotHeight: number): Promise<ScreenShotResult> => {
+    if (!canvasRef.current) throw new Error("Canvas not available");
     const canvas = canvasRef.current;
+
+    const originalWidth = canvas.width;
+    const originalHeight = canvas.height;
+    canvas.width = screenshotWidth;
+    canvas.height = screenshotHeight;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
 
     const blob = await new Promise<Blob | null>((resolve) => {
       canvas.toBlob((blob) => {
         resolve(blob);
       });
     });
+    const cameraFOV = cameraRef.current instanceof PerspectiveCamera ? cameraRef.current.fov : null;
 
+    canvas.width = originalWidth;
+    canvas.height = originalHeight;
+    
     if (blob) {
-      saveAs(blob, 'screenshot.png');
+      return {
+        blob,
+        fov: cameraFOV
+      } as ScreenShotResult;
     }
+
+    throw new Error("Failed to capture screenshot");
   }, []);
+
+  // Register callbacks in the store once
   useEffect(() => {
     registerSetPose(setPose);
     registerTakeScreenshot(takeScreenshot);
@@ -72,7 +83,6 @@ const Viewport = ({ model }: ViewportProps) => {
         gl={{ preserveDrawingBuffer: true }}
         raycaster={{ params: raycasterParams }}
         ref={canvasRef}
-        onPointerMissed={() => setSelectedPolygon(id, [null, null])}
       >
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 10, 5]} intensity={1} />
@@ -94,9 +104,7 @@ const Viewport = ({ model }: ViewportProps) => {
         <color attach="background" args={['#484848']} />
 
         <SwitchableCamera ref={cameraRef} />
-
         <CameraPosLogging />
-        {/* <WASDControls /> */}
       </Canvas>
     </>
   );
