@@ -1,9 +1,9 @@
 import { BufferGeometry, Vector3, BufferAttribute, DoubleSide } from "three";
 import useMultiPolygonStore from "../../../hooks/useMultiPolygonStore";
 import { useEffect, useMemo, useRef } from "react";
-import earcut from 'earcut';
 import { useParams } from "react-router-dom";
 import useMultiGenerationStore from "../../../hooks/useMultiGenerationStore";
+import Triangulation from "../../../util/triangulate";
 
 type PolygonHeightDisplayProps = {
   polygon: Vector3[];
@@ -34,17 +34,15 @@ const PolygonHeightDisplay = ({ polygon, height }: PolygonHeightDisplayProps) =>
       ]);
     }
 
-
-    // Get upper+lower faces
-    // advanced using earcut
-    const a = polygon.flatMap((point) => [point.x, point.y, point.z]);
-    const earcutIndices = earcut(a, undefined, 3);
-    for (let i = 0; i < earcutIndices.length; i += 3) {
+    const triangulation = new Triangulation(polygon);
+    for (let i = 0; i < triangulation.triangles.length; i++) {
+      const triangle = triangulation.triangles[i];
       result.push([
-        [lower(earcutIndices[i]), lower(earcutIndices[i + 2]), lower(earcutIndices[i + 1])],
-        [upper(earcutIndices[i]), upper(earcutIndices[i + 2]), upper(earcutIndices[i + 1])],
+        [lower(triangle[0].index), lower(triangle[1].index), lower(triangle[2].index)],
+        [upper(triangle[0].index), upper(triangle[1].index), upper(triangle[2].index)],
       ]);
     }
+
     // Naive: only works for convex polygons
     // for (let i = 0; i < polygon.length; i++) {
     //   result.push([

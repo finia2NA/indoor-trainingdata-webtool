@@ -3,6 +3,7 @@ import useMultiPolygonStore from "../../../hooks/useMultiPolygonStore";
 import { useState } from "react";
 import { PiDotFill, PiFolder, PiPolygon, PiTrash } from "react-icons/pi";
 import { useParams } from "react-router-dom";
+import useEditorStore, { EditorMode, PolygonToolMode } from "../../../hooks/useEditorStore";
 
 type CoordinateProps = {
   x: number,
@@ -57,6 +58,7 @@ function Node({ node, style, dragHandle }: NodeProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { getPolygons, setPolygons, setSelectedPolygon, deletePolygon, deletePoint } = useMultiPolygonStore();
   const polygons = getPolygons(id);
+  const { polygonToolMode } = useEditorStore();
 
   const type = node.data.type;
 
@@ -74,7 +76,7 @@ function Node({ node, style, dragHandle }: NodeProps) {
   }
 
   const handleNodeClick = () => {
-    if (type === 'Point') {
+    if (type === 'Point' && polygonToolMode === PolygonToolMode.EDIT) {
       setSelectedPolygon(id, [node.data.polygonIndex, node.data.pointIndex]);
     }
   };
