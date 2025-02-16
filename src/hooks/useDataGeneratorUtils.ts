@@ -55,6 +55,14 @@ type DataGeneratorState = {
   registerTakeScreenshot: (cb: (screenshotWidth: number, screenshotHeight: number) => Promise<ScreenShotResult>) => void;
 }
 
+const getAllowedAngle = (distance: number) => {
+  const min = 0.15;
+  const max = 0.30;
+  const clampedScaler = Math.min(Math.max(0, (distance - min) / (max - min)), 1); // linear between min and max, constant outside
+  console.log(clampedScaler)
+  const angle = Math.PI / 2 + clampedScaler * (Math.PI * (3.0 / 2.0)); // between 90 and 360 degrees
+  return angle;
+}
 
 
 /**
@@ -83,6 +91,7 @@ const useDataGeneratorUtils = () => {
     getHeightOffset,
     getAnglesRange,
     getAnglesConcentration,
+    getAvoidWalls,
     getDoPairGeneration,
     getPairDistanceRange,
     getPairDistanceConcentration,
@@ -94,6 +103,7 @@ const useDataGeneratorUtils = () => {
   const heightOffset = getHeightOffset(id);
   const anglesRange = getAnglesRange(id);
   const anglesConcentration = getAnglesConcentration(id);
+  const avoidWalls = getAvoidWalls(id);
   const pair = getDoPairGeneration(id);
   const pairDistanceRange = getPairDistanceRange(id);
   const pairDistanceConcentration = getPairDistanceConcentration(id);
@@ -121,33 +131,6 @@ const useDataGeneratorUtils = () => {
 
 
 
-
-
-  // A stand in for when we can get a point inside a polygon
-  // This one works on the react canvas
-  // const setTrulyRandomPose = async (min?: Vector3, max?: Vector3) => {
-  //   if (!setPose) throw new Error('setPose is not set');
-  //   if (!min)
-  //     min = new Vector3(-10, -10, -10);
-  //   if (!max)
-  //     max = new Vector3(10, 10, 10);
-
-  //   const randomPosition = new Vector3(
-  //     Math.random() * (max.x - min.x) + min.x,
-  //     Math.random() * (max.y - min.y) + min.y,
-  //     Math.random() * (max.z - min.z) + min.z
-  //   );
-
-  //   const randomTarget = new Vector3(
-  //     Math.random() * 2 - 1,
-  //     Math.random() * 2 - 1,
-  //     Math.random() * 2 - 1
-  //   ).normalize().add(randomPosition);
-
-  //   setPose(randomPosition, randomTarget);
-  //   await new Promise(requestAnimationFrame);
-  // }
-
   const getRandomPoseInPolygons = async () => {
     // pick a random polygon. This is similar to how it is in triangulate.ts.
     // Then, use the polygon's triangulation to get a random point inside the polygon
@@ -167,6 +150,20 @@ const useDataGeneratorUtils = () => {
     const rndHeightOffset = (Math.random() * 2 - 1) * heightOffset;
     selectedPoint.add(new Vector3(0, rndHeightOffset, 0));
 
+    // Let's first do the XZ angle
+    let directionXZ: Vector2;
+    if (!avoidWalls) {
+      directionXZ = new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1);
+    } else {
+      // In this case, use the triag method to find the closest wall edge. Find the distance.
+      const { closestPoint, closestDistance } = selectedPolygon!.triangulation.getClosestEdgePoint(new Vector2(selectedPoint.x, selectedPoint.z));
+      const direction = closestPoint.clone().sub(selectedPoint);
+      // first, turn the direction by 180 degrees
+      direction.multiplyScalar(-1);
+
+      // them we can figure out how much we are allowed to move in that direction
+    }
+
     // sample pitch angle
     const anglesDist = createDistribution(anglesConcentration);
     const angleSample = takeRandomSample({ dist: anglesDist }); // this one is in [-1, 1]
@@ -175,8 +172,6 @@ const useDataGeneratorUtils = () => {
     const midPoint = (anglesRange[1] + anglesRange[0]) / 2;
     const angleVal = angleSample * rangeWidth / 2 + midPoint; // in degrees
 
-    // XZ direction is completely random
-    const directionXZ = new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1);
     if (directionXZ.length() > 0) {
       directionXZ.normalize();
     } else {

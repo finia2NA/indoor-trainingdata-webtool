@@ -1,4 +1,4 @@
-import { Line3, Vector3 } from "three";
+import { Line3, Vector2, Vector3 } from "three";
 import earcut from 'earcut';
 
 type IndexedPoint = {
@@ -9,11 +9,16 @@ type IndexedPoint = {
 class Triangulation {
   polygon: Vector3[];
   lines: [IndexedPoint, IndexedPoint][];
+  outliLines: [IndexedPoint, IndexedPoint][];
   triangles: [IndexedPoint, IndexedPoint, IndexedPoint][];
   #area: number | null = null;
 
   constructor(polygon: Vector3[]) {
     this.polygon = polygon;
+    this.outliLines = polygon.map((point, index) => {
+      const nextIndex = (index + 1) % polygon.length;
+      return [{ index, position: point }, { index: nextIndex, position: polygon[nextIndex] }];
+    }) as [IndexedPoint, IndexedPoint][];
     const flatCoords = polygon.flatMap((point) => [point.x, point.z]);
     const earcutIndices = earcut(flatCoords, undefined, 2);
     const lineIndices: number[][] = [];
@@ -53,7 +58,7 @@ class Triangulation {
     return area;
   }
 
-  getRandomPoint() {
+  getRandomPoint(avoidWalls = false) {
     // First, get a triangle weighted by area
     // We do this by first computing a goal area as a fraction of the total shape area,
     // then iterating over the triangles and taking the first one that pushes us over the goal area
@@ -129,20 +134,29 @@ class Triangulation {
     }
     return isInside;
   }
+  /**
+   Returns the distance to the closest edge of the polygon
+   works in 2D! Only x and z are considered
+   This is because the offset goes straight up
 
-  getDistanceToClosestEdge = (point: Vector3) => {
-    let minDistance = Infinity;
-    for (let i = 0; i < this.lines.length; i++) {
-      const A = point;
-      const B = this.lines[i][0].position;
-      const C = this.lines[i][1].position;
+   The returned distance and closest point are for an assumed perpendicular line from the point to the closest edge
+  */
+  getClosestEdgePoint = (point: Vector2) => {
+    let closestDistance = Infinity;
+    let closestPoint = new Vector3();
+    for (let i = 0; i < this.outliLines.length; i++) {
+      const A = new Vector3(point.x, 0, point.y);
+      const B = new Vector3(this.lines[i][0].position.x, 0, this.lines[i][0].position.z);
+      const C = new Vector3(this.lines[i][1].position.x, 0, this.lines[i][1].position.z);
       const line = new Line3(B, C);
-      const d = line.closestPointToPoint(A, true, new Vector3()).distanceTo(A);
-      if (d < minDistance) {
-        minDistance = d;
+      const currentPoint = line.closestPointToPoint(A, true, new Vector3());
+      const currentDistance = currentPoint.distanceTo(A);
+      if (currentDistance < closestDistance) {
+        closestDistance = currentDistance;
+        closestPoint = currentPoint.clone().setY(point.y);
       }
     }
-    return minDistance;
+    return { closestDistance, closestPoint };
   }
 }
 
