@@ -18,8 +18,8 @@ const GenerateSidebar = () => {
   const { poses } = usePrecomputedPoses();
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
-  let offset, angles, anglesConcentration, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, numImages, imageSize;
-  let setHeightOffset, setAnglesRange, setAnglesConcentration, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setNumImages, setImageSize, reset;
+  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, numImages, imageSize;
+  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setNumImages, setImageSize, reset;
   {
     // getting values from store
     const {
@@ -29,6 +29,8 @@ const GenerateSidebar = () => {
       setAnglesRange: storeSetAnglesRange,
       getAnglesConcentration,
       setAnglesConcentration: storeSetAnglesConcentration,
+      getAvoidWalls,
+      setAvoidWalls: storeSetAvoidWalls,
       getDoPairGeneration,
       setDoPairGeneration: storeSetDoPairGeneration,
       getPairDistanceRange,
@@ -48,6 +50,7 @@ const GenerateSidebar = () => {
     offset = getHeightOffset(id);
     angles = getAnglesRange(id);
     anglesConcentration = getAnglesConcentration(id);
+    avoidWalls = getAvoidWalls(id);
     pair = getDoPairGeneration(id);
     pairDistanceRange = getPairDistanceRange(id);
     pairDistanceConcentration = getPairDistanceConcentration(id);
@@ -59,6 +62,7 @@ const GenerateSidebar = () => {
     setHeightOffset = (offset: number) => storeSetHeightOffset(id, offset);
     setAnglesRange = (angles: GenPair) => storeSetAnglesRange(id, angles);
     setAnglesConcentration = (concentration: number) => storeSetAnglesConcentration(id, concentration);
+    setAvoidWalls = (avoid: boolean) => storeSetAvoidWalls(id, avoid);
     setDoPair = (doPair: boolean) => storeSetDoPairGeneration(id, doPair);
     setPairDistanceRange = (distanceRange: GenPair) => storeSetPairDistanceRange(id, distanceRange);
     setPairDistanceConcentration = (concentration: number) => storeSetPairDistanceConcentration(id, concentration);
@@ -97,24 +101,33 @@ const GenerateSidebar = () => {
   return (
     <SidebarSection title="Generate">
       <SidebarSection title="Poses" level={3}>
-        {/* 
-        - Offset input
-        - Angle (min, max) slider
-        - Pair, Single checkbox
-        */}
-
         {/* OFFSET */}
-        <div className="flex items-center mb-2">
-          <label htmlFor="offset" className="mr-2 w-20">Offset</label>
-          <InteractiveInput
-            id="offset"
-            className='w-32 text-center bg-inactive basis-1/3'
-            type="number"
-            min={0} max={1} step={0.01}
-            value={offset}
-            onChange={heightOffsetHandler}
-          />
-        </div>
+        <SidebarSection title="Base Settings" level={4}>
+          <div className="flex items-center mb-2">
+            <label htmlFor="offset" className="mr-2 w-20">Offset</label>
+            <InteractiveInput
+              id="offset"
+              className='w-32 text-center bg-inactive basis-1/3'
+              type="number"
+              min={0} max={1} step={0.01}
+              value={offset}
+              onChange={heightOffsetHandler}
+            />
+          </div>
+          {/* WALL AVOIDANCE */}
+          <div className="flex flex-col mb-2">
+            <div className="flex items-center">
+              <label htmlFor="avoidWalls" className="mr-2 w-400">Avoid Walls</label>
+              <input
+                id="avoidWalls"
+                type="checkbox"
+                checked={avoidWalls}
+                onChange={(e) => setAvoidWalls(e.target.checked)}
+              />
+            </div>
+            <p className="text-gray-400">If checked, poses close to and looking at a polygon edge are not possible</p>
+          </div>
+        </SidebarSection>
 
         {/* ANGLES */}
         <SidebarSection title="Angles" level={4}>

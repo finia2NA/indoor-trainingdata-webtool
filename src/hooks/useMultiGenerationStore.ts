@@ -29,6 +29,9 @@ export type MultiGenrationState = {
   multiAnglesConcentrations: Record<number, number>;
   getAnglesConcentration: (id: number) => number;
   setAnglesConcentration: (id: number, angleDistribution: number) => void;
+  avoidWalls: Record<number, boolean>;
+  getAvoidWalls: (id: number) => boolean;
+  setAvoidWalls: (id: number, avoidWalls: boolean) => void;
 
   // pair
   multiDoPairGenerations: Record<number, boolean>;
@@ -84,6 +87,14 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
         multiAnglesConcentrations: {
           ...state.multiAnglesConcentrations,
           [id]: angleDistribution,
+        },
+      })),
+      avoidWalls: {},
+      getAvoidWalls: (id) => get().avoidWalls[id] ?? true,
+      setAvoidWalls: (id, avoidWalls) => set((state) => ({
+        avoidWalls: {
+          ...state.avoidWalls,
+          [id]: avoidWalls,
         },
       })),
 
