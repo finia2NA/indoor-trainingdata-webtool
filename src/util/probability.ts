@@ -10,6 +10,12 @@ function normPdf(x: number, mu: number, sigma: number) {
     Math.exp(-0.5 * Math.pow((x - mu) / sigma, 2));
 }
 
+type RandomSampleProps = {
+  dist: (x: number) => number;
+  maxTries?: number;
+  positive?: boolean;
+};
+
 
 /**
  * Returns a function that calculates the mixture distribution value
@@ -33,7 +39,7 @@ export function createDistribution(a: number) {
 }
 
 // source: Monte Carlo Statistical Methods by Christian P. Robert and George Casella
-export const takeRandomSample = (dist: (x: number) => number, maxTries: number = 1000) => {
+export const takeRandomSample = ({ dist, maxTries = 1000, positive = false }: RandomSampleProps) => {
   const maxValue = dist(0); // Approximate upper bound
 
   for (let i = 0; i < maxTries; i++) {
@@ -41,9 +47,12 @@ export const takeRandomSample = (dist: (x: number) => number, maxTries: number =
     const u = Math.random(); // Uniform random number in [0,1]
 
     if (u < dist(x) / maxValue) {
-      return x;
+      if (Math.abs(x) > 1)
+        console.warn("Sampled value is outside the range [-1, 1].");
+      return positive ? Math.abs(x) : x;
     }
   }
 
+  // This happens when we exhausted all attempts
   throw new Error("Sampling failed after maximum attempts.");
 };

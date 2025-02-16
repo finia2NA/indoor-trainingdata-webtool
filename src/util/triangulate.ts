@@ -89,12 +89,26 @@ class Triangulation {
     const bCoeff = (1 - s) * Math.sqrt(t);
     const cCoeff = s * Math.sqrt(t);
 
-    const q =
+    const point =
       A.clone().multiplyScalar(aCoeff)
         .add(B.clone().multiplyScalar(bCoeff))
         .add(C.clone().multiplyScalar(cCoeff));
 
-    return q;
+    return { point, triangleIndex };
+  }
+
+  isInPolygon = (point: Vector3) => {
+    let isInside = false;
+    for (let i = 0, j = this.polygon.length - 1; i < this.polygon.length; j = i++) {
+      const xi = this.polygon[i].x;
+      const zi = this.polygon[i].z;
+      const xj = this.polygon[j].x;
+      const zj = this.polygon[j].z;
+      const intersect = ((zi > point.z) !== (zj > point.z)) &&
+        (point.x < (xj - xi) * (point.z - zi) / (zj - zi) + xi);
+      if (intersect) isInside = !isInside;
+    }
+    return isInside;
   }
 }
 
