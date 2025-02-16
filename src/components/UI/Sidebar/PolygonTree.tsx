@@ -3,7 +3,9 @@ import useMultiPolygonStore from "../../../hooks/useMultiPolygonStore";
 import { useState } from "react";
 import { PiDotFill, PiFolder, PiPolygon, PiTrash } from "react-icons/pi";
 import { useParams } from "react-router-dom";
-import useEditorStore, { EditorMode, PolygonToolMode } from "../../../hooks/useEditorStore";
+import useEditorStore, { PolygonToolMode } from "../../../hooks/useEditorStore";
+import { TbArrowAutofitHeight } from "react-icons/tb";
+
 
 type CoordinateProps = {
   x: number,
@@ -58,7 +60,8 @@ function Node({ node, style, dragHandle }: NodeProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { getPolygons, setPolygons, setSelectedPolygon, deletePolygon, deletePoint } = useMultiPolygonStore();
   const polygons = getPolygons(id);
-  const { polygonToolMode } = useEditorStore();
+  const { polygonHeight, polygonToolMode } = useEditorStore();
+  const { editPosition } = useMultiPolygonStore();
 
   const type = node.data.type;
 
@@ -90,6 +93,15 @@ function Node({ node, style, dragHandle }: NodeProps) {
       deletePolygon(id, node.data.polygonIndex);
     }
   };
+  const handleReheightClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    debugger;
+    if (type === 'Point') {
+      editPosition({ id, polygonIndex: node.data.polygonIndex, pointIndex: node.data.pointIndex, y: polygonHeight });
+    } else if (type === 'Polygon') {
+      editPosition({ id, polygonIndex: node.data.polygonIndex, y: polygonHeight });
+    }
+  };
 
   const handlePointLocationChange = (newValue: number, index: number) => {
     if (node.data.type === 'Point') {
@@ -118,7 +130,18 @@ function Node({ node, style, dragHandle }: NodeProps) {
           {/* {node.data.coord && <span>({node.data.coord.x.toFixed(2)}, {node.data.coord.y.toFixed(2)}, {node.data.coord.z.toFixed(2)})</span>} */}
           {node.data.coord && <Coordinate x={node.data.coord.x} y={node.data.coord.y} z={node.data.coord.z} handleLocationChange={handlePointLocationChange} />}
         </div>
-        {(isHovered || node.data.isSelected) && <PiTrash onClick={handleTrashClick} />}
+        {(isHovered || node.data.isSelected) &&
+          <div className="flex flex-row gap-1">
+            <button className="display-none"
+              title="Set height to current editor surface height">
+              <TbArrowAutofitHeight onClick={handleReheightClick} />
+            </button>
+            <button className="display-none"
+              title="Delete">
+              <PiTrash onClick={handleTrashClick} />
+            </button>
+          </div>
+        }
       </div>
     </div>
   );
