@@ -1,4 +1,4 @@
-import { Vector3 } from "three";
+import { Line3, Vector3 } from "three";
 import earcut from 'earcut';
 
 type IndexedPoint = {
@@ -97,6 +97,25 @@ class Triangulation {
     return { point, triangleIndex };
   }
 
+  /**
+   * Determines whether a given point is inside the polygon.
+   *
+   * This method implements the ray-casting algorithm by drawing a horizontal ray from the
+   * point and counting the number of times the ray intersects with the polygon's edges.
+   *
+   * The algorithm works as follows:
+   * - Iterate over each edge of the polygon, where each edge is defined by two consecutive vertices.
+   * - For each edge, check if the ray crossed from the point's z coordinate lies within the
+   *   vertical span of the edge.
+   * - Calculate the intersection point's x coordinate on the edge.
+   * - Toggle the resulting boolean state if the ray intersects the edge.
+   *
+   * A final odd number of crossings indicates that the point is inside the polygon, while
+   * an even number indicates that it is outside.
+   *
+   * @param point - The point with x and z coordinates to test against the polygon.
+   * @returns True if the point is inside the polygon, false otherwise.
+   */
   isInPolygon = (point: Vector3) => {
     let isInside = false;
     for (let i = 0, j = this.polygon.length - 1; i < this.polygon.length; j = i++) {
@@ -109,6 +128,21 @@ class Triangulation {
       if (intersect) isInside = !isInside;
     }
     return isInside;
+  }
+
+  getDistanceToClosestEdge = (point: Vector3) => {
+    let minDistance = Infinity;
+    for (let i = 0; i < this.lines.length; i++) {
+      const A = point;
+      const B = this.lines[i][0].position;
+      const C = this.lines[i][1].position;
+      const line = new Line3(B, C);
+      const d = line.closestPointToPoint(A, true, new Vector3()).distanceTo(A);
+      if (d < minDistance) {
+        minDistance = d;
+      }
+    }
+    return minDistance;
   }
 }
 
