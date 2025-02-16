@@ -1,14 +1,13 @@
 import { Model3D } from '../../data/db';
 import { useEffect, useRef, useState } from 'react';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { Group, Object3DEventMap } from 'three';
+import { Object3DEventMap } from 'three';
 import useMultiTransformationStore from '../../hooks/useMultiTransformationStore';
 import * as THREE from 'three';
 import useEditorStore from '../../hooks/useEditorStore';
 import { TransformControls } from '@react-three/drei';
 import useTransformingSync from '../../hooks/useTransformingSync';
 import Transformation from '../../data/Transformation';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { loadModel } from '../../utils/loadModel';
 
 type SceneObjectProps = {
   model: Model3D;
@@ -29,34 +28,17 @@ const SceneObject = ({ model }: SceneObjectProps) => {
   // -------------------
 
   // Load scene and apply transformation
-  const [object3D, setObject3D] = useState<Group<Object3DEventMap> | null>(null);
+  const [object3D, setObject3D] = useState<THREE.Object3D<Object3DEventMap> | null>(null);
   useEffect(() => {
-    const filetype = model.name.split('.').pop();
-
-    const url = URL.createObjectURL(model.content);
-
-    switch (filetype) {
-      case 'glb':
-      case 'gltf':
-        {
-          const gltfLoader = new GLTFLoader();
-          gltfLoader.load(url, (gltf) => {
-            setObject3D(gltf.scene);
-          });
-          break;
-        }
-      case 'fbx':
-        {
-          console.warn('FBX files are not fully supported. Expect weird textures.');
-          const fbxLoader = new FBXLoader();
-          fbxLoader.load(url, (object) => {
-            setObject3D(object);
-          });
-          break;
-        }
-      default:
-        console.error(`Unsupported file type: ${filetype}`);
-    }
+    // Async function to load the model using util
+    (async () => {
+      try {
+        const obj = await loadModel(model.name, model.content);
+        setObject3D(obj);
+      } catch (err) {
+        console.error(err);
+      }
+    })();
   }, [model]);
   // Apply transformation to object
   useEffect(() => {

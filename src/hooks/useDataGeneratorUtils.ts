@@ -8,10 +8,13 @@ import Triangulation from "../util/triangulate";
 import useMultiPolygonStore from "./useMultiPolygonStore";
 import usePrecomputedPoses from "./usePrecomputedPoses";
 import { Id, toast } from "react-toastify";
-import { ProgressToast } from "../components/UI/Toasts";
+import { ProgressToast, ProgressType } from "../components/UI/Toasts";
+import useOffscreenScreenshot from "./useOffscreenScreenshot";
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 const logging = false;
-const progressLogging = true;
+const progressLogging = false;
 
 export type ScreenShotResult = {
   blob: Blob;
@@ -54,6 +57,9 @@ type DataGeneratorState = {
 
 
 
+/**
+ * @deprecated Screenshots are now taken offscreen, so this is not necessary any more
+ */
 export const useDataGeneratorStore = create<DataGeneratorState>((set) => ({
   orbitTarget: new Vector3(0, 0, 0),
   setOrbitTarget: (target) => set({ orbitTarget: target }),
@@ -66,7 +72,7 @@ export const useDataGeneratorStore = create<DataGeneratorState>((set) => ({
 }));
 
 const useDataGeneratorUtils = () => {
-  const { takeScreenshot, setPose } = useDataGeneratorStore();
+  const { takeOffscreenScreenshots } = useOffscreenScreenshot();
   const { poses, addPose, clearPoses } = usePrecomputedPoses();
   const id = Number(useParams<{ id: string }>().id);
   const { getPolygons } = useMultiPolygonStore();
@@ -118,28 +124,29 @@ const useDataGeneratorUtils = () => {
 
 
   // A stand in for when we can get a point inside a polygon
-  const setTrulyRandomPose = async (min?: Vector3, max?: Vector3) => {
-    if (!setPose) throw new Error('setPose is not set');
-    if (!min)
-      min = new Vector3(-10, -10, -10);
-    if (!max)
-      max = new Vector3(10, 10, 10);
+  // This one works on the react canvas
+  // const setTrulyRandomPose = async (min?: Vector3, max?: Vector3) => {
+  //   if (!setPose) throw new Error('setPose is not set');
+  //   if (!min)
+  //     min = new Vector3(-10, -10, -10);
+  //   if (!max)
+  //     max = new Vector3(10, 10, 10);
 
-    const randomPosition = new Vector3(
-      Math.random() * (max.x - min.x) + min.x,
-      Math.random() * (max.y - min.y) + min.y,
-      Math.random() * (max.z - min.z) + min.z
-    );
+  //   const randomPosition = new Vector3(
+  //     Math.random() * (max.x - min.x) + min.x,
+  //     Math.random() * (max.y - min.y) + min.y,
+  //     Math.random() * (max.z - min.z) + min.z
+  //   );
 
-    const randomTarget = new Vector3(
-      Math.random() * 2 - 1,
-      Math.random() * 2 - 1,
-      Math.random() * 2 - 1
-    ).normalize().add(randomPosition);
+  //   const randomTarget = new Vector3(
+  //     Math.random() * 2 - 1,
+  //     Math.random() * 2 - 1,
+  //     Math.random() * 2 - 1
+  //   ).normalize().add(randomPosition);
 
-    setPose(randomPosition, randomTarget);
-    await new Promise(requestAnimationFrame);
-  }
+  //   setPose(randomPosition, randomTarget);
+  //   await new Promise(requestAnimationFrame);
+  // }
 
   const getRandomPoseInPolygons = async () => {
     // pick a random polygon. This is similar to how it is in triangulate.ts.
@@ -253,17 +260,42 @@ const useDataGeneratorUtils = () => {
     return { newPos, newTarget };
   }
 
+  const takeScreenshots = async () => {
+    const blobs = await takeOffscreenScreenshots({ poses, width: imageSize[0], height: imageSize[1], numImages });
+    const zip = new JSZip();
+    const folder = zip.folder("screenshots");
+    blobs.forEach((blob, index) => {
+      folder?.file(`screenshot_${index + 1}.png`, blob);
+    });
+    const content = await zip.generateAsync({ type: "blob" });
+    saveAs(content, "screenshots.zip");
+  }
 
-  const generate = async () => {
+
+  const generatePoses = async () => {
     clearPoses();
 
+    let stop = false
+    const doStop = () => {
+      console.log("Aborting pose generation");
+      stop = true;
+    }
+
     for (let i = 0; i < numImages; i++) {
+      if (stop)
+        break;
       const progress = ((i + 1) / numImages);
 
       if (progressToastId.current === null) {
-        progressToastId.current = toast(ProgressToast, { progress, data: { progress }, type: "info" });
+        progressToastId.current = toast(ProgressToast, {
+          progress, data: { progress, type: ProgressType.POSES }, type: "info", onClose(reason) {
+            if (reason === "stop") {
+              doStop();
+            }
+          },
+        });
       } else {
-        toast.update(progressToastId.current, { progress, data: { progress } });
+        toast.update(progressToastId.current, { progress, data: { progress, type: ProgressType.POSES } });
       }
       const pose = await getRandomPoseInPolygons();
       addPose(pose);
@@ -272,11 +304,19 @@ const useDataGeneratorUtils = () => {
       // Yield control to avoid blocking the UI.
       await new Promise(resolve => setTimeout(resolve, 0));
     }
-    toast("Pose generation complete", { type: "success" });
+    if (!stop)
+      toast("Pose generation complete", { type: "success" });
+    else
+      toast("Pose generation stopped", { type: "warning" });
+
+    if (progressToastId.current !== null) {
+      toast.dismiss(progressToastId.current);
+      progressToastId.current = null;
+    }
   }
 
 
-  return { takeScreenshot, setPose, setTrulyRandomPose, generate };
+  return { takeScreenshots, generatePoses };
 }
 
 export default useDataGeneratorUtils;
