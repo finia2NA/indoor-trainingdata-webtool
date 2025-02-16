@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Quaternion, Vector2, Vector3 } from "three";
 import { create } from "zustand";
@@ -7,8 +7,11 @@ import { createDistribution, takeRandomSample } from "../util/probability";
 import Triangulation from "../util/triangulate";
 import useMultiPolygonStore from "./useMultiPolygonStore";
 import usePrecomputedPoses from "./usePrecomputedPoses";
+import { Id, toast } from "react-toastify";
+import { ProgressToast } from "../components/UI/Toasts";
 
-const logging = true;
+const logging = false;
+const progressLogging = true;
 
 export type ScreenShotResult = {
   blob: Blob;
@@ -65,10 +68,10 @@ export const useDataGeneratorStore = create<DataGeneratorState>((set) => ({
 const useDataGeneratorUtils = () => {
   const { takeScreenshot, setPose } = useDataGeneratorStore();
   const { poses, addPose, clearPoses } = usePrecomputedPoses();
-
   const id = Number(useParams<{ id: string }>().id);
   const { getPolygons } = useMultiPolygonStore();
   const polygons = getPolygons(id);
+  const progressToastId = useRef<null | Id>(null);
 
   const {
     getHeightOffset,
@@ -191,7 +194,6 @@ const useDataGeneratorUtils = () => {
       });
     }
 
-    console.log(selectedPoint.x + selectedPoint.z > 0.5)
     return { position: selectedPoint, target: targetPoint };
   }
 
@@ -253,16 +255,24 @@ const useDataGeneratorUtils = () => {
 
 
   const generate = async () => {
-    // if (!setTrulyRandomPose) throw new Error('setTrulyRandomPose is not set');
-    // if (!takeScreenshot) throw new Error('takeScreenshot is not set');
-    // setTrulyRandomPose();
-    // await takeScreenshot(imageSize[0], imageSize[1]);
-
     clearPoses();
+
     for (let i = 0; i < numImages; i++) {
+      const progress = ((i + 1) / numImages);
+
+      if (progressToastId.current === null) {
+        progressToastId.current = toast(ProgressToast, { progress, data: { progress }, type: "info" });
+      } else {
+        toast.update(progressToastId.current, { progress, data: { progress } });
+      }
       const pose = await getRandomPoseInPolygons();
       addPose(pose);
+      if (progressLogging) console.log(`Generated ${i + 1}/${numImages} poses`);
+
+      // Yield control to avoid blocking the UI.
+      await new Promise(resolve => setTimeout(resolve, 0));
     }
+    toast("Pose generation complete", { type: "success" });
   }
 
 
