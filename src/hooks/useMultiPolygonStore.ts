@@ -12,6 +12,15 @@ export type MultiPolygons = { [id: number]: PolygonList };
 type PolygonSelection = [number | null, number | null];
 type MultiPolygonSelection = { [id: number]: PolygonSelection };
 
+type EditPositionProps = {
+  id: number;
+  polygonIndex: number;
+  pointIndex?: number;
+  x?: number;
+  y?: number;
+  z?: number;
+};
+
 export type MultiPolygonState = {
   // POLYGONS
   multiPolygons: MultiPolygons;
@@ -42,6 +51,7 @@ export type MultiPolygonState = {
   deletePolygon: (id: number, index: number) => void;
   deletePoint: (id: number, polygonIndex: number, pointIndex: number) => void;
   addPoint: (id: number, position: Vector3, polygonIndex?: number, afterPointIndex?: number) => void;
+  editPosition: (props: EditPositionProps) => void;
 };
 
 const useMultiPolygonStore = create<MultiPolygonState>()(
@@ -131,6 +141,25 @@ const useMultiPolygonStore = create<MultiPolygonState>()(
           return;
         }
 
+      },
+      editPosition: ({ id, polygonIndex, pointIndex, x, y, z }: EditPositionProps) => {
+        const allPolygons = get().getPolygons(id);
+        const editIndices = [];
+        if (pointIndex !== undefined) {
+          editIndices.push(pointIndex);
+        } else {
+          for (let i = 0; i < allPolygons.length; i++) {
+            editIndices.push(...Array.from({ length: allPolygons[i].length }, (_, i) => i));
+          }
+        }
+
+        for (const index of editIndices) {
+          if (x !== undefined) allPolygons[polygonIndex][index].x = x;
+          if (y !== undefined) allPolygons[polygonIndex][index].y = y;
+          if (z !== undefined) allPolygons[polygonIndex][index].z = z;
+        }
+
+        set({ multiPolygons: { ...get().multiPolygons, [id]: allPolygons } });
       },
     }),
     {
