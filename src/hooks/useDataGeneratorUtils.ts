@@ -160,19 +160,19 @@ const useDataGeneratorUtils = () => {
 
     const rangeWidth = anglesRange[1] - anglesRange[0];
     const midPoint = (anglesRange[1] + anglesRange[0]) / 2;
-    const angleVal = angleSample * rangeWidth / 2 + midPoint;
+    const angleVal = angleSample * rangeWidth / 2 + midPoint; // in degrees
 
+    // XZ direction is completely random
     const directionXZ = new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1);
     if (directionXZ.length() > 0) {
       directionXZ.normalize();
     } else {
-      // If the random XZ values resulted in no movement, set a default forward vector
       directionXZ.set(1, 0);
     }
 
     // Compute the Y component using the pitch angle
-    const y = Math.sin(angleVal); // Upward component
-    const horizontalScale = Math.cos(angleVal); // Scale for XZ to maintain unit length
+    const y = Math.sin((angleVal / 180.0) * Math.PI); // Upward component
+    const horizontalScale = Math.cos((angleVal / 180.0) * Math.PI); // Scale for XZ to maintain unit length
     // Final target vector
     const targetPoint = new Vector3(
       selectedPoint.x + directionXZ.x * horizontalScale,
@@ -184,7 +184,7 @@ const useDataGeneratorUtils = () => {
       console.table({
         Position: to2accuracy(selectedPoint.toArray()).join(', '),
         Target: to2accuracy(targetPoint.toArray()).join(', '),
-        Pitch: to2accuracy(angleVal * 180 / Math.PI) + "°",
+        Pitch: to2accuracy(angleVal) + "°",
       });
     }
 
