@@ -93,8 +93,7 @@ const GenerateSidebar = () => {
     takeScreenshots();
   }
 
-  console.log(poses.length);
-
+  const screenshotColor = poses.length === 0 ? "inactive" : "confirm";
   return (
     <SidebarSection title="Generate">
       <SidebarSection title="Poses" level={3}>
@@ -266,7 +265,7 @@ const GenerateSidebar = () => {
             onClick={() => generatePoses()}
           >Generate Poses</button>
           <button
-            className={`bg-${poses.length === 0 ? "inactive" : "confirm"} p-1 px-4`}
+            className={`bg-${screenshotColor} p-1 px-4`}
             onClick={takeScreenshotsHandler}>
             Take Screenshots
           </button>
