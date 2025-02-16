@@ -1,9 +1,13 @@
-import { Vector3 } from "three";
-import { create } from "zustand";
-import useMultiPolygonStore from "./useMultiPolygonStore";
+import { useMemo } from "react";
 import { useParams } from "react-router-dom";
+import { Quaternion, Vector2, Vector3 } from "three";
+import { create } from "zustand";
 import useMultiGenerationStore from "../hooks/useMultiGenerationStore";
+import { createDistribution, takeRandomSample } from "../util/probability";
+import Triangulation from "../util/triangulate";
+import useMultiPolygonStore from "./useMultiPolygonStore";
 
+const logging = true;
 
 export type ScreenShotResult = {
   blob: Blob;
@@ -11,6 +15,26 @@ export type ScreenShotResult = {
   height: number;
   fov: number;
 }
+
+type PolygonEX = {
+  polygon: Vector3[];
+  triangulation: Triangulation;
+  area: number;
+}
+
+type Pose = {
+  position: Vector3;
+  target: Vector3;
+}
+
+const to2accuracy = (values: number[] | number) => {
+  if (Array.isArray(values)) {
+    return values.map(v => Math.round(v * 100) / 100);
+  } else {
+    return Math.round(values * 100) / 100;
+  }
+}
+
 
 type DataGeneratorState = {
   orbitTarget: Vector3;
@@ -22,6 +46,8 @@ type DataGeneratorState = {
   takeScreenshot?: (screenshotWidth: number, screenshotHeight: number) => Promise<ScreenShotResult | null>;
   registerTakeScreenshot: (cb: (screenshotWidth: number, screenshotHeight: number) => Promise<ScreenShotResult>) => void;
 }
+
+
 
 export const useDataGeneratorStore = create<DataGeneratorState>((set) => ({
   orbitTarget: new Vector3(0, 0, 0),
@@ -53,8 +79,8 @@ const useDataGeneratorUtils = () => {
     getNumImages,
     getImageDimensions,
   } = useMultiGenerationStore();
-  const offset = getHeightOffset(id);
-  const angles = getAnglesRange(id);
+  const heightOffset = getHeightOffset(id);
+  const anglesRange = getAnglesRange(id);
   const anglesConcentration = getAnglesConcentration(id);
   const pair = getDoPairGeneration(id);
   const pairDistanceRange = getPairDistanceRange(id);
@@ -63,6 +89,26 @@ const useDataGeneratorUtils = () => {
   const pairAngleConcentration = getPairAngleConcentration(id);
   const numImages = getNumImages(id);
   const imageSize = getImageDimensions(id);
+
+
+  // we need the areas of the polygons often, so let's precompute
+  const polygonsEX: PolygonEX[] = useMemo(() => {
+    return polygons.map(polygon => {
+      const triangulation = new Triangulation(polygon);
+      return {
+        polygon,
+        triangulation,
+        area: triangulation.getArea(),
+      } as PolygonEX;
+    });
+  }, [polygons]);
+
+  const totalArea = useMemo(() => {
+    return polygonsEX.reduce((acc, { area }) => acc + area, 0);
+  }, [polygonsEX]);
+
+
+
 
 
   // A stand in for when we can get a point inside a polygon
@@ -89,16 +135,128 @@ const useDataGeneratorUtils = () => {
     await new Promise(requestAnimationFrame);
   }
 
-  const setPoseInPolygons = async () => {
+  const getRandomPoseInPolygons = async () => {
+    // pick a random polygon. This is similar to how it is in triangulate.ts.
+    // Then, use the polygon's triangulation to get a random point inside the polygon
+    const randomArea = Math.random() * totalArea;
+    let currentArea = 0;
+    let selectedPolygon: PolygonEX | undefined;
+    for (let i = 0; i < polygonsEX.length; i++) {
+      currentArea += polygonsEX[i].area;
+      if (currentArea >= randomArea) {
+        selectedPolygon = polygonsEX[i];
+        break;
+      }
+    }
+    const { point: selectedPoint } = selectedPolygon!.triangulation.getRandomPoint();
 
+    // We now have a point in the triange. Next, add random offset.
+    const rndHeightOffset = (Math.random() * 2 - 1) * heightOffset;
+    selectedPoint.add(new Vector3(0, rndHeightOffset, 0));
+
+    // sample pitch angle
+    const anglesDist = createDistribution(anglesConcentration);
+    const angleSample = takeRandomSample({ dist: anglesDist }); // this one is in [-1, 1]
+
+    const rangeWidth = anglesRange[1] - anglesRange[0];
+    const midPoint = (anglesRange[1] + anglesRange[0]) / 2;
+    const angleVal = angleSample * rangeWidth / 2 + midPoint;
+
+    const directionXZ = new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1);
+    if (directionXZ.length() > 0) {
+      directionXZ.normalize();
+    } else {
+      // If the random XZ values resulted in no movement, set a default forward vector
+      directionXZ.set(1, 0);
+    }
+
+    // Compute the Y component using the pitch angle
+    const y = Math.sin(angleVal); // Upward component
+    const horizontalScale = Math.cos(angleVal); // Scale for XZ to maintain unit length
+    // Final target vector
+    const targetPoint = new Vector3(
+      selectedPoint.x + directionXZ.x * horizontalScale,
+      selectedPoint.y + y,
+      selectedPoint.z + directionXZ.y * horizontalScale
+    );
+
+    if (logging) {
+      console.table({
+        Position: to2accuracy(selectedPoint.toArray()).join(', '),
+        Target: to2accuracy(targetPoint.toArray()).join(', '),
+        Pitch: to2accuracy(angleVal * 180 / Math.PI) + "°",
+      });
+    }
+
+    return { position: selectedPoint, target: targetPoint };
+  }
+
+  const getPairPoint = async (pose: Pose, numTries = 1000) => {
+
+    if (numTries <= 0) {
+      throw new Error('getPairPoint failed after maximum attempts');
+    }
+
+    // Sample a distance and angle
+    const distanceDist = createDistribution(pairDistanceConcentration);
+    const distanceSample = takeRandomSample({ dist: distanceDist, positive: true });
+    const distanceVal = distanceSample * (pairDistanceRange[1] - pairDistanceRange[0]) + pairDistanceRange[0];
+
+    const angleDist = createDistribution(pairAngleConcentration);
+    const angleSample = takeRandomSample({ dist: angleDist });
+    const angleVal = angleSample * pairAngleOffset * (Math.PI / 180);
+
+    // Create the second point
+    const newPos = pose.position.clone().add(new Vector3(
+      Math.random() * 2 - 1,
+      Math.random() * 2 - 1,
+      Math.random() * 2 - 1
+    ).multiplyScalar(distanceVal));
+
+
+    // get relevant directions
+    const direction = pose.target.clone().sub(pose.position).normalize();
+    const up = new Vector3(0, 1, 0);
+    const right = new Vector3().crossVectors(up, direction).normalize();
+
+    // Randomly split angleVal into yaw and pitch
+    const t = Math.random();
+    const yawAngle = (2 * Math.random() - 1) * t * angleVal;
+    const pitchAngle = (2 * Math.random() - 1) * (1 - t) * angleVal;
+
+    // Apply Yaw (rotation around up vector)
+    const yawQuat = new Quaternion().setFromAxisAngle(up, yawAngle);
+    direction.applyQuaternion(yawQuat);
+
+    // Apply Pitch (rotation around right vector)
+    const pitchQuat = new Quaternion().setFromAxisAngle(right, pitchAngle);
+    direction.applyQuaternion(pitchQuat);
+
+    direction.normalize();
+
+    // Compute the new target position
+    const newTarget = newPos.clone().add(direction);
+
+    // check if we are in the polygon. If not, recurse
+    const isInPolygon = polygonsEX.some((polygonEX) => {
+      polygonEX.triangulation.isInPolygon(newPos);
+    });
+    if (!isInPolygon) {
+      return getPairPoint(pose, numTries - 1);
+    }
+
+    return { newPos, newTarget };
   }
 
 
   const generate = async () => {
-    if (!setTrulyRandomPose) throw new Error('setTrulyRandomPose is not set');
-    if (!takeScreenshot) throw new Error('takeScreenshot is not set');
-    setTrulyRandomPose();
-    await takeScreenshot(imageSize[0], imageSize[1]);
+    // if (!setTrulyRandomPose) throw new Error('setTrulyRandomPose is not set');
+    // if (!takeScreenshot) throw new Error('takeScreenshot is not set');
+    // setTrulyRandomPose();
+    // await takeScreenshot(imageSize[0], imageSize[1]);
+
+    const pose = await getRandomPoseInPolygons();
+    setPose?.(pose.position, pose.target);
   }
 
 
