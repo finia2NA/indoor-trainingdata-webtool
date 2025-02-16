@@ -159,7 +159,7 @@ export const ViewmodeToggles = () => {
   const toggleShowPoses = () => {
     const newShowPoses = !showPoses;
     if (newShowPoses) {
-      toast("Showing poses. If there are many of them, loading may take a while.",
+      toast("Showing poses. If there are many of them, this may impact performance.",
         {
           type: 'info',
           transition: Zoom,

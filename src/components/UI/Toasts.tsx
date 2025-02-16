@@ -17,3 +17,13 @@ export const ResetConfirmationToast = ({ closeToast }: ToastContentProps) => {
     </div>
   )
 }
+
+export const ProgressToast = ({ closeToast, data }: ToastContentProps) => {
+  const progressPercent = Math.round((data as { progress: number }).progress * 100);
+
+  return (
+    <div className='flex flex-col gap-2 align-right'>
+      <p>Generating poses: {progressPercent}%</p>
+    </div>
+  )
+}
