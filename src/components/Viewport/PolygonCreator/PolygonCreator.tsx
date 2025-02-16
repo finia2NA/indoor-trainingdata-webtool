@@ -14,10 +14,11 @@ import useMultiPolygonStore from '../../../hooks/useMultiPolygonStore.ts';
 import HeightDisplay from './HeightDisplay.tsx';
 import { useParams } from 'react-router-dom';
 import TriangulationDisplay from './TriangulizationDisplay.tsx';
+import PosesPreview from './PosePreview.tsx';
 
 const PolygonCreator: React.FC = () => {
   "use no memo"
-  const { polygonToolMode, setPolygonToolMode, editorMode, showTriangulation } = useEditorStore();
+  const { polygonToolMode, setPolygonToolMode, editorMode, showTriangulation, showPoses } = useEditorStore();
   const id = Number(useParams<{ id: string }>().id);
   const { getPolygons, deletePolygon, deletePoint, setPolygons, addPoint, getSelectedPolygon, setSelectedPolygon } = useMultiPolygonStore();
   const polygons = getPolygons(id);
@@ -186,12 +187,17 @@ const PolygonCreator: React.FC = () => {
       {/* Height Display */}
       {editorMode === EditorMode.GENERATE && <HeightDisplay />}
 
+      {/* Poses */}
+      {editorMode === EditorMode.GENERATE && showPoses && (
+        <PosesPreview />
+      )}
+
 
       {/* Debug cube */}
-      <mesh position={[0, 0, 0]} onClick={(e) => { e.stopPropagation(); console.log(polygons) }}>
+      {/* <mesh position={[0, 0, 0]} onClick={(e) => { e.stopPropagation(); console.log(polygons) }}>
         <boxGeometry args={[0.3, 0.3, 0.3]} />
         <meshBasicMaterial color="red" />
-      </mesh>
+      </mesh> */}
     </>
   );
 };

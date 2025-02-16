@@ -56,6 +56,9 @@ export type EditorState = {
   showTriangulation: boolean;
   setShowTriangulation: (show: boolean) => void;
 
+  showPoses: boolean;
+  setShowPoses: (show: boolean) => void;
+
   // TODO: rename this and below to surface_, to distinguish from drawn polygon offset etc.
   polygonHeight: number;
   setPolygonHeight: (newHeight: number) => void;
@@ -90,6 +93,9 @@ const useEditorStore = create<EditorState>((set) => ({
 
   showTriangulation: false,
   setShowTriangulation: (show: boolean) => set({ showTriangulation: show }),
+
+  showPoses: false,
+  setShowPoses: (show: boolean) => set({ showPoses: show }),
 
   polygonHeight: 0,
   setPolygonHeight: (newHeight: number) => set({ polygonHeight: newHeight }),

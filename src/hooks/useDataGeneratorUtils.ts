@@ -6,6 +6,7 @@ import useMultiGenerationStore from "../hooks/useMultiGenerationStore";
 import { createDistribution, takeRandomSample } from "../util/probability";
 import Triangulation from "../util/triangulate";
 import useMultiPolygonStore from "./useMultiPolygonStore";
+import usePrecomputedPoses from "./usePrecomputedPoses";
 
 const logging = true;
 
@@ -22,9 +23,10 @@ type PolygonEX = {
   area: number;
 }
 
-type Pose = {
+export type Pose = {
   position: Vector3;
   target: Vector3;
+  type?: 'single' | 'pair';
 }
 
 const to2accuracy = (values: number[] | number) => {
@@ -62,6 +64,7 @@ export const useDataGeneratorStore = create<DataGeneratorState>((set) => ({
 
 const useDataGeneratorUtils = () => {
   const { takeScreenshot, setPose } = useDataGeneratorStore();
+  const { poses, addPose, clearPoses } = usePrecomputedPoses();
 
   const id = Number(useParams<{ id: string }>().id);
   const { getPolygons } = useMultiPolygonStore();
@@ -182,17 +185,17 @@ const useDataGeneratorUtils = () => {
 
     if (logging) {
       console.table({
-        Position: to2accuracy(selectedPoint.toArray()).join(', '),
-        Target: to2accuracy(targetPoint.toArray()).join(', '),
+        Position: (to2accuracy(selectedPoint.toArray()) as number[]).join(', '),
+        Target: (to2accuracy(targetPoint.toArray()) as number[]).join(', '),
         Pitch: to2accuracy(angleVal) + "°",
       });
     }
 
+    console.log(selectedPoint.x + selectedPoint.z > 0.5)
     return { position: selectedPoint, target: targetPoint };
   }
 
   const getPairPoint = async (pose: Pose, numTries = 1000) => {
-
     if (numTries <= 0) {
       throw new Error('getPairPoint failed after maximum attempts');
     }
@@ -255,8 +258,11 @@ const useDataGeneratorUtils = () => {
     // setTrulyRandomPose();
     // await takeScreenshot(imageSize[0], imageSize[1]);
 
-    const pose = await getRandomPoseInPolygons();
-    setPose?.(pose.position, pose.target);
+    clearPoses();
+    for (let i = 0; i < numImages; i++) {
+      const pose = await getRandomPoseInPolygons();
+      addPose(pose);
+    }
   }
 
 

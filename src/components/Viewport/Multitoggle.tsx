@@ -1,9 +1,13 @@
 import { IconType } from "react-icons";
-import useEditorStore, { EditorMode, EditorState, Perspective, PolygonToolMode, TransformMode } from "../../hooks/useEditorStore";
-import { LuExpand, LuMousePointer2, LuMove, LuRotate3D } from "react-icons/lu";
-import { TbPerspective, TbPerspectiveOff } from "react-icons/tb";
-import { MdOutlineGridOn, MdOutlineGridOff, MdLabel, MdLabelOff, MdOutlineAddLocationAlt, MdOutlinePolyline } from "react-icons/md";
 import { GiMeshNetwork } from "react-icons/gi";
+import { LuExpand, LuMousePointer2, LuMove, LuRotate3D } from "react-icons/lu";
+import { MdLabel, MdLabelOff, MdOutlineAddLocationAlt, MdOutlineGridOff, MdOutlineGridOn, MdOutlinePolyline } from "react-icons/md";
+import { PiTargetBold } from "react-icons/pi";
+import { TbPerspective, TbPerspectiveOff } from "react-icons/tb";
+import { toast, Zoom } from "react-toastify";
+import useEditorStore, { EditorMode, EditorState, Perspective, PolygonToolMode, TransformMode } from "../../hooks/useEditorStore";
+
+
 
 
 
@@ -131,7 +135,7 @@ export const PolygonCreatorToggles = () => {
 export const ViewmodeToggles = () => {
   // Perspective stuff
   // state
-  const { editorMode, perspectiveMode, setPerspectiveMode, showLabels: showLabel, setShowLabel, showGrid, setShowGrid, showTriangulation, setShowTriangulation } = useEditorStore();
+  const { editorMode, perspectiveMode, setPerspectiveMode, showLabels: showLabel, setShowLabel, showGrid, setShowGrid, showTriangulation, setShowTriangulation, showPoses, setShowPoses } = useEditorStore();
 
   // icons
   const PerspectiveOrthographicIcon = perspectiveMode === Perspective.ORTHOGRAPHIC ? TbPerspectiveOff : TbPerspective;
@@ -151,6 +155,22 @@ export const ViewmodeToggles = () => {
     const newTriangulation = !showTriangulation;
     setShowTriangulation(newTriangulation);
   }
+
+  const toggleShowPoses = () => {
+    const newShowPoses = !showPoses;
+    if (newShowPoses) {
+      toast("Showing poses. If there are many of them, loading may take a while.",
+        {
+          type: 'info',
+          transition: Zoom,
+          autoClose: 2000,
+          hideProgressBar: false
+        });
+    }
+    setShowPoses(newShowPoses);
+  }
+
+
 
   // icon
   const GridIcon = showGrid ? MdOutlineGridOn : MdOutlineGridOff;
@@ -190,6 +210,18 @@ export const ViewmodeToggles = () => {
         icon: () => <GiMeshNetwork />,
         active: showTriangulation,
         onClick: toggleShowTriangulation,
+      }
+    )
+  }
+
+  if (editorMode === EditorMode.GENERATE) {
+    items.push(
+      {
+        id: 'poses',
+        title: 'Toggle Poses',
+        icon: () => <PiTargetBold />,
+        active: showPoses,
+        onClick: toggleShowPoses,
       }
     )
   }
