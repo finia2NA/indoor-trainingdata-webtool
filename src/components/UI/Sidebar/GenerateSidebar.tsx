@@ -8,12 +8,14 @@ import useMultiGenerationStore, { GenPair } from "../../../hooks/useMultiGenerat
 import { ResetConfirmationToast } from "../Toasts";
 import { toast } from "react-toastify";
 import useDataGeneratorUtils from "../../../hooks/useDataGeneratorUtils";
+import usePrecomputedPoses from "../../../hooks/usePrecomputedPoses";
 
 
 const GenerateSidebar = () => {
   const id = Number(useParams<{ id: string }>().id);
 
-  const { generate } = useDataGeneratorUtils();
+  const { generatePoses, takeScreenshots } = useDataGeneratorUtils();
+  const { poses } = usePrecomputedPoses();
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
   let offset, angles, anglesConcentration, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, numImages, imageSize;
@@ -83,6 +85,15 @@ const GenerateSidebar = () => {
     // NOTE: limiting in this way does not appear to work
     setHeightOffset(Math.max(parseFloat(e.target.value), 0));
   }
+
+  const takeScreenshotsHandler = () => {
+    console.log("Taking screenshots");
+    if (poses.length === 0)
+      toast.error('Need to generate poses first');
+    takeScreenshots();
+  }
+
+  console.log(poses.length);
 
   return (
     <SidebarSection title="Generate">
@@ -252,15 +263,20 @@ const GenerateSidebar = () => {
         <div className="flex flex-row gap-2 justify-around">
           <button
             className="bg-primary p-1 px-4"
-            onClick={() => generate()}
-          >Generate</button>
+            onClick={() => generatePoses()}
+          >Generate Poses</button>
+          <button
+            className={`bg-${poses.length === 0 ? "inactive" : "confirm"} p-1 px-4`}
+            onClick={takeScreenshotsHandler}>
+            Take Screenshots
+          </button>
           <button
             className="bg-danger p-1 px-4"
             onClick={resetHandler}
-          >Reset</button>
+          >Reset Generator Settings</button>
         </div>
       </SidebarSection>
-    </SidebarSection>
+    </SidebarSection >
 
   )
 
