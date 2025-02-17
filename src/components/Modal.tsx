@@ -1,36 +1,11 @@
 import { createPortal } from "react-dom";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FiTrash2 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ProjectDeletionToast } from "./UI/Toasts";
 import UploadComponent from "./UploadComponent";
+import db, { Project } from "../data/db";
 
-
-enum CloseReason {
-  BACKGROUND = "background",
-  CANCEL = "cancel",
-  CONFIRM = "confirm",
-}
-
-type ModalProps = {
-  onClose: (reason?: CloseReason) => void,
-  children: React.ReactNode,
-  className?: string,
-};
-
-type ProjectModalProps = {
-  onClose: (reason?: CloseReason) => void,
-  projectId: number,
-  isNew?: boolean,
-};
-
-const placeholder = {
-  name: "P1",
-  files: [
-    { name: "F1", size: 100 },
-    { name: "Verylongprojectnamelikeyouwouldn'tbelieve", size: 200 },
-  ]
-}
 
 type ProjectFileProps = {
   name: string,
@@ -59,19 +34,58 @@ const ProjectFile: React.FC<ProjectFileProps> = ({ name, size, index, onDelete }
   );
 }
 
+enum CloseReason {
+  BACKGROUND = "background",
+  CANCEL = "cancel",
+  CONFIRM = "confirm",
+}
+
+type ProjectModalProps = {
+  onClose: (reason?: CloseReason) => void,
+  projectId: number,
+  isNew?: boolean,
+};
+
+const placeholder = {
+  name: "P1",
+  files: [
+    { name: "F1", size: 100 },
+    { name: "Verylongprojectnamelikeyouwouldn'tbelieve", size: 200 },
+  ]
+}
+
+
 export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) => {
   const [name, setName] = useState(placeholder.name);
   const [files, setFiles] = useState(placeholder.files);
 
-  const h1 = (isNew ? "Creating Project" : "Editing Project") + " " + projectId;
+  useEffect(() => {
+    async function fetchData() {
+      const project = await db.getProject(projectId);
+      if (!project) return;
+      const loadedName = project.name;
+      setName(loadedName);
+    }
+    fetchData();
+  }, [projectId]);
+
+  const onConfirm = async () => {
+    db.setProjectName(projectId, name);
+    onClose(CloseReason.CONFIRM);
+  }
 
   const onDelete = () => {
     toast.warn(ProjectDeletionToast, {
-      onClose: (reason) => {
-        if (reason === "delete") onClose(CloseReason.CONFIRM);
+      onClose: async (reason) => {
+        if (reason === "delete") {
+          await db.deleteProject(projectId);
+          onClose(CloseReason.CONFIRM)
+        };
       },
     });
   }
+
+  const h1 = (isNew ? "Creating Project" : "Editing Project") + " " + projectId;
 
   return (
     <Modal
@@ -127,14 +141,14 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
           <div className="flex flex-col pt-2">
             <h3 className="font-medium">Upload a new model</h3>
 
-            <UploadComponent />
+            <UploadComponent projectId={projectId} />
           </div>
           <hr className="mt-2" />
         </div>
         <div className=" flex justify-end gap-2 pr-2">
           <button
             className="bg-confirm text-white p-2 rounded-md"
-            onClick={() => onClose(CloseReason.CONFIRM)}
+            onClick={onConfirm}
           >
             Confirm
           </button>
@@ -144,7 +158,11 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
   );
 }
 
-
+type ModalProps = {
+  onClose: (reason?: CloseReason) => void,
+  children: React.ReactNode,
+  className?: string,
+};
 
 const Modal = ({ onClose, children, className }: ModalProps) => {
   return createPortal(
