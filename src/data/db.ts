@@ -1,5 +1,4 @@
 import Dexie, { Table } from 'dexie';
-import Transformation from './Transformation';
 
 // Data model
 export interface ModelWithoutContent {
@@ -12,14 +11,12 @@ export class Model3D implements ModelWithoutContent {
   name: string;
   size: number;
   content: Blob;
-  transform: Transformation;
 
   constructor(file: File) {
     this.name = file.name;
     this.size = file.size;
 
     this.content = file;
-    this.transform = new Transformation();
   }
 }
 

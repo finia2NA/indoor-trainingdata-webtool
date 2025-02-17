@@ -1,4 +1,4 @@
-import { Model3D } from "../../data/db"
+import { Model3D, Project } from "../../data/db"
 import useEditorStore, { EditorMode, EditorState } from "../../hooks/useEditorStore";
 import { PolygonCreatorToggles, TransformToggles, ViewmodeToggles } from "./Multitoggle"
 import ViewcubeViz from "./Minipanels/ViewcubeViz"
@@ -6,17 +6,17 @@ import Viewport from "./Viewport"
 import CameraPoseDisplay from "./CameraPoseDisplay";
 
 type EditorProps = {
-  model: Model3D;
+  project: Project;
 }
 
 
-const Editor = ({ model }: EditorProps) => {
+const Editor = ({ project }: EditorProps) => {
 
   const { editorMode } = useEditorStore(state => state as EditorState)
 
   return (
     <div className="h-full w-full relative">
-      <Viewport model={model as Model3D} />
+      <Viewport project={project} />
       <div className="
           absolute top-0 left-0 w-full h-full
           grid grid-cols-2 grid-rows-2

@@ -1,9 +1,9 @@
 import { Canvas } from '@react-three/fiber';
-import { Model3D } from '../../data/db';
+import { Project } from '../../data/db';
 import WrappedOrbitControls, { OrbitUsecase } from './WrappedOrbitControls';
 import useEditorStore, { EditorMode, EditorState } from '../../hooks/useEditorStore';
 import SwitchableCamera from './SwitchableCamera';
-import SceneObject from './SceneObject';
+import SceneObjects from './SceneObjects';
 import PolygonCreator from './PolygonCreator/PolygonCreator';
 import LabeledAxesHelper from './LabeledAxesHelper';
 import CameraPosLogging from './CameraPoseLogging';
@@ -12,7 +12,7 @@ import { Camera, PerspectiveCamera, Vector3 } from 'three';
 import { ScreenShotResult, useDataGeneratorStore } from '../../hooks/useDataGeneratorUtils';
 
 type ViewportProps = {
-  model: Model3D;
+  project: Project;
 }
 
 // Make it a bit easier to click on lines
@@ -26,7 +26,7 @@ const raycasterParams = {
   Sprite: undefined
 }
 
-const Viewport = ({ model }: ViewportProps) => {
+const Viewport = ({ project }: ViewportProps) => {
   const { showGrid, editorMode } = useEditorStore((state) => (state as EditorState));
 
   const { orbitTarget, setOrbitTarget, registerSetPose, registerTakeScreenshot } = useDataGeneratorStore();
@@ -93,7 +93,7 @@ const Viewport = ({ model }: ViewportProps) => {
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 10, 5]} intensity={1} />
 
-        <SceneObject model={model} />
+        <SceneObjects project={project} />
 
         {[EditorMode.MAP, EditorMode.GENERATE].includes(editorMode) && <PolygonCreator />}
 
