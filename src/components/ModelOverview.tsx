@@ -3,7 +3,7 @@ import db from '../data/db';
 import byteSize from 'byte-size';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
-import Modal, { ProjectModal } from './Modal';
+import { ProjectModal } from './Modal';
 import { toast } from "react-toastify";
 import { ProjectDeletionToast } from './UI/Toasts';
 
@@ -11,8 +11,10 @@ import { ProjectDeletionToast } from './UI/Toasts';
 const ProjectOverview = () => {
   const projects = useLiveQuery(() => db.projects.toArray(), []);
   const navigate = useNavigate();
-
   const [editingProject, setEditingProject] = useState<number | null>(null);
+
+  const sizes = projects?.map(project => project.models.reduce((acc, model) => acc + model.size, 0));
+  console.log(sizes)
 
   const onView = (id?: number) => {
     if (id === undefined) return;
@@ -47,10 +49,10 @@ const ProjectOverview = () => {
             </tr>
           </thead>
           <tbody>
-            {projects && projects.map(project => (
-              <tr key={project.id} className='border-2'>
+            {projects && projects.map((project, idx) => (
+              <tr key={idx} className='border-2'>
                 <td className='border-2'>{project.name}</td>
-                {/* < td className=' border-2'>{byteSize(model.size, { units: 'iec', precision: 1 }).toString()}</td> */}
+                < td className=' border-2'>{byteSize(sizes![idx], { units: 'iec', precision: 1 }).toString()}</td>
                 <td onClick={() => onView(project.id)} className='border-2 cursor-pointer'>View</td>
                 <td onClick={() => onEdit(project.id)} className='border-2 cursor-pointer'>Edit</td>
                 <td onClick={() => onDelete(project.id)} className='border-2 cursor-pointer'>Delete</td>
