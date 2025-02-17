@@ -144,9 +144,6 @@ const LayoutSidebar = ({ project }: LayoutSidebarProps) => {
   }
   const models = project.models;
   for (const model of models) {
-    if (model.id === undefined) {
-      throw new Error("Model has no id");
-    }
     if (!getTransformation(projectId, model.id)) {
       addTransformation(projectId, model.id);
     }
@@ -160,7 +157,7 @@ const LayoutSidebar = ({ project }: LayoutSidebarProps) => {
         }
         return (
           <Fragment key={model.id}>
-            <ModelChannel model={model} modelId={model.id!} projectId={projectId!} />
+            <ModelChannel model={model} modelId={model.id} projectId={projectId!} />
           </Fragment>
         )
       })
