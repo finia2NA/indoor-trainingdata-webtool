@@ -5,12 +5,22 @@ export enum ProgressType {
   SCREENSHOT = "screenshot"
 }
 
+export const ProjectDeletionToast = ({ closeToast }: ToastContentProps) => {
+  return (
+    <div className='flex flex-col gap-2 align-right'>
+      <p>Are you sure you want to delete this project?</p>
+      <button className='bg-red-500 rounded-md' onClick={() => closeToast("delete")}>Delete Project</button>
+      <button className='bg-confirm rounded-md' onClick={() => closeToast("cancel")}>Cancel</button>
+    </div>
+  )
+}
+
 
 export const PolygonDeletionToast = ({ closeToast }: ToastContentProps) => {
   return (
     <div className='flex flex-col gap-2 align-right'>
       <p>Cannot delete a point in a triangle</p>
-      <button className='bg-red-500 rounded-md' onClick={() => closeToast("delete")}>Delete Polygon</button>
+      <button className='bg-danger rounded-md' onClick={() => closeToast("delete")}>Delete Polygon</button>
     </div>
   )
 }
