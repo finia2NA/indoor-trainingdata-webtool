@@ -23,65 +23,96 @@ export class Model3D implements ModelWithoutContent {
   }
 }
 
+export class Project {
+  id?: number;
+  name: string;
+  models: Model3D[];
+  constructor(name: string,) {
+    this.name = name;
+    this.models = [];
+  }
+}
+
 
 // DB definition
 class MyAppDatabase extends Dexie {
-  models!: Table<Model3D>;
+  projects!: Table<Project>;
 
   constructor() {
     super('webtool');
-    this.version(1).stores({
-      models: '++id, name, size, transform',
+    this.version(2).stores({
+      projects: '++id, name, models',
     });
   }
 
   // Data manipulation methods
-  async addModel(model: Model3D): Promise<number> {
-    return await this.models.put({
-      name: model.name,
-      size: model.size,
-      content: model.content,
-      transform: model.transform
-    });
+  addProject(project: Project): Promise<number> {
+    return this.projects.put(project);
   }
 
-  /**
-   * Retrieves a model from the database based on the provided ID.
-   * @param id - The ID of the model to retrieve.
-   * @returns A Promise that resolves to the retrieved model, or undefined if the model is not found.
-   */
-  async getModel(id: number): Promise<Model3D | undefined> {
-    return await this.models.get(id);
+  async addModelToProject(projectId: number, model: Model3D): Promise<number> {
+    const project = await this.projects.get(projectId);
+    if (!project) throw new Error('Project not found');
+    project.models.push(model);
+    await this.projects.put(project);
+    return project.id!;
   }
 
-  /**
-   * Retrieves models from the database.
-   * @returns A promise that resolves to an array of models without content.
-   */
-  async getModels(): Promise<ModelWithoutContent[]> {
-    const models = await this.models.toArray();
-    return models.map(({ id, name, size }) => ({ id, name, size }));
+  async getProject(id: number): Promise<Project | undefined> {
+    return await this.projects.get(id);
+  }
+
+  async getProjects(): Promise<Project[]> {
+    return await this.projects.toArray();
+  }
+
+  async setProjectName(id: number, newName: string): Promise<void> {
+    await this.projects.update(id, { name: newName });
+  }
+
+  async deleteProject(id: number): Promise<void> {
+    await this.projects.delete(id);
   }
 
 
-  /**
-   * Updates the name of a model in the database.
-   * @param id - The ID of the model to update.
-   * @param newName - The new name for the model.
-   * @returns A Promise that resolves when the update is complete.
-   */
-  async editModelName(id: number, newName: string): Promise<void> {
-    await this.models.update(id, { name: newName });
-  }
 
-  /**
-   * Deletes a model from the database based on the provided ID.
-   * @param id - The ID of the model to delete.
-   * @returns A promise that resolves when the model is deleted.
-   */
-  async deleteModel(id: number): Promise<void> {
-    await this.models.delete(id);
-  }
+  // /**
+  //  * Retrieves a model from the database based on the provided ID.
+  //  * @param id - The ID of the model to retrieve.
+  //  * @returns A Promise that resolves to the retrieved model, or undefined if the model is not found.
+  //  */
+  // async getModel(id: number): Promise<Model3D | undefined> {
+  //   return await this.models.get(id);
+  // }
+
+  // /**
+  //  * Retrieves models from the database.
+  //  * @returns A promise that resolves to an array of models without content.
+  //  */
+  // async getModels(): Promise<ModelWithoutContent[]> {
+  //   const models = await this.models.toArray();
+  //   return models.map(({ id, name, size }) => ({ id, name, size }));
+  // }
+
+
+  // /**
+  //  * Updates the name of a model in the database.
+  //  * @param id - The ID of the model to update.
+  //  * @param newName - The new name for the model.
+  //  * @returns A Promise that resolves when the update is complete.
+  //  */
+  // async editModelName(id: number, newName: string): Promise<void> {
+  //   await this.models.update(id, { name: newName });
+  // }
+
+  // /**
+  //  * Deletes a model from the database based on the provided ID.
+  //  * @param id - The ID of the model to delete.
+  //  * @returns A promise that resolves when the model is deleted.
+  //  */
+  // async deleteModel(id: number): Promise<void> {
+  //   await this.models.delete(id);
+  // }
 
   /**
    * Clears all tables in the database.

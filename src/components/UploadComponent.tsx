@@ -1,15 +1,17 @@
-import React from 'react';
 import { useDropzone } from 'react-dropzone';
 import db, { Model3D } from '../data/db';
 
-const UploadComponent: React.FC = () => {
+type UploadComponentProps = {
+  projectId: number;
+};
+
+const UploadComponent = ({ projectId }: UploadComponentProps) => {
   const onDrop = async (acceptedFiles: File[]) => {
     for (const file of acceptedFiles) {
       const model3D: Model3D = new Model3D(file);
 
-      // Add the file to the database
-      // await db.addModel({ name, content, size });
-      await db.addModel(model3D);
+      debugger;
+      await db.addModelToProject(projectId, model3D);
       console.log(`File ${model3D.name} added to the database`);
     }
   };
