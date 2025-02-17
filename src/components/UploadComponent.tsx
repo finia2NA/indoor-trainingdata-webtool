@@ -10,7 +10,6 @@ const UploadComponent = ({ projectId }: UploadComponentProps) => {
     for (const file of acceptedFiles) {
       const model3D: Model3D = new Model3D(file);
 
-      debugger;
       await db.addModelToProject(projectId, model3D);
       console.log(`File ${model3D.name} added to the database`);
     }
