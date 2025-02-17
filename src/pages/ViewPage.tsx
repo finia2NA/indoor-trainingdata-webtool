@@ -10,32 +10,20 @@ import useEditorStore, { EditorMode } from "../hooks/useEditorStore";
 const ViewPage = () => {
   const { id, editorMode } = useParams();
   const navigate = useNavigate();
-  // @ts-expect-error //Q: Why does this cause a ts error? It doesn't every other file I use it in.
-  const { setEditorMode, resetEditorConfig } = useEditorStore((state) => state);
-
-  // get our model, or redirect to 404 if it doesn't exist
-  const model = useLiveQuery(
-    async () => {
-      let curr = null;
-      if (!id || !isNumeric(id)) {
-        navigate('/404');
-        return null;
-      }
-      curr = await db.models.where('id').equals(Number(id)).first();
-      if (!curr) {
-        navigate('/404');
-        return null;
-      }
-      return curr;
-    },
-    [id]
-  );
+  const { setEditorMode, resetEditorConfig } = useEditorStore();
 
   // When id changes, reset the editor
   // FIXME: does the 2nd useEffect always run 2nd? it needs to to keep the editormode in sync with the url. Investigate this.
   useEffect(() => {
     resetEditorConfig();
   }, [resetEditorConfig, id]);
+
+  const project = useLiveQuery(() => db.projects.get(Number(id)), [id]);
+  useEffect(() => {
+    if (!id || !isNumeric(id)) {
+      navigate("/404");
+    }
+  }, [id, navigate]);
 
   useEffect(() => {
     if (!editorMode) {
@@ -44,7 +32,7 @@ const ViewPage = () => {
     setEditorMode(editorMode as EditorMode);
   }, [editorMode, setEditorMode, id, navigate]);
 
-  if (!model) {
+  if (!project) {
     return <div>Loading...</div>;
   }
 
@@ -52,10 +40,10 @@ const ViewPage = () => {
   return (
     <div className="flex flex-col lg:flex-row h-full w-full">
       <div className="flex-grow flex-shrink h-1/2 lg:h-auto lg:basis-3/4 min-h-[400px] min-w-0">
-        <Editor model={model as Model3D} />
+        <Editor project={project} />
       </div>
       <div className="flex-grow flex-shrink h-1/2 lg:h-auto lg:basis-1/4 lg:min-w-[400px] overflow-auto">
-        <Sidebar />
+        {/* <Sidebar /> */}
       </div>
     </div>
   );
