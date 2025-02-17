@@ -8,14 +8,22 @@ import { TransformControls } from '@react-three/drei';
 import useTransformingSync from '../../hooks/useTransformingSync';
 import Transformation from '../../data/Transformation';
 import { loadModel } from '../../utils/loadModel';
-
+import { useParams } from 'react-router-dom';
 
 type SceneObjectProps = {
   model: Model3D;
 };
 
 const SceneObject = ({ model }: SceneObjectProps) => {
+  const projectId = Number(useParams<{ id: string }>().id);
+  const modelId = model.id;
   const [object3D, setObject3D] = useState<THREE.Object3D<Object3DEventMap> | null>(null);
+  const { getTransformation, setTransformation } = useMultiTransformationStore();
+  const transformation = getTransformation(projectId, modelId);
+  if (!transformation) throw new Error('No transformation found for model');
+  const objectRef = useRef<THREE.Object3D | null>(null);
+
+  console.log("Object transformation", transformation);
 
   // Load scene
   useEffect(() => {
@@ -28,6 +36,15 @@ const SceneObject = ({ model }: SceneObjectProps) => {
       }
     })();
   }, [model]);
+
+  // Apply transformation
+  useEffect(() => {
+    if (!object3D) return;
+    object3D.position.set(transformation.translation[0], transformation.translation[1], transformation.translation[2]);
+    object3D.setRotationFromEuler(new THREE.Euler(transformation.rotation[0], transformation.rotation[1], transformation.rotation[2]));
+    object3D.scale.set(transformation.scale[0], transformation.scale[1], transformation.scale[2]);
+  }, [object3D, transformation.translation, transformation.rotation, transformation.scale]);
+
 
   // render
   return (!object3D ?

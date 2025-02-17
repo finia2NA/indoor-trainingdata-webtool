@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import Transformation from '../data/Transformation';
+import { atom } from "jotai";
+
+export const selectedModelAtom = atom<[number, number] | null>(null);
 
 type MultiTransformationState = {
   mulitTransformations: Record<number, Record<number, Transformation>>;

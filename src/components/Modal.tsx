@@ -135,7 +135,7 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
                   index={i}
                   name={model.name}
                   size={model.size}
-                  onDelete={() => { db.deleteModelFromProject(projectId, model.id!) }}
+                  onDelete={() => { db.deleteModelFromProject(projectId, model.id) }}
                 />
               ))}
             </div>
