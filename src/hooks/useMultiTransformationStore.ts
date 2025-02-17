@@ -3,15 +3,15 @@ import { persist } from "zustand/middleware";
 import Transformation from '../data/Transformation';
 
 type MultiTransformationState = {
-  mulitTransformations: Record<number, Transformation>;
-  getTransformation: (id: number) => Transformation | null;
-  addTransformation: (id: number) => void;
+  mulitTransformations: Record<number, Record<number, Transformation>>;
+  getTransformation: (projectId: number, modelId: number) => Transformation | null;
+  addTransformation: (projectId: number, modelId: number) => void;
 
-  setTransformation: (id: number, transformation: Transformation) => void;
+  setTransformation: (projectId: number, modelId: number, transformation: Transformation) => void;
 
-  setTranslation: (id: number, translation: number[]) => void;
-  setRotation: (id: number, rotation: number[]) => void;
-  setScale: (id: number, scale: number[]) => void;
+  setTranslation: (projectId: number, modelId: number, translation: number[]) => void;
+  setRotation: (projectId: number, modelId: number, rotation: number[]) => void;
+  setScale: (projectId: number, modelId: number, scale: number[]) => void;
 };
 
 const useMultiTransformationStore = create<MultiTransformationState>()(
@@ -19,38 +19,44 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
     (set, get) => ({
       mulitTransformations: {},
 
-      getTransformation: (id: number) => {
-        const obj = get().mulitTransformations[id];
+      getTransformation: (projectId: number, modelId: number) => {
+        const obj = get().mulitTransformations[projectId]?.[modelId];
         if (!obj) {
           return null;
         }
         return new Transformation(obj.translation, obj.rotation, obj.scale);
       },
 
-      addTransformation: (id: number) => set((state) => ({
+      addTransformation: (projectId: number, modelId: number) => set((state) => ({
         mulitTransformations: {
           ...state.mulitTransformations,
-          [id]: new Transformation(),
+          [projectId]: {
+            ...state.mulitTransformations[projectId],
+            [modelId]: new Transformation(),
+          },
         },
       })),
 
-      setTransformation: (id: number, transformation: Transformation) => set((state) => {
+      setTransformation: (projectId: number, modelId: number, transformation: Transformation) => set((state) => {
         // Check if the transformation exists; if not, do nothing
-        const currTrans = state.getTransformation(id);
+        const currTrans = state.getTransformation(projectId, modelId);
         if (!currTrans) return state;
 
         // Use the provided transformation to replace the current one
         return {
           mulitTransformations: {
             ...state.mulitTransformations,
-            [id]: transformation.copy(),
+            [projectId]: {
+              ...state.mulitTransformations[projectId],
+              [modelId]: transformation,
+            },
           },
         };
       }),
 
-      setTranslation: (id: number, translation: number[]) => set((state) => {
+      setTranslation: (projectId: number, modelId: number, translation: number[]) => set((state) => {
         // get the object
-        const currTrans = state.getTransformation(id);
+        const currTrans = state.getTransformation(projectId, modelId);
         if (!currTrans) return state;
 
         // update the translation
@@ -61,14 +67,17 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
         return {
           mulitTransformations: {
             ...state.mulitTransformations,
-            [id]: newTransformation,
+            [projectId]: {
+              ...state.mulitTransformations[projectId],
+              [modelId]: newTransformation,
+            },
           },
         };
       }),
 
-      setRotation: (id: number, rotation: number[]) => set((state) => {
+      setRotation: (projectId: number, modelId: number, rotation: number[]) => set((state) => {
         // get the object
-        const currTrans = state.getTransformation(id);
+        const currTrans = state.getTransformation(projectId, modelId);
         if (!currTrans) return state;
 
         // update the translation
@@ -78,14 +87,17 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
         return {
           mulitTransformations: {
             ...state.mulitTransformations,
-            [id]: newTransformation,
+            [projectId]: {
+              ...state.mulitTransformations[projectId],
+              [modelId]: newTransformation,
+            },
           },
         };
       }),
 
-      setScale: (id: number, scale: number[]) => set((state) => {
+      setScale: (projectId: number, modelId: number, scale: number[]) => set((state) => {
         // get the object
-        const currTrans = state.getTransformation(id);
+        const currTrans = state.getTransformation(projectId, modelId);
         if (!currTrans) return state;
 
         // update the translation
@@ -95,16 +107,19 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
         return {
           mulitTransformations: {
             ...state.mulitTransformations,
-            [id]: newTransformation,
-          },
+            [projectId]: {
+              ...state.mulitTransformations[projectId],
+              [modelId]: newTransformation,
+            },
+          }
         };
-      }),
 
+      }),
     }),
     {
       name: 'multiTransformation'
-    },
-  ),
+    }
+  )
 );
 
 export default useMultiTransformationStore;
