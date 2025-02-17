@@ -33,6 +33,9 @@ const Viewport = ({ model }: ViewportProps) => {
   const cameraRef = useRef<Camera | null>();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  /**
+   * @deprecated use the offscreen canvas instead
+   */
   const setPose = useCallback((pos: Vector3, target: Vector3) => {
     if (cameraRef.current) {
       cameraRef.current.position.set(pos.x, pos.y, pos.z);
@@ -40,6 +43,9 @@ const Viewport = ({ model }: ViewportProps) => {
     }
   }, [setOrbitTarget]);
 
+  /**
+   * @deprecated use the offscreen canvas instead
+   */
   const takeScreenshot = useCallback(async (screenshotWidth: number, screenshotHeight: number): Promise<ScreenShotResult> => {
     if (!canvasRef.current) throw new Error("Canvas not available");
     const canvas = canvasRef.current;
@@ -60,7 +66,7 @@ const Viewport = ({ model }: ViewportProps) => {
 
     canvas.width = originalWidth;
     canvas.height = originalHeight;
-    
+
     if (blob) {
       return {
         blob,
