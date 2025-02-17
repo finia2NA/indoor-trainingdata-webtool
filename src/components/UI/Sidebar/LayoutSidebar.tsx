@@ -4,6 +4,8 @@ import { LuExpand, LuMove, LuRotate3D } from "react-icons/lu";
 import useEditorStore, { EditorState } from '../../../hooks/useEditorStore';
 import { InteractiveInput } from '@designbyadrian/react-interactive-input';
 import SidebarSection from './SidebarSection';
+import { Model3D, Project } from '../../../data/db';
+import { Fragment } from 'react/jsx-runtime';
 
 
 
@@ -71,17 +73,15 @@ const SingleChannel = ({ name, values, onChange, step = 1, min = -100, max = 100
   )
 }
 
-const LayoutSidebar = () => {
-  "use no memo"; // LATER: upgrade react compiler, see if that fixes this // make a bug report
-  const id = Number(useParams<{ id: string }>().id);
+type ModelChannelProps = {
+  model: Model3D
+  modelId: number
+  projectId: number
+}
 
-  const { addTransformation, getTransformation, setTranslation, setRotation, setScale } = useMultiTransformationStore();
-
-  if (!getTransformation(id)) {
-    addTransformation(id);
-  }
-
-  const myTransformation = getTransformation(id);
+const ModelChannel = ({ model, modelId, projectId }: ModelChannelProps) => {
+  const { getTransformation, setTranslation, setRotation, setScale } = useMultiTransformationStore();
+  const myTransformation = getTransformation(projectId, modelId);
   if (!myTransformation) {
     return <></>
   }
@@ -93,8 +93,9 @@ const LayoutSidebar = () => {
       }
       return val;
     });
-    setTranslation(id, sanitizedVals);
+    setTranslation(projectId, modelId, sanitizedVals);
   }
+
   const rotateSetter = (newVals: number[]) => {
     const sanitizedVals = newVals.map((val) => {
       if (isNaN(val)) {
@@ -102,8 +103,9 @@ const LayoutSidebar = () => {
       }
       return val;
     });
-    setRotation(id, sanitizedVals);
+    setRotation(projectId, modelId, sanitizedVals);
   }
+
   const scaleSetter = (newVals: number[]) => {
     const sanitizedVals = newVals.map((val) => {
       if (isNaN(val)) {
@@ -111,22 +113,60 @@ const LayoutSidebar = () => {
       }
       return val;
     });
-    setScale(id, sanitizedVals);
+    setScale(projectId, modelId, sanitizedVals);
+  }
+
+  return (
+    <SidebarSection title={model.name}>
+      <SingleChannel name="Translate" min={-10} max={10} step={0.1}
+        values={myTransformation.translation} onChange={translateSetter} />
+      <SingleChannel name="Rotate" min={-Math.PI} max={Math.PI} step={0.05}
+        values={myTransformation.rotation} onChange={rotateSetter} />
+      <SingleChannel name="Scale" min={0.1} max={3} step={0.1}
+        values={myTransformation.scale} onChange={scaleSetter} />
+    </SidebarSection>
+  )
+}
+
+type LayoutSidebarProps = {
+  project: Project
+}
+
+const LayoutSidebar = ({ project }: LayoutSidebarProps) => {
+  // eslint-disable-next-line react-compiler/react-compiler
+  "use no memo"; // LATER: upgrade react compiler, see if that fixes this // make a bug report
+
+  const { addTransformation, getTransformation } = useMultiTransformationStore();
+
+  const projectId = project.id;
+  if (!projectId) {
+    throw new Error("Project has no id");
+  }
+  const models = project.models;
+  for (const model of models) {
+    if (model.id === undefined) {
+      throw new Error("Model has no id");
+    }
+    if (!getTransformation(projectId, model.id)) {
+      addTransformation(projectId, model.id);
+    }
   }
 
   return (
     <>
-      <SidebarSection title="Channelbox">
-        <SingleChannel name="Translate" min={-10} max={10} step={0.1}
-          values={myTransformation.translation} onChange={translateSetter} />
-        <SingleChannel name="Rotate" min={-Math.PI} max={Math.PI} step={0.05}
-          values={myTransformation.rotation} onChange={rotateSetter} />
-        <SingleChannel name="Scale" min={0.1} max={3} step={0.1}
-          values={myTransformation.scale} onChange={scaleSetter} />
-      </SidebarSection>
+      {models.map((model) => {
+        if (model.id === undefined) {
+          throw new Error("Model has no id");
+        }
+        return (
+          <Fragment key={model.id}>
+            <ModelChannel model={model} modelId={model.id!} projectId={projectId!} />
+          </Fragment>
+        )
+      })
+      }
     </>
   )
-
 };
 
 export default LayoutSidebar;

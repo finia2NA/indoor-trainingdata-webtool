@@ -43,7 +43,7 @@ const ViewPage = () => {
         <Editor project={project} />
       </div>
       <div className="flex-grow flex-shrink h-1/2 lg:h-auto lg:basis-1/4 lg:min-w-[400px] overflow-auto">
-        {/* <Sidebar /> */}
+        <Sidebar project={project} />
       </div>
     </div>
   );
