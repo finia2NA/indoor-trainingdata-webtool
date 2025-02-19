@@ -2,7 +2,7 @@ import { useCallback, useRef } from 'react';
 import * as THREE from 'three';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useParams } from 'react-router-dom';
-import db, { Model3D } from "../data/db";
+import db, { Project } from "../data/db";
 import { Pose } from './useDataGeneratorUtils';
 import { loadModel } from '../utils/loadModel';
 import { Id, toast } from 'react-toastify';
@@ -17,27 +17,26 @@ type takeScreenshotProps = {
 }
 
 const useOffscreenScreenshot = () => {
-  const { id } = useParams();
+  const { id: projectId } = useParams();
   const progressToastId = useRef<null | Id>(null);
-  const { getTransformation, setTransformation } = useMultiTransformationStore();
+  const { getTransformation, getVisibility } = useMultiTransformationStore();
 
 
 
-  const model = useLiveQuery<Model3D | null>(
+  const project = useLiveQuery<Project | null>(
     async () => {
-      return (await db.models.where('id').equals(Number(id)).first()) ?? null;
+      return (await db.projects.where('id').equals(Number(projectId)).first()) ?? null;
     },
-    [id]
+    [projectId]
   );
 
   const takeOffscreenScreenshots = useCallback(async ({ poses, width, height }: takeScreenshotProps) => {
-    if (!model) throw new Error('Model not found');
-    if(!model.id) throw new Error('Model id not found');
+    if (!project) throw new Error('Model not found');
+    if (!project.id) throw new Error('Model id not found');
     if (!poses || poses.length === 0) throw new Error('Poses not given');
-    const transformation = getTransformation(model.id);
 
 
-    // setup
+    // first, basic setup: canvas, scene, renderer, lights, camera, etc
     const offscreen = new OffscreenCanvas(width, height);
     const renderer = new THREE.WebGLRenderer({ canvas: offscreen, preserveDrawingBuffer: true });
     const scene = new THREE.Scene();
@@ -46,13 +45,25 @@ const useOffscreenScreenshot = () => {
     const ambientLight = new THREE.AmbientLight(0xffffff, 1);
     scene.add(ambientLight);
 
-    // load model using util function
-    const loadedObject = await loadModel(model.name, model.content);
-    loadedObject.position.set(transformation.translation[0], transformation.translation[1], transformation.translation[2]);
-    loadedObject.setRotationFromEuler(new THREE.Euler(transformation.rotation[0], transformation.rotation[1], transformation.rotation[2]));
-    loadedObject.scale.set(transformation.scale[0], transformation.scale[1], transformation.scale[2]);
-    scene.add(loadedObject);
+    // now, add all applicable models to the scene
+    const models = project.models;
+    if (!models) throw new Error('Models not found');
+    for (const model of models) {
+      if (!getVisibility(project.id, model.id)) continue;
 
+      const transformation = getTransformation(project.id, model.id);
+      if (!transformation) throw new Error(`Transformation not found for model${model.name}, ids p-${projectId}, m-${model.id}`);
+
+      const loadedObject = await loadModel(model.name, model.content);
+      loadedObject.position.set(transformation.translation[0], transformation.translation[1], transformation.translation[2]);
+      loadedObject.setRotationFromEuler(new THREE.Euler(transformation.rotation[0], transformation.rotation[1], transformation.rotation[2]));
+      loadedObject.scale.set(transformation.scale[0], transformation.scale[1], transformation.scale[2]);
+      scene.add(loadedObject);
+    }
+
+
+    // take the pictures.
+    // we need to keep track of the progress, and also allow the user to stop the process
     let stop = false;
     const doStop = () => {
       stop = true;
@@ -94,7 +105,7 @@ const useOffscreenScreenshot = () => {
     }
 
     return blobs;
-  }, [model]);
+  }, [getTransformation, getVisibility, project, projectId]);
 
   return { takeOffscreenScreenshots };
 };
