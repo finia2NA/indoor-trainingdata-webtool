@@ -8,7 +8,7 @@ const sizes = {
 }
 
 type SidebarSectionProps = {
-  title: string;
+  title: string | React.ReactNode;
   level?: number;
   children?: React.ReactNode;
   className?: string;

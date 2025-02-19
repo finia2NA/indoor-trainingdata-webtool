@@ -12,12 +12,19 @@ type MultiTransformationState = {
   setTranslation: (projectId: number, modelId: number, translation: number[]) => void;
   setRotation: (projectId: number, modelId: number, rotation: number[]) => void;
   setScale: (projectId: number, modelId: number, scale: number[]) => void;
+
+  multiVisibility: Record<number, Record<number,boolean>>;
+  getVisibility: (projectId: number, modelId: number) => boolean;
+  setVisibility: (projectId: number, modelId: number, visibility: boolean) => void;
+
+
 };
 
 const useMultiTransformationStore = create<MultiTransformationState>()(
   persist(
     (set, get) => ({
       mulitTransformations: {},
+      multiVisibility: {},
 
       getTransformation: (projectId: number, modelId: number) => {
         const obj = get().mulitTransformations[projectId]?.[modelId];
@@ -115,6 +122,20 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
         };
 
       }),
+
+      getVisibility: (projectId: number, modelId: number) => {
+        return get().multiVisibility[projectId]?.[modelId] ?? false;
+      },
+
+      setVisibility: (projectId: number, modelId: number, visibility: boolean) => set((state) => ({
+        multiVisibility: {
+          ...state.multiVisibility,
+          [projectId]: {
+            ...state.multiVisibility[projectId],
+            [modelId]: visibility,
+          },
+        },
+      })),
     }),
     {
       name: 'multiTransformation'
