@@ -1,4 +1,3 @@
-import { useParams } from 'react-router-dom';
 import useMultiTransformationStore from '../../../hooks/useMultiTransformationStore';
 import { LuExpand, LuMove, LuRotate3D } from "react-icons/lu";
 import useEditorStore, { EditorState } from '../../../hooks/useEditorStore';
@@ -7,6 +6,7 @@ import SidebarSection from './SidebarSection';
 import { Model3D, Project } from '../../../data/db';
 import { Fragment } from 'react/jsx-runtime';
 
+import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 
 
 
@@ -80,8 +80,10 @@ type ModelChannelProps = {
 }
 
 const ModelChannel = ({ model, modelId, projectId }: ModelChannelProps) => {
-  const { getTransformation, setTranslation, setRotation, setScale } = useMultiTransformationStore();
+  const { getTransformation, setTranslation, setRotation, setScale, getVisibility, setVisibility } = useMultiTransformationStore();
   const myTransformation = getTransformation(projectId, modelId);
+  const myVisibility = getVisibility(projectId, modelId);
+
   if (!myTransformation) {
     return <></>
   }
@@ -116,8 +118,22 @@ const ModelChannel = ({ model, modelId, projectId }: ModelChannelProps) => {
     setScale(projectId, modelId, sanitizedVals);
   }
 
+  const visibilitySetter = (newVal: boolean) => {
+    setVisibility(projectId, modelId, newVal);
+  }
+
+  const titleSection =
+    <div className='flex flex-row gap-2 items-center'>
+      <button
+        className={`flex h-6 items-center ${myVisibility ? "text-confirm" : "text-danger"}`}
+        onClick={() => visibilitySetter(!myVisibility)}>
+        {myVisibility ? <IoMdEye /> : <IoMdEyeOff />}
+      </button>
+      <span>{model.name}</span>
+    </div>
+
   return (
-    <SidebarSection title={model.name}>
+    <SidebarSection title={titleSection}>
       <SingleChannel name="Translate" min={-10} max={10} step={0.1}
         values={myTransformation.translation} onChange={translateSetter} />
       <SingleChannel name="Rotate" min={-Math.PI} max={Math.PI} step={0.05}

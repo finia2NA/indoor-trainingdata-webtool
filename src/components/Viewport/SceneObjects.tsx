@@ -1,5 +1,5 @@
 import { Model3D, Project } from '../../data/db';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Object3DEventMap } from 'three';
 import useMultiTransformationStore from '../../hooks/useMultiTransformationStore';
 import * as THREE from 'three';
@@ -22,15 +22,13 @@ const SceneObject = ({ model }: SceneObjectProps) => {
   const { setIsTransforming } = useTransformingSync();
 
   // Transformations
-  const { getTransformation, setTransformation } = useMultiTransformationStore();
+  const { getTransformation, setTransformation, getVisibility } = useMultiTransformationStore();
   const transformation = getTransformation(projectId, modelId);
   if (!transformation) throw new Error('No transformation found for model');
+  const iAmVisible = getVisibility(projectId, modelId);
 
   // Storing the object, both the three object and the ref to it
   const [object3D, setObject3D] = useState<THREE.Object3D<Object3DEventMap> | null>(null);
-  const objectRef = useRef<THREE.Object3D | null>(null);
-
-  console.log("Object transformation", transformation);
 
   // Load scene into object3D
   useEffect(() => {
@@ -74,10 +72,10 @@ const SceneObject = ({ model }: SceneObjectProps) => {
 
   // render
   return (
+    iAmVisible &&
     <>
-
       {object3D &&
-        <primitive object={object3D} ref={objectRef} />
+        <primitive object={object3D} />
       }
       {transformMode !== 'none' && object3D &&
         <TransformControls
