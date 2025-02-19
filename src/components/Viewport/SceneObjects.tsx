@@ -15,17 +15,24 @@ type SceneObjectProps = {
 };
 
 const SceneObject = ({ model }: SceneObjectProps) => {
+  // IDs, editor state
   const projectId = Number(useParams<{ id: string }>().id);
   const modelId = model.id;
-  const [object3D, setObject3D] = useState<THREE.Object3D<Object3DEventMap> | null>(null);
+  const { transformMode } = useEditorStore();
+  const { setIsTransforming } = useTransformingSync();
+
+  // Transformations
   const { getTransformation, setTransformation } = useMultiTransformationStore();
   const transformation = getTransformation(projectId, modelId);
   if (!transformation) throw new Error('No transformation found for model');
+
+  // Storing the object, both the three object and the ref to it
+  const [object3D, setObject3D] = useState<THREE.Object3D<Object3DEventMap> | null>(null);
   const objectRef = useRef<THREE.Object3D | null>(null);
 
   console.log("Object transformation", transformation);
 
-  // Load scene
+  // Load scene into object3D
   useEffect(() => {
     (async () => {
       try {
@@ -37,7 +44,7 @@ const SceneObject = ({ model }: SceneObjectProps) => {
     })();
   }, [model]);
 
-  // Apply transformation
+  // Apply transformation to it
   useEffect(() => {
     if (!object3D) return;
     object3D.position.set(transformation.translation[0], transformation.translation[1], transformation.translation[2]);
@@ -46,11 +53,44 @@ const SceneObject = ({ model }: SceneObjectProps) => {
   }, [object3D, transformation.translation, transformation.rotation, transformation.scale]);
 
 
+  // When transforming using handles, apply it to the zustand store
+  const onTransform = () => {
+    if (!object3D) return;
+    if (model.id === undefined || model.id < 0) return;
+
+    const pos = object3D.position;
+    const rot = object3D.rotation;
+    const scale = object3D.scale;
+
+    const newTransform = new Transformation(
+      [pos.x, pos.y, pos.z],
+      [rot.x, rot.y, rot.z],
+      [scale.x, scale.y, scale.z]
+    )
+
+    setTransformation(projectId, modelId, newTransform);
+  }
+
+
   // render
-  return (!object3D ?
-    // Nothing if scene is not loaded
-    null :
-    <primitive object={object3D} />
+  return (
+    <>
+
+      {object3D &&
+        <primitive object={object3D} ref={objectRef} />
+      }
+      {transformMode !== 'none' && object3D &&
+        <TransformControls
+          object={object3D}
+          position={new THREE.Vector3(...transformation.translation)}
+          mode={transformMode}
+          onMouseDown={() => setIsTransforming(true)}
+          onMouseUp={() => setIsTransforming(false)}
+          onObjectChange={() => {
+            onTransform();
+          }}
+        />}
+    </>
   );
 
   // // Getting current model transformation
