@@ -117,7 +117,7 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
             <input
               id="Project "
               type="text"
-              className="border-b-2"
+              className="border-b-2 pl-1 pr-1"
               placeholder="Insert Project Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
