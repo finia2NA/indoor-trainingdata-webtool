@@ -49,7 +49,7 @@ export const takeRandomSample = ({ dist, maxTries = 1000, positive = false }: Ra
     if (u < dist(x) / maxValue) {
       if (Math.abs(x) > 1)
         console.warn("Sampled value is outside the range [-1, 1].");
-      return positive ? Math.abs(x) : x;
+      return positive ? Math.abs(x) : x; // ||x|| if positive is true
     }
   }
 
