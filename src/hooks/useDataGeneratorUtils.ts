@@ -155,10 +155,9 @@ const useDataGeneratorUtils = () => {
 
     // sample pitch angle
     const anglesDist = createDistribution(anglesConcentration);
-    const angleSample = takeRandomSample({ dist: anglesDist }); // this one is in [-1, 1]
-    const rangeWidth = anglesRange[1] - anglesRange[0];
-    const midPoint = (anglesRange[1] + anglesRange[0]) / 2;
-    const angleVal = angleSample * rangeWidth / 2 + midPoint; // in degrees
+    const angleSample = takeRandomSample({ dist: anglesDist });
+    const angleVal = (anglesRange[0] + anglesRange[1]) / 2 + // midpoint
+      angleSample * anglesRange[1] - anglesRange[0] / 2; // random sampled offset /2 bc range of sampled values is [-1, 1]
 
     if (directionXZ.length() > 0) {
       directionXZ.normalize();
@@ -187,7 +186,6 @@ const useDataGeneratorUtils = () => {
     // generate random fov
     const fovDist = createDistribution(fovConcentration);
     const fovSample = takeRandomSample({ dist: fovDist });
-    console.log(fovSample)
     const fov = (fovRange[0] + fovRange[1]) / 2 + fovSample * (fovRange[1] - fovRange[0]) / 2;
 
 
@@ -216,11 +214,12 @@ const useDataGeneratorUtils = () => {
     // Sample a distance and angle
     const distanceDist = createDistribution(pairDistanceConcentration);
     const distanceSample = takeRandomSample({ dist: distanceDist, positive: true });
-    const distanceVal = distanceSample * (pairDistanceRange[1] - pairDistanceRange[0]) + pairDistanceRange[0];
+    const distanceVal = pairDistanceRange[0] + // base
+      distanceSample * (pairDistanceRange[1] - pairDistanceRange[0]); // random offset
 
-    const angleDist = createDistribution(pairAngleConcentration);
-    const angleSample = takeRandomSample({ dist: angleDist });
-    const angleVal = angleSample * pairAngleOffset * (Math.PI / 180);
+    const pairAngleDist = createDistribution(pairAngleConcentration);
+    const pairAngleSample = takeRandomSample({ dist: pairAngleDist });
+    const pairAngleVal = pairAngleSample * pairAngleOffset * (Math.PI / 180);
 
     // Create the second point
     const newPos = pose.position.clone().add(new Vector3(
@@ -237,8 +236,8 @@ const useDataGeneratorUtils = () => {
 
     // Randomly split angleVal into yaw and pitch
     const t = Math.random();
-    const yawAngle = (2 * Math.random() - 1) * t * angleVal;
-    const pitchAngle = (2 * Math.random() - 1) * (1 - t) * angleVal;
+    const yawAngle = (2 * Math.random() - 1) * t * pairAngleVal;
+    const pitchAngle = (2 * Math.random() - 1) * (1 - t) * pairAngleVal;
 
     // Apply Yaw (rotation around up vector)
     const yawQuat = new Quaternion().setFromAxisAngle(up, yawAngle);
