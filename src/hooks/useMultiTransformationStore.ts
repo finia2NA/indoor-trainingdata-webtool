@@ -124,7 +124,7 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
       }),
 
       getVisibility: (projectId: number, modelId: number) => {
-        return get().multiVisibility[projectId]?.[modelId] ?? false;
+        return get().multiVisibility[projectId]?.[modelId] ?? true;
       },
 
       setVisibility: (projectId: number, modelId: number, visibility: boolean) => set((state) => ({
