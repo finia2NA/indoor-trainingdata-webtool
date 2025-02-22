@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useParams } from 'react-router-dom';
 import db, { Project } from "../data/db";
-import { Pose } from './useDataGeneratorUtils';
+import { Pose, ScreenShotResult } from './useDataGeneratorUtils';
 import { loadModel } from '../utils/loadModel';
 import { Id, toast } from 'react-toastify';
 import { ProgressToast, ProgressType } from '../components/UI/Toasts';
@@ -69,7 +69,7 @@ const useOffscreenScreenshot = () => {
       stop = true;
     }
 
-    const blobs: Blob[] = [];
+    const results: ScreenShotResult[] = [];
     for (let i = 0; i < poses.length; i++) {
       if (stop) break;
       const progress = (i + 1) / poses.length;
@@ -88,10 +88,17 @@ const useOffscreenScreenshot = () => {
       }
       const pose = poses[i];
       camera.position.set(...pose.position.toArray());
+      camera.fov = pose.fov;
+      camera.updateProjectionMatrix();
       camera.lookAt(...pose.target.toArray());
       renderer.render(scene, camera);
       const blob = await offscreen.convertToBlob({ type: 'image/png' });
-      blobs.push(blob);
+      results.push({
+        blob,
+        pose,
+        width,
+        height,
+      });
     }
 
     if (!stop)
@@ -104,7 +111,7 @@ const useOffscreenScreenshot = () => {
       progressToastId.current = null;
     }
 
-    return blobs;
+    return results;
   }, [getTransformation, getVisibility, project, projectId]);
 
   return { takeOffscreenScreenshots };

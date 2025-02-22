@@ -1,7 +1,6 @@
 import { useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Quaternion, Vector2, Vector3 } from "three";
-import { create } from "zustand";
 import useMultiGenerationStore from "../hooks/useMultiGenerationStore";
 import { createDistribution, takeRandomSample } from "../util/probability";
 import Triangulation from "../util/triangulate";
@@ -12,15 +11,16 @@ import { ProgressToast, ProgressType } from "../components/UI/Toasts";
 import useOffscreenScreenshot from "./useOffscreenScreenshot";
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { Matrix4 } from "three";
 
-const logging = false;
+const logging = true;
 const progressLogging = false;
 
 export type ScreenShotResult = {
   blob: Blob;
+  pose: Pose;
   width: number;
   height: number;
-  fov: number;
 }
 
 type PolygonEX = {
@@ -32,9 +32,14 @@ type PolygonEX = {
 export type Pose = {
   position: Vector3;
   target: Vector3;
+  quaternion: Quaternion;
+  fov: number;
   type?: 'single' | 'pair';
 }
 
+/**
+ * Function that rounds a number to 2 decimal places
+ */
 const to2accuracy = (values: number[] | number) => {
   if (Array.isArray(values)) {
     return values.map(v => Math.round(v * 100) / 100);
@@ -43,18 +48,9 @@ const to2accuracy = (values: number[] | number) => {
   }
 }
 
-
-type DataGeneratorState = {
-  orbitTarget: Vector3;
-  setOrbitTarget: (target: Vector3) => void;
-
-  setPose?: (pos: Vector3, target: Vector3) => void;
-  registerSetPose: (cb: (pos: Vector3, target: Vector3) => void) => void;
-
-  takeScreenshot?: (screenshotWidth: number, screenshotHeight: number) => Promise<ScreenShotResult | null>;
-  registerTakeScreenshot: (cb: (screenshotWidth: number, screenshotHeight: number) => Promise<ScreenShotResult>) => void;
-}
-
+/**
+ * Function that when given the distance from the nearest wall, returns the angle that the camera should be allowed to look at
+ */
 const getAllowedAngle = (distance: number) => {
   const min = 0.15;
   const max = 0.30;
@@ -64,20 +60,6 @@ const getAllowedAngle = (distance: number) => {
   return angle;
 }
 
-
-/**
- * @deprecated Screenshots are now taken offscreen, so this is not necessary any more
- */
-export const useDataGeneratorStore = create<DataGeneratorState>((set) => ({
-  orbitTarget: new Vector3(0, 0, 0),
-  setOrbitTarget: (target) => set({ orbitTarget: target }),
-
-  setPose: undefined,
-  registerSetPose: (cb) => set({ setPose: cb }),
-
-  takeScreenshot: undefined,
-  registerTakeScreenshot: (cb) => set({ takeScreenshot: cb }),
-}));
 
 const useDataGeneratorUtils = () => {
   const { takeOffscreenScreenshots } = useOffscreenScreenshot();
@@ -97,6 +79,8 @@ const useDataGeneratorUtils = () => {
     getPairDistanceConcentration,
     getPairAngle,
     getPairAngleConcentration,
+    getFovRange,
+    getFovConcentration,
     getNumImages,
     getImageDimensions,
   } = useMultiGenerationStore();
@@ -109,6 +93,8 @@ const useDataGeneratorUtils = () => {
   const pairDistanceConcentration = getPairDistanceConcentration(id);
   const pairAngleOffset = getPairAngle(id);
   const pairAngleConcentration = getPairAngleConcentration(id);
+  const fovRange = getFovRange(id);
+  const fovConcentration = getFovConcentration(id);
   const numImages = getNumImages(id);
   const imageSize = getImageDimensions(id);
 
@@ -151,23 +137,25 @@ const useDataGeneratorUtils = () => {
     selectedPoint.add(new Vector3(0, rndHeightOffset, 0));
 
     // Let's first do the XZ angle
-    let directionXZ: Vector2;
-    if (!avoidWalls) {
-      directionXZ = new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1);
-    } else {
-      // In this case, use the triag method to find the closest wall edge. Find the distance.
-      const { closestPoint, closestDistance } = selectedPolygon!.triangulation.getClosestEdgePoint(new Vector2(selectedPoint.x, selectedPoint.z));
-      const direction = closestPoint.clone().sub(selectedPoint);
-      // first, turn the direction by 180 degrees
-      direction.multiplyScalar(-1);
+    const directionXZ = new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1);
 
-      // them we can figure out how much we are allowed to move in that direction
-    }
+    // TODO: this is for the wall avoidance
+    // let directionXZ: Vector2;
+    // if (!avoidWalls) {
+    //   directionXZ = new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1);
+    // } else {
+    //   // In this case, use the triag method to find the closest wall edge. Find the distance.
+    //   const { closestPoint, closestDistance } = selectedPolygon!.triangulation.getClosestEdgePoint(new Vector2(selectedPoint.x, selectedPoint.z));
+    //   const direction = closestPoint.clone().sub(selectedPoint);
+    //   // first, turn the direction by 180 degrees
+    //   direction.multiplyScalar(-1);
+    //
+    //   // then we can figure out how much we are allowed to move in that direction
+    // }
 
     // sample pitch angle
     const anglesDist = createDistribution(anglesConcentration);
     const angleSample = takeRandomSample({ dist: anglesDist }); // this one is in [-1, 1]
-
     const rangeWidth = anglesRange[1] - anglesRange[0];
     const midPoint = (anglesRange[1] + anglesRange[0]) / 2;
     const angleVal = angleSample * rangeWidth / 2 + midPoint; // in degrees
@@ -181,6 +169,7 @@ const useDataGeneratorUtils = () => {
     // Compute the Y component using the pitch angle
     const y = Math.sin((angleVal / 180.0) * Math.PI); // Upward component
     const horizontalScale = Math.cos((angleVal / 180.0) * Math.PI); // Scale for XZ to maintain unit length
+
     // Final target vector
     const targetPoint = new Vector3(
       selectedPoint.x + directionXZ.x * horizontalScale,
@@ -188,15 +177,35 @@ const useDataGeneratorUtils = () => {
       selectedPoint.z + directionXZ.y * horizontalScale
     );
 
+    // Compute the quaternion rotation from the position-target pair.
+    // Create a look-at matrix and extract its rotation.
+    const up = new Vector3(0, 1, 0);
+    const m = new Matrix4();
+    m.lookAt(selectedPoint, targetPoint, up);
+    const quaternionRotation = new Quaternion().setFromRotationMatrix(m);
+
+    // generate random fov
+    const fovDist = createDistribution(fovConcentration);
+    const fovSample = takeRandomSample({ dist: fovDist });
+    console.log(fovSample)
+    const fov = (fovRange[0] + fovRange[1]) / 2 + fovSample * (fovRange[1] - fovRange[0]) / 2;
+
+
     if (logging) {
       console.table({
         Position: (to2accuracy(selectedPoint.toArray()) as number[]).join(', '),
         Target: (to2accuracy(targetPoint.toArray()) as number[]).join(', '),
         Pitch: to2accuracy(angleVal) + "°",
+        Fov: to2accuracy(fov) + "°",
       });
     }
 
-    return { position: selectedPoint, target: targetPoint };
+    return {
+      position: selectedPoint,
+      target: targetPoint,
+      quaternion: quaternionRotation,
+      fov
+    };
   }
 
   const getPairPoint = async (pose: Pose, numTries = 1000) => {
@@ -256,11 +265,18 @@ const useDataGeneratorUtils = () => {
   }
 
   const takeScreenshots = async () => {
-    const blobs = await takeOffscreenScreenshots({ poses, width: imageSize[0], height: imageSize[1], numImages });
+    const labeledScreenshots = await takeOffscreenScreenshots({ poses, width: imageSize[0], height: imageSize[1], numImages });
     const zip = new JSZip();
     const folder = zip.folder("screenshots");
-    blobs.forEach((blob, index) => {
+    labeledScreenshots.forEach((labeledScreenshot, index) => {
+      const { blob, pose, width, height } = labeledScreenshot;
+      const label = {
+        pose,
+        width,
+        height,
+      }
       folder?.file(`screenshot_${index + 1}.png`, blob);
+      folder?.file(`screenshot_${index + 1}.json`, JSON.stringify(label, null, 2));
     });
     const content = await zip.generateAsync({ type: "blob" });
     saveAs(content, "screenshots.zip");
