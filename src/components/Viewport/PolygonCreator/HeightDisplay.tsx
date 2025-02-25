@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import useMultiGenerationStore from "../../../hooks/useMultiGenerationStore";
 import Triangulation from "../../../util/triangulate";
+import useEditorStore from "../../../hooks/useEditorStore";
 
 type PolygonHeightDisplayProps = {
   polygon: Vector3[];
@@ -11,6 +12,8 @@ type PolygonHeightDisplayProps = {
 }
 
 const PolygonHeightDisplay = ({ polygon, height }: PolygonHeightDisplayProps) => {
+
+  const { showPoses } = useEditorStore();
 
   // enable updates
   const bufferRef = useRef<BufferGeometry | null>(null);
@@ -73,9 +76,9 @@ const PolygonHeightDisplay = ({ polygon, height }: PolygonHeightDisplayProps) =>
     <>
       <mesh>
         <bufferGeometry ref={bufferRef} />
-        <meshStandardMaterial color="red" opacity={0.5} side={DoubleSide} transparent={true} />
+        <meshStandardMaterial color="red" opacity={0.2} side={DoubleSide} transparent={true} />
       </mesh>
-      {vertices.map((vertex, index) => (
+      {!showPoses && vertices.map((vertex, index) => (
         <mesh key={index} position={vertex}>
           <sphereGeometry args={[0.02, 16, 16]} />
           <meshStandardMaterial color="blue" />
