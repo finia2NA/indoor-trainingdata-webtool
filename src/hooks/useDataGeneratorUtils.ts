@@ -8,13 +8,18 @@ import useMultiPolygonStore from "./useMultiPolygonStore";
 import usePrecomputedPoses from "./usePrecomputedPoses";
 import { Id, toast } from "react-toastify";
 import { ProgressToast, ProgressType } from "../components/UI/Toasts";
-import useOffscreenScreenshot from "./useOffscreenScreenshot";
+import useOffscreenThree from "./useOffscreenThree";
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Matrix4 } from "three";
 
-const logging = true;
+const logging = false;
 const progressLogging = false;
+
+export enum PoseType {
+  SINGLE = 'single',
+  PAIR = 'pair',
+}
 
 export type ScreenShotResult = {
   blob: Blob;
@@ -34,8 +39,8 @@ export type Pose = {
   target: Vector3;
   quaternion: Quaternion;
   fov: number;
-  type?: 'single' | 'pair';
-  series?: number;
+  series: number;
+  type?: PoseType
 }
 
 /**
@@ -47,6 +52,13 @@ const to2accuracy = (values: number[] | number) => {
   } else {
     return Math.round(values * 100) / 100;
   }
+}
+
+const getQuaternionFromTarget = (position: Vector3, target: Vector3) => {
+  const up = new Vector3(0, 1, 0);
+  const m = new Matrix4();
+  m.lookAt(position, target, up);
+  return new Quaternion().setFromRotationMatrix(m);
 }
 
 /**
@@ -63,7 +75,7 @@ const getAllowedAngle = (distance: number) => {
 
 
 const useDataGeneratorUtils = () => {
-  const { takeOffscreenScreenshots } = useOffscreenScreenshot();
+  const { takeOffscreenScreenshots, doOffscreenRaycast } = useOffscreenThree();
   const { poses, addPose, clearPoses } = usePrecomputedPoses();
   const id = Number(useParams<{ id: string }>().id);
   const { getPolygons } = useMultiPolygonStore();
@@ -118,7 +130,7 @@ const useDataGeneratorUtils = () => {
 
 
 
-  const getRandomPoseInPolygons = async () => {
+  const getRandomPoseInPolygons = async (numSeries: number) => {
     // pick a random polygon. This is similar to how it is in triangulate.ts.
     // Then, use the polygon's triangulation to get a random point inside the polygon
     const randomArea = Math.random() * totalArea;
@@ -178,11 +190,7 @@ const useDataGeneratorUtils = () => {
     );
 
     // Compute the quaternion rotation from the position-target pair.
-    // Create a look-at matrix and extract its rotation.
-    const up = new Vector3(0, 1, 0);
-    const m = new Matrix4();
-    m.lookAt(selectedPoint, targetPoint, up);
-    const quaternionRotation = new Quaternion().setFromRotationMatrix(m);
+    const quaternionRotation = getQuaternionFromTarget(selectedPoint, targetPoint);
 
     // generate random fov
     const fovDist = createDistribution(fovConcentration);
@@ -192,8 +200,9 @@ const useDataGeneratorUtils = () => {
 
     if (logging) {
       console.table({
+        Series: numSeries + "a",
         Position: (to2accuracy(selectedPoint.toArray()) as number[]).join(', '),
-        Target: (to2accuracy(targetPoint.toArray()) as number[]).join(', '),
+        "Relative Target": (to2accuracy(targetPoint.clone().sub(selectedPoint).toArray()) as number[]).join(', '),
         Pitch: to2accuracy(angleVal) + "°",
         Fov: to2accuracy(fov) + "°",
       });
@@ -203,16 +212,18 @@ const useDataGeneratorUtils = () => {
       position: selectedPoint,
       target: targetPoint,
       quaternion: quaternionRotation,
-      fov
+      fov,
+      type: PoseType.SINGLE,
+      series: numSeries,
     };
   }
 
-  const getPairPoint = async (pose: Pose, numTries = 1000) => {
+  const getPairPoint = async (pose: Pose, numSeries: number, numTries = 1000) => {
     if (numTries <= 0) {
       throw new Error('getPairPoint failed after maximum attempts');
     }
 
-    // Sample a distance and angle
+    // SAMPING
     const distanceDist = createDistribution(pairDistanceConcentration);
     const distanceSample = takeRandomSample({ dist: distanceDist, positive: true });
     const distanceVal = pairDistanceRange[0] + // base
@@ -221,8 +232,9 @@ const useDataGeneratorUtils = () => {
     const pairAngleDist = createDistribution(pairAngleConcentration);
     const pairAngleSample = takeRandomSample({ dist: pairAngleDist });
     const pairAngleVal = pairAngleSample * pairAngleOffset * (Math.PI / 180);
+    console.log(pairAngleVal);
 
-    // Create the second point
+    // POSITION
     const newPos = pose.position.clone().add(new Vector3(
       Math.random() * 2 - 1,
       Math.random() * 2 - 1,
@@ -230,6 +242,7 @@ const useDataGeneratorUtils = () => {
     ).multiplyScalar(distanceVal));
 
 
+    // ANGLE
     // get relevant directions
     const direction = pose.target.clone().sub(pose.position).normalize();
     const up = new Vector3(0, 1, 0);
@@ -237,31 +250,49 @@ const useDataGeneratorUtils = () => {
 
     // Randomly split angleVal into yaw and pitch
     const t = Math.random();
-    const yawAngle = (2 * Math.random() - 1) * t * pairAngleVal;
-    const pitchAngle = (2 * Math.random() - 1) * (1 - t) * pairAngleVal;
-
+    const yawAngle = t * pairAngleVal;
+    const pitchAngle = (1 - t) * pairAngleVal;
     // Apply Yaw (rotation around up vector)
     const yawQuat = new Quaternion().setFromAxisAngle(up, yawAngle);
     direction.applyQuaternion(yawQuat);
-
     // Apply Pitch (rotation around right vector)
     const pitchQuat = new Quaternion().setFromAxisAngle(right, pitchAngle);
     direction.applyQuaternion(pitchQuat);
-
     direction.normalize();
 
     // Compute the new target position
     const newTarget = newPos.clone().add(direction);
 
-    // check if we are in the polygon. If not, recurse
-    const isInPolygon = polygonsEX.some((polygonEX) => {
-      polygonEX.triangulation.isInPolygon(newPos);
-    });
-    if (!isInPolygon) {
-      return getPairPoint(pose, numTries - 1);
+    // get quaternion
+    const quaternionRotation = getQuaternionFromTarget(newPos, newTarget);
+
+    // // check if we are in the polygon. If not, recurse
+    // const isInPolygon = polygonsEX.some((polygonEX) => {
+    //   polygonEX.triangulation.isInPolygon(newPos);
+    // });
+    // if (!isInPolygon) {
+    //   return getPairPoint(pose, numTries - 1);
+    // }
+
+    if (logging) {
+      console.table({
+        Series: numSeries + "b",
+        Position: (to2accuracy(newPos.toArray()) as number[]).join(', '),
+        "Relative Target": (to2accuracy(newTarget.clone().sub(newPos).toArray()) as number[]).join(', '),
+        Pitch: to2accuracy(pitchAngle),
+        "Distance to first": to2accuracy(distanceVal),
+        "Angle to first": to2accuracy(pairAngleVal),
+      });
     }
 
-    return { newPos, newTarget };
+    return {
+      position: newPos,
+      target: newTarget,
+      quaternion: quaternionRotation,
+      fov: pose.fov,
+      type: PoseType.PAIR,
+      series: numSeries,
+    };
   }
 
   const takeScreenshots = async () => {
@@ -308,9 +339,15 @@ const useDataGeneratorUtils = () => {
       } else {
         toast.update(progressToastId.current, { progress, data: { progress, type: ProgressType.POSES } });
       }
-      const pose = await getRandomPoseInPolygons();
+      const pose = await getRandomPoseInPolygons(i);
       addPose(pose);
       if (progressLogging) console.log(`Generated ${i + 1}/${numSeries} poses`);
+
+      // If we are doing pair generation, add a second pose
+      if (pair) {
+        const pairPose = await getPairPoint(pose, i);
+        addPose(pairPose);
+      }
 
       // Yield control to avoid blocking the UI.
       await new Promise(resolve => setTimeout(resolve, 0));
