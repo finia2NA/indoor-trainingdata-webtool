@@ -34,6 +34,15 @@ const useOffscreenScreenshot = () => {
     if (!project.id) throw new Error('Model id not found');
     if (!poses || poses.length === 0) throw new Error('Poses not given');
 
+    // Init the toast ASAP so the user knows what's going on
+    progressToastId.current = toast(ProgressToast, {
+      progress: 0.00001, data: { progress: 0.00001, type: ProgressType.SCREENSHOT }, type: "info", onClose(reason) {
+        if (reason === "stop") {
+          doStop();
+        }
+      },
+    });
+
 
     // first, basic setup: canvas, scene, renderer, lights, camera, etc
     const offscreen = new OffscreenCanvas(width, height);
@@ -75,13 +84,7 @@ const useOffscreenScreenshot = () => {
 
 
       if (progressToastId.current === null) {
-        progressToastId.current = toast(ProgressToast, {
-          progress, data: { progress, type: ProgressType.SCREENSHOT }, type: "info", onClose(reason) {
-            if (reason === "stop") {
-              doStop();
-            }
-          },
-        });
+        throw new Error('Screenshot toast was not initialized');
       } else {
         toast.update(progressToastId.current, { progress, data: { progress, type: ProgressType.SCREENSHOT } });
       }
