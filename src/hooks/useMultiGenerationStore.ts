@@ -9,6 +9,7 @@ const defaults = {
   heightOffset: 0,
   anglesRange: [-10, 10],
   anglesConcentration: 0.5,
+  avoidWalls: false,
   doPairGeneration: false,
   pairDistance: [0, 0.2],
   pairDistanceConcentration: 0.5,
@@ -16,7 +17,7 @@ const defaults = {
   pairAngleConcentration: 0.5,
   fovRange: [60, 90],
   fovConcentration: 0.5,
-  numImages: 1000,
+  numSeries: 1000,
   imageDimensions: [256, 256],
 }
 
@@ -59,9 +60,9 @@ export type MultiGenrationState = {
   setFovRange: (id: number, fovRange: GenPair) => void;
   getFovConcentration: (id: number) => number;
   setFovConcentration: (id: number, fovDistribution: number) => void;
-  multiNumImages: Record<number, number>;
-  getNumImages: (id: number) => number;
-  setNumImages: (id: number, numImages: number) => void;
+  multiNumSeries: Record<number, number>;
+  getNumSeries: (id: number) => number;
+  setNumSeries: (id: number, numSeries: number) => void;
   multiImageDimensions: Record<number, GenPair>;
   getImageDimensions: (id: number) => GenPair;
   setImageDimensions: (id: number, dimensions: GenPair) => void;
@@ -98,7 +99,7 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
         },
       })),
       avoidWalls: {},
-      getAvoidWalls: (id) => get().avoidWalls[id] ?? true,
+      getAvoidWalls: (id) => get().avoidWalls[id] ?? defaults.avoidWalls,
       setAvoidWalls: (id, avoidWalls) => set((state) => ({
         avoidWalls: {
           ...state.avoidWalls,
@@ -165,12 +166,12 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
           [id]: fovDistribution,
         },
       })),
-      multiNumImages: {},
-      getNumImages: (id) => get().multiNumImages[id] ?? defaults.numImages,
-      setNumImages: (id, numImages) => set((state) => ({
-        multiNumImages: {
-          ...state.multiNumImages,
-          [id]: numImages,
+      multiNumSeries: {},
+      getNumSeries: (id) => get().multiNumSeries[id] ?? defaults.numSeries,
+      setNumSeries: (id, numSeries) => set((state) => ({
+        multiNumSeries: {
+          ...state.multiNumSeries,
+          [id]: numSeries,
         },
       })),
       multiImageDimensions: {},
@@ -186,7 +187,7 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
         get().setHeightOffset(id, defaults.heightOffset);
         get().setAnglesRange(id, defaults.anglesRange as GenPair);
         get().setAnglesConcentration(id, defaults.anglesConcentration);
-        get().setAvoidWalls(id, true);
+        get().setAvoidWalls(id, defaults.avoidWalls);
 
         get().setDoPairGeneration(id, defaults.doPairGeneration);
         get().setPairDistanceRange(id, defaults.pairDistance as GenPair);
@@ -196,7 +197,7 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
 
         get().setFovRange(id, defaults.fovRange as GenPair);
         get().setFovConcentration(id, defaults.fovConcentration);
-        get().setNumImages(id, defaults.numImages);
+        get().setNumSeries(id, defaults.numSeries);
         get().setImageDimensions(id, defaults.imageDimensions as GenPair);
       }
     }),

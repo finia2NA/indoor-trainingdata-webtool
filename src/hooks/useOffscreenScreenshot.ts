@@ -11,7 +11,6 @@ import useMultiTransformationStore from './useMultiTransformationStore';
 
 type takeScreenshotProps = {
   poses: Pose[];
-  numImages: number;
   width: number;
   height: number;
 }
