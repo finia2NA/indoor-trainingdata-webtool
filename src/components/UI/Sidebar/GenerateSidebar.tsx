@@ -18,8 +18,8 @@ const GenerateSidebar = () => {
   const { poses } = usePrecomputedPoses();
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
-  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numImages, imageSize;
-  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumImages, setImageSize, reset;
+  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize;
+  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, reset;
   {
     // getting values from store
     const {
@@ -45,8 +45,8 @@ const GenerateSidebar = () => {
       setFovRange: storeSetFovRange,
       getFovConcentration,
       setFovConcentration: storeSetFovConcentration,
-      getNumImages,
-      setNumImages: storeSetNumImages,
+      getNumSeries,
+      setNumSeries: storeSetNumSeries,
       getImageDimensions,
       setImageDimensions: storeSetImageDimensions,
       reset: storeReset
@@ -62,7 +62,7 @@ const GenerateSidebar = () => {
     pairAngleConcentration = getPairAngleConcentration(id);
     fovRange = getFovRange(id);
     fovConcentration = getFovConcentration(id);
-    numImages = getNumImages(id);
+    numSeries = getNumSeries(id);
     imageSize = getImageDimensions(id);
 
     setHeightOffset = (offset: number) => storeSetHeightOffset(id, offset);
@@ -76,7 +76,7 @@ const GenerateSidebar = () => {
     setAngleConcentration = (concentration: number) => storeSetPairAngleConcentration(id, concentration);
     setFovRange = (range: GenPair) => storeSetFovRange(id, range);
     setFovConcentration = (concentration: number) => storeSetFovConcentration(id, concentration);
-    setNumImages = (numImages: number) => storeSetNumImages(id, numImages);
+    setNumSeries = (numSeries: number) => storeSetNumSeries(id, numSeries);
     setImageSize = (size: [number, number]) => storeSetImageDimensions(id, size);
     reset = () => storeReset(id);
   }
@@ -135,6 +135,7 @@ const GenerateSidebar = () => {
                 id="avoidWalls"
                 type="checkbox"
                 checked={avoidWalls}
+                disabled
                 onChange={(e) => setAvoidWalls(e.target.checked)}
               />
             </div>
@@ -280,14 +281,14 @@ const GenerateSidebar = () => {
         </SidebarSection>
 
         <div className="flex items-center mb-2">
-          <label htmlFor="numImages" className="mr-2 w-20">Number of Images</label>
+          <label htmlFor="numseries" className="mr-2 w-20">Number of Series</label>
           <InteractiveInput
-            id="numImages"
+            id="numSeries"
             className='w-32 text-center bg-inactive basis-1/3'
             type="number"
             min={1} step={1}
-            value={numImages}
-            onChange={(e) => setNumImages(parseInt(e.target.value))}
+            value={numSeries}
+            onChange={(e) => setNumSeries(parseInt(e.target.value))}
           />
         </div>
 

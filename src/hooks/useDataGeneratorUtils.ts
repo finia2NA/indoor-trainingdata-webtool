@@ -35,6 +35,7 @@ export type Pose = {
   quaternion: Quaternion;
   fov: number;
   type?: 'single' | 'pair';
+  series?: number;
 }
 
 /**
@@ -81,7 +82,7 @@ const useDataGeneratorUtils = () => {
     getPairAngleConcentration,
     getFovRange,
     getFovConcentration,
-    getNumImages,
+    getNumSeries,
     getImageDimensions,
   } = useMultiGenerationStore();
   const heightOffset = getHeightOffset(id);
@@ -95,7 +96,7 @@ const useDataGeneratorUtils = () => {
   const pairAngleConcentration = getPairAngleConcentration(id);
   const fovRange = getFovRange(id);
   const fovConcentration = getFovConcentration(id);
-  const numImages = getNumImages(id);
+  const numSeries = getNumSeries(id);
   const imageSize = getImageDimensions(id);
 
 
@@ -264,7 +265,7 @@ const useDataGeneratorUtils = () => {
   }
 
   const takeScreenshots = async () => {
-    const labeledScreenshots = await takeOffscreenScreenshots({ poses, width: imageSize[0], height: imageSize[1], numImages });
+    const labeledScreenshots = await takeOffscreenScreenshots({ poses, width: imageSize[0], height: imageSize[1] });
     const zip = new JSZip();
     const folder = zip.folder("screenshots");
     labeledScreenshots.forEach((labeledScreenshot, index) => {
@@ -291,10 +292,10 @@ const useDataGeneratorUtils = () => {
       stop = true;
     }
 
-    for (let i = 0; i < numImages; i++) {
+    for (let i = 0; i < numSeries; i++) {
       if (stop)
         break;
-      const progress = ((i + 1) / numImages);
+      const progress = ((i + 1) / numSeries);
 
       if (progressToastId.current === null) {
         progressToastId.current = toast(ProgressToast, {
@@ -309,7 +310,7 @@ const useDataGeneratorUtils = () => {
       }
       const pose = await getRandomPoseInPolygons();
       addPose(pose);
-      if (progressLogging) console.log(`Generated ${i + 1}/${numImages} poses`);
+      if (progressLogging) console.log(`Generated ${i + 1}/${numSeries} poses`);
 
       // Yield control to avoid blocking the UI.
       await new Promise(resolve => setTimeout(resolve, 0));
