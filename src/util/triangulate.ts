@@ -1,4 +1,4 @@
-import { Line3, Vector2, Vector3 } from "three";
+import { Line3, Plane, Vector2, Vector3 } from "three";
 import earcut from 'earcut';
 
 type IndexedPoint = {
@@ -58,7 +58,7 @@ class Triangulation {
     return area;
   }
 
-  getRandomPoint(avoidWalls = false) {
+  getRandomPoint() {
     // First, get a triangle weighted by area
     // We do this by first computing a goal area as a fraction of the total shape area,
     // then iterating over the triangles and taking the first one that pushes us over the goal area
@@ -119,20 +119,55 @@ class Triangulation {
    * an even number indicates that it is outside.
    *
    * @param point - The point with x and z coordinates to test against the polygon.
+   * @param heightOffset - The maximum allowed height offset to the triangle.
    * @returns True if the point is inside the polygon, false otherwise.
    */
-  isInPolygon = (point: Vector3) => {
-    let isInside = false;
-    for (let i = 0, j = this.polygon.length - 1; i < this.polygon.length; j = i++) {
-      const xi = this.polygon[i].x;
-      const zi = this.polygon[i].z;
-      const xj = this.polygon[j].x;
-      const zj = this.polygon[j].z;
-      const intersect = ((zi > point.z) !== (zj > point.z)) &&
-        (point.x < (xj - xi) * (point.z - zi) / (zj - zi) + xi);
-      if (intersect) isInside = !isInside;
+  isInPolygon = (point: Vector3, heightOffset: number) => {
+    // part 1: find the triangle we project to
+    const p = new Vector2(point.x, point.z);
+    for (const tri of this.triangles) {
+      const a = new Vector2(tri[0].position.x, tri[0].position.z);
+      const b = new Vector2(tri[1].position.x, tri[1].position.z);
+      const c = new Vector2(tri[2].position.x, tri[2].position.z);
+      const v0 = c.clone().sub(a);
+      const v1 = b.clone().sub(a);
+      const v2 = p.clone().sub(a);
+
+      const d00 = v0.dot(v0);
+      const d01 = v0.dot(v1);
+      const d11 = v1.dot(v1);
+      const d20 = v2.dot(v0);
+      const d21 = v2.dot(v1);
+
+      // Compute determinant
+      const denom = d00 * d11 - d01 * d01;
+
+      // Compute barycentric coordinates
+      const i = (d11 * d20 - d01 * d21) / denom;
+      const j = (d00 * d21 - d01 * d20) / denom;
+
+      // If we are not in the triangle, continue
+      if (!(i >= 0 && j >= 0 && i + j <= 1)) {
+        continue;
+      }
+
+      // part 2: check if we are above/below the triangle with height < heightOffset
+      // for this, first get abc in 3d, construct the plane from this
+      const a3 = tri[0].position;
+      const b3 = tri[1].position;
+      const c3 = tri[2].position;
+      const myPlane = new Plane().setFromCoplanarPoints(a3, b3, c3);
+
+      // now, intersect this plane with the line from the point to the triangle
+      const pointDown = point.clone().setY(point.y - heightOffset);
+      const pointUp = point.clone().setY(point.y + heightOffset);
+      const myLine = new Line3(pointDown, pointUp);
+      const hasIntersection = myPlane.intersectsLine(myLine);
+
+      return hasIntersection;
+
     }
-    return isInside;
+    return false;
   }
   /**
    Returns the distance to the closest edge of the polygon

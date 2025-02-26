@@ -18,8 +18,8 @@ const GenerateSidebar = () => {
   const { poses } = usePrecomputedPoses();
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
-  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, numImages, imageSize;
-  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setNumImages, setImageSize, reset;
+  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize;
+  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, reset;
   {
     // getting values from store
     const {
@@ -41,8 +41,12 @@ const GenerateSidebar = () => {
       setPairAngle: storeSetPairAngle,
       getPairAngleConcentration,
       setPairAngleConcentration: storeSetPairAngleConcentration,
-      getNumImages,
-      setNumImages: storeSetNumImages,
+      getFovRange,
+      setFovRange: storeSetFovRange,
+      getFovConcentration,
+      setFovConcentration: storeSetFovConcentration,
+      getNumSeries,
+      setNumSeries: storeSetNumSeries,
       getImageDimensions,
       setImageDimensions: storeSetImageDimensions,
       reset: storeReset
@@ -56,7 +60,9 @@ const GenerateSidebar = () => {
     pairDistanceConcentration = getPairDistanceConcentration(id);
     pairAngleOffset = getPairAngle(id);
     pairAngleConcentration = getPairAngleConcentration(id);
-    numImages = getNumImages(id);
+    fovRange = getFovRange(id);
+    fovConcentration = getFovConcentration(id);
+    numSeries = getNumSeries(id);
     imageSize = getImageDimensions(id);
 
     setHeightOffset = (offset: number) => storeSetHeightOffset(id, offset);
@@ -68,7 +74,9 @@ const GenerateSidebar = () => {
     setPairDistanceConcentration = (concentration: number) => storeSetPairDistanceConcentration(id, concentration);
     setPairAngleRange = (val: number) => storeSetPairAngle(id, val);
     setAngleConcentration = (concentration: number) => storeSetPairAngleConcentration(id, concentration);
-    setNumImages = (numImages: number) => storeSetNumImages(id, numImages);
+    setFovRange = (range: GenPair) => storeSetFovRange(id, range);
+    setFovConcentration = (concentration: number) => storeSetFovConcentration(id, concentration);
+    setNumSeries = (numSeries: number) => storeSetNumSeries(id, numSeries);
     setImageSize = (size: [number, number]) => storeSetImageDimensions(id, size);
     reset = () => storeReset(id);
   }
@@ -101,18 +109,23 @@ const GenerateSidebar = () => {
   return (
     <SidebarSection title="Generate">
       <SidebarSection title="Poses" level={3}>
-        {/* OFFSET */}
         <SidebarSection title="Base Settings" level={4}>
-          <div className="flex items-center mb-2">
-            <label htmlFor="offset" className="mr-2 w-20">Offset</label>
-            <InteractiveInput
-              id="offset"
-              className='w-32 text-center bg-inactive basis-1/3'
-              type="number"
-              min={0} max={1} step={0.01}
-              value={offset}
-              onChange={heightOffsetHandler}
-            />
+          <div className="flex flex-col mb-2">
+            <div className="flex items-center">
+              {/* OFFSET */}
+              <label htmlFor="offset" className="mr-2 w-20">Offset</label>
+              <InteractiveInput
+                id="offset"
+                className="w-32 text-center bg-inactive basis-1/3"
+                type="number"
+                min={0}
+                max={1}
+                step={0.01}
+                value={offset}
+                onChange={heightOffsetHandler}
+              />
+            </div>
+            <p className="text-gray-400">Determines the height range in which poses are generated around the polygon height</p>
           </div>
           {/* WALL AVOIDANCE */}
           <div className="flex flex-col mb-2">
@@ -125,7 +138,7 @@ const GenerateSidebar = () => {
                 onChange={(e) => setAvoidWalls(e.target.checked)}
               />
             </div>
-            <p className="text-gray-400">If checked, poses close to and looking at a polygon edge are not possible</p>
+            <p className="text-gray-400">If checked, poses close to and looking at a wall are not possible</p>
           </div>
         </SidebarSection>
 
@@ -236,15 +249,45 @@ const GenerateSidebar = () => {
 
       {/* Images */}
       <SidebarSection title="Format" level={3}>
+
+        <SidebarSection title="Camera Settings" level={4} className="mb-2">
+          <div className="flex items-center mb-2">
+            <label htmlFor="fov" className="mr-2 w-20">FOV Range</label>
+            <Slider
+              color="secondary"
+              getAriaLabel={() => 'FOV range'}
+              value={fovRange}
+              onChange={(_, value) => setFovRange(value as GenPair)}
+              valueLabelDisplay="auto"
+              getAriaValueText={(value) => `${value}°`}
+              min={40}
+              max={120}
+              step={1}
+            />
+          </div>
+          <label htmlFor="dist" className="mr-2 w-20">FOV Distribution</label>
+          <Slider
+            color="secondary"
+            getAriaLabel={() => 'FOV Distribution'}
+            value={fovConcentration}
+            onChange={(_, value) => setFovConcentration(value as number)}
+            valueLabelDisplay="auto"
+            min={0}
+            max={1}
+            step={0.01}
+          />
+          <DistributionViz concentration={fovConcentration} minVal={fovRange[0]} maxVal={fovRange[1]} />
+        </SidebarSection>
+
         <div className="flex items-center mb-2">
-          <label htmlFor="numImages" className="mr-2 w-20">Number of Images</label>
+          <label htmlFor="numseries" className="mr-2 w-20">Number of Series</label>
           <InteractiveInput
-            id="numImages"
+            id="numSeries"
             className='w-32 text-center bg-inactive basis-1/3'
             type="number"
             min={1} step={1}
-            value={numImages}
-            onChange={(e) => setNumImages(parseInt(e.target.value))}
+            value={numSeries}
+            onChange={(e) => setNumSeries(parseInt(e.target.value))}
           />
         </div>
 

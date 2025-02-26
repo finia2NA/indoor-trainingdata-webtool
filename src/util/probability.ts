@@ -39,7 +39,7 @@ export function createDistribution(a: number) {
 }
 
 // source: Monte Carlo Statistical Methods by Christian P. Robert and George Casella
-export const takeRandomSample = ({ dist, maxTries = 1000, positive = false }: RandomSampleProps) => {
+export const takeRandomSample = ({ dist, maxTries = 10000, positive = false }: RandomSampleProps) => {
   const maxValue = dist(0); // Approximate upper bound
 
   for (let i = 0; i < maxTries; i++) {
@@ -49,7 +49,7 @@ export const takeRandomSample = ({ dist, maxTries = 1000, positive = false }: Ra
     if (u < dist(x) / maxValue) {
       if (Math.abs(x) > 1)
         console.warn("Sampled value is outside the range [-1, 1].");
-      return positive ? Math.abs(x) : x;
+      return positive ? Math.abs(x) : x; // ||x|| if positive is true
     }
   }
 

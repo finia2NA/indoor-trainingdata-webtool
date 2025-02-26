@@ -140,7 +140,7 @@ const PolygonCreator: React.FC = () => {
       )}
 
       {/* points */}
-      {polygons.map((polygon, polygonIndex) => (
+      {!(editorMode === EditorMode.GENERATE && showPoses) && polygons.map((polygon, polygonIndex) => (
         <Fragment key={polygonIndex}>
           {polygon.map((point, pointIndex) => (
             <Fragment key={`${polygonIndex}, ${pointIndex}`}>

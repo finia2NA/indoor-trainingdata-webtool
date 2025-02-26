@@ -1,7 +1,6 @@
 import { useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Quaternion, Vector2, Vector3 } from "three";
-import { create } from "zustand";
 import useMultiGenerationStore from "../hooks/useMultiGenerationStore";
 import { createDistribution, takeRandomSample } from "../util/probability";
 import Triangulation from "../util/triangulate";
@@ -9,18 +8,25 @@ import useMultiPolygonStore from "./useMultiPolygonStore";
 import usePrecomputedPoses from "./usePrecomputedPoses";
 import { Id, toast } from "react-toastify";
 import { ProgressToast, ProgressType } from "../components/UI/Toasts";
-import useOffscreenScreenshot from "./useOffscreenScreenshot";
+import useOffscreenThree from "./useOffscreenThree";
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { Matrix4 } from "three";
 
 const logging = false;
 const progressLogging = false;
+const wallAvoidanceThreshold = 0.3;
+
+export enum PoseType {
+  SINGLE = 'single',
+  PAIR = 'pair',
+}
 
 export type ScreenShotResult = {
   blob: Blob;
+  pose: Pose;
   width: number;
   height: number;
-  fov: number;
 }
 
 type PolygonEX = {
@@ -32,9 +38,15 @@ type PolygonEX = {
 export type Pose = {
   position: Vector3;
   target: Vector3;
-  type?: 'single' | 'pair';
+  quaternion: Quaternion;
+  fov: number;
+  series: number;
+  type?: PoseType
 }
 
+/**
+ * Function that rounds a number to 2 decimal places
+ */
 const to2accuracy = (values: number[] | number) => {
   if (Array.isArray(values)) {
     return values.map(v => Math.round(v * 100) / 100);
@@ -43,44 +55,15 @@ const to2accuracy = (values: number[] | number) => {
   }
 }
 
-
-type DataGeneratorState = {
-  orbitTarget: Vector3;
-  setOrbitTarget: (target: Vector3) => void;
-
-  setPose?: (pos: Vector3, target: Vector3) => void;
-  registerSetPose: (cb: (pos: Vector3, target: Vector3) => void) => void;
-
-  takeScreenshot?: (screenshotWidth: number, screenshotHeight: number) => Promise<ScreenShotResult | null>;
-  registerTakeScreenshot: (cb: (screenshotWidth: number, screenshotHeight: number) => Promise<ScreenShotResult>) => void;
+const getQuaternionFromTarget = (position: Vector3, target: Vector3) => {
+  const up = new Vector3(0, 1, 0);
+  const m = new Matrix4();
+  m.lookAt(position, target, up);
+  return new Quaternion().setFromRotationMatrix(m);
 }
-
-const getAllowedAngle = (distance: number) => {
-  const min = 0.15;
-  const max = 0.30;
-  const clampedScaler = Math.min(Math.max(0, (distance - min) / (max - min)), 1); // linear between min and max, constant outside
-  console.log(clampedScaler)
-  const angle = Math.PI / 2 + clampedScaler * (Math.PI * (3.0 / 2.0)); // between 90 and 360 degrees
-  return angle;
-}
-
-
-/**
- * @deprecated Screenshots are now taken offscreen, so this is not necessary any more
- */
-export const useDataGeneratorStore = create<DataGeneratorState>((set) => ({
-  orbitTarget: new Vector3(0, 0, 0),
-  setOrbitTarget: (target) => set({ orbitTarget: target }),
-
-  setPose: undefined,
-  registerSetPose: (cb) => set({ setPose: cb }),
-
-  takeScreenshot: undefined,
-  registerTakeScreenshot: (cb) => set({ takeScreenshot: cb }),
-}));
 
 const useDataGeneratorUtils = () => {
-  const { takeOffscreenScreenshots } = useOffscreenScreenshot();
+  const { takeOffscreenScreenshots, doOffscreenRaycast } = useOffscreenThree();
   const { poses, addPose, clearPoses } = usePrecomputedPoses();
   const id = Number(useParams<{ id: string }>().id);
   const { getPolygons } = useMultiPolygonStore();
@@ -97,7 +80,9 @@ const useDataGeneratorUtils = () => {
     getPairDistanceConcentration,
     getPairAngle,
     getPairAngleConcentration,
-    getNumImages,
+    getFovRange,
+    getFovConcentration,
+    getNumSeries,
     getImageDimensions,
   } = useMultiGenerationStore();
   const heightOffset = getHeightOffset(id);
@@ -109,7 +94,9 @@ const useDataGeneratorUtils = () => {
   const pairDistanceConcentration = getPairDistanceConcentration(id);
   const pairAngleOffset = getPairAngle(id);
   const pairAngleConcentration = getPairAngleConcentration(id);
-  const numImages = getNumImages(id);
+  const fovRange = getFovRange(id);
+  const fovConcentration = getFovConcentration(id);
+  const numSeries = getNumSeries(id);
   const imageSize = getImageDimensions(id);
 
 
@@ -131,7 +118,12 @@ const useDataGeneratorUtils = () => {
 
 
 
-  const getRandomPoseInPolygons = async () => {
+  const getRandomPoseInPolygons = async (numSeries: number, maxTries = 10000) => {
+
+    if (maxTries <= 0) {
+      throw new Error('getRandomPoseInPolygons failed after maximum attempts');
+    }
+
     // pick a random polygon. This is similar to how it is in triangulate.ts.
     // Then, use the polygon's triangulation to get a random point inside the polygon
     const randomArea = Math.random() * totalArea;
@@ -151,26 +143,13 @@ const useDataGeneratorUtils = () => {
     selectedPoint.add(new Vector3(0, rndHeightOffset, 0));
 
     // Let's first do the XZ angle
-    let directionXZ: Vector2;
-    if (!avoidWalls) {
-      directionXZ = new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1);
-    } else {
-      // In this case, use the triag method to find the closest wall edge. Find the distance.
-      const { closestPoint, closestDistance } = selectedPolygon!.triangulation.getClosestEdgePoint(new Vector2(selectedPoint.x, selectedPoint.z));
-      const direction = closestPoint.clone().sub(selectedPoint);
-      // first, turn the direction by 180 degrees
-      direction.multiplyScalar(-1);
-
-      // them we can figure out how much we are allowed to move in that direction
-    }
+    const directionXZ = new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1);
 
     // sample pitch angle
     const anglesDist = createDistribution(anglesConcentration);
-    const angleSample = takeRandomSample({ dist: anglesDist }); // this one is in [-1, 1]
-
-    const rangeWidth = anglesRange[1] - anglesRange[0];
-    const midPoint = (anglesRange[1] + anglesRange[0]) / 2;
-    const angleVal = angleSample * rangeWidth / 2 + midPoint; // in degrees
+    const angleSample = takeRandomSample({ dist: anglesDist });
+    const angleVal = (anglesRange[0] + anglesRange[1]) / 2 + // midpoint
+      angleSample * anglesRange[1] - anglesRange[0] / 2; // random sampled offset /2 bc range of sampled values is [-1, 1]
 
     if (directionXZ.length() > 0) {
       directionXZ.normalize();
@@ -181,6 +160,7 @@ const useDataGeneratorUtils = () => {
     // Compute the Y component using the pitch angle
     const y = Math.sin((angleVal / 180.0) * Math.PI); // Upward component
     const horizontalScale = Math.cos((angleVal / 180.0) * Math.PI); // Scale for XZ to maintain unit length
+
     // Final target vector
     const targetPoint = new Vector3(
       selectedPoint.x + directionXZ.x * horizontalScale,
@@ -188,32 +168,65 @@ const useDataGeneratorUtils = () => {
       selectedPoint.z + directionXZ.y * horizontalScale
     );
 
+    // Compute the quaternion rotation from the position-target pair.
+    const quaternionRotation = getQuaternionFromTarget(selectedPoint, targetPoint);
+
+    // generate random fov
+    const fovDist = createDistribution(fovConcentration);
+    const fovSample = takeRandomSample({ dist: fovDist });
+    const fov = (fovRange[0] + fovRange[1]) / 2 + fovSample * (fovRange[1] - fovRange[0]) / 2;
+
+
+    // THE DEALBREAKERS
+    // TODO: this is for the wall avoidance
+    if (avoidWalls) {
+      const intersections = await doOffscreenRaycast(selectedPoint, targetPoint, false);
+      if (intersections.length > 0) {
+        const intersection = intersections[0];
+        const distance = selectedPoint.distanceTo(intersection.point);
+        if (distance < wallAvoidanceThreshold) {
+          return getRandomPoseInPolygons(numSeries, maxTries - 1);
+        }
+      }
+    }
+
+
     if (logging) {
       console.table({
+        Series: numSeries + "a",
         Position: (to2accuracy(selectedPoint.toArray()) as number[]).join(', '),
-        Target: (to2accuracy(targetPoint.toArray()) as number[]).join(', '),
+        "Relative Target": (to2accuracy(targetPoint.clone().sub(selectedPoint).toArray()) as number[]).join(', '),
         Pitch: to2accuracy(angleVal) + "°",
+        Fov: to2accuracy(fov) + "°",
       });
     }
 
-    return { position: selectedPoint, target: targetPoint };
+    return {
+      position: selectedPoint,
+      target: targetPoint,
+      quaternion: quaternionRotation,
+      fov,
+      type: PoseType.SINGLE,
+      series: numSeries,
+    };
   }
 
-  const getPairPoint = async (pose: Pose, numTries = 1000) => {
+  const getPairPoint = async (pose: Pose, numSeries: number, numTries = 10000) => {
     if (numTries <= 0) {
       throw new Error('getPairPoint failed after maximum attempts');
     }
 
-    // Sample a distance and angle
+    // SAMPING
     const distanceDist = createDistribution(pairDistanceConcentration);
     const distanceSample = takeRandomSample({ dist: distanceDist, positive: true });
-    const distanceVal = distanceSample * (pairDistanceRange[1] - pairDistanceRange[0]) + pairDistanceRange[0];
+    const distanceVal = pairDistanceRange[0] + // base
+      distanceSample * (pairDistanceRange[1] - pairDistanceRange[0]); // random offset
 
-    const angleDist = createDistribution(pairAngleConcentration);
-    const angleSample = takeRandomSample({ dist: angleDist });
-    const angleVal = angleSample * pairAngleOffset * (Math.PI / 180);
+    const pairAngleDist = createDistribution(pairAngleConcentration);
+    const pairAngleSample = takeRandomSample({ dist: pairAngleDist });
+    const pairAngleVal = pairAngleSample * pairAngleOffset * (Math.PI / 180);
 
-    // Create the second point
+    // POSITION
     const newPos = pose.position.clone().add(new Vector3(
       Math.random() * 2 - 1,
       Math.random() * 2 - 1,
@@ -221,6 +234,7 @@ const useDataGeneratorUtils = () => {
     ).multiplyScalar(distanceVal));
 
 
+    // ANGLE
     // get relevant directions
     const direction = pose.target.clone().sub(pose.position).normalize();
     const up = new Vector3(0, 1, 0);
@@ -228,39 +242,94 @@ const useDataGeneratorUtils = () => {
 
     // Randomly split angleVal into yaw and pitch
     const t = Math.random();
-    const yawAngle = (2 * Math.random() - 1) * t * angleVal;
-    const pitchAngle = (2 * Math.random() - 1) * (1 - t) * angleVal;
-
+    const yawAngle = t * pairAngleVal;
+    const pitchAngle = (1 - t) * pairAngleVal;
     // Apply Yaw (rotation around up vector)
     const yawQuat = new Quaternion().setFromAxisAngle(up, yawAngle);
     direction.applyQuaternion(yawQuat);
-
     // Apply Pitch (rotation around right vector)
     const pitchQuat = new Quaternion().setFromAxisAngle(right, pitchAngle);
     direction.applyQuaternion(pitchQuat);
-
     direction.normalize();
-
-    // Compute the new target position
+    // Compute the new target position and quaternion
     const newTarget = newPos.clone().add(direction);
+    const quaternionRotation = getQuaternionFromTarget(newPos, newTarget);
+
+    // THE DEALBREAKERS
+
+    // // If we are outside the allowed pitch angle.. too bad, try again
+    // // This works, but we need to think about if this is something we want :)
+    // if (pitchAngle / Math.PI * 180 > anglesRange[1] || pitchAngle / Math.PI * 180 < anglesRange[0]) {
+    //   return getPairPoint(pose, numSeries, numTries - 1);
+    // }
 
     // check if we are in the polygon. If not, recurse
-    const isInPolygon = polygonsEX.some((polygonEX) => {
-      polygonEX.triangulation.isInPolygon(newPos);
-    });
+    let isInPolygon = false;
+    for (const polygon of polygonsEX) {
+      if (polygon.triangulation.isInPolygon(newPos, heightOffset)) {
+        isInPolygon = true;
+        break;
+      }
+    }
     if (!isInPolygon) {
-      return getPairPoint(pose, numTries - 1);
+      return getPairPoint(pose, numSeries, numTries - 1);
     }
 
-    return { newPos, newTarget };
+    // check if we accidentally went through a wall. If so, recurse
+    const intersections = await doOffscreenRaycast(pose.position, newPos, true);
+    if (intersections.length > 0) {
+      return getPairPoint(pose, numSeries, numTries - 1);
+    }
+
+    // check if we are too close to a wall. If so, recurse
+    const wallIntersections = await doOffscreenRaycast(newPos, newTarget, false);
+    if (wallIntersections.length > 0) {
+      const intersection = wallIntersections[0];
+      const distance = newPos.distanceTo(intersection.point);
+      if (distance < wallAvoidanceThreshold) {
+        return getPairPoint(pose, numSeries, numTries - 1);
+      }
+    }
+
+
+    // HAPPY PATH
+    // If we are here, all checks have passed. We can now log and return the pose
+
+    if (logging) {
+      console.table({
+        Series: numSeries + "b",
+        Position: (to2accuracy(newPos.toArray()) as number[]).join(', '),
+        "Relative Target": (to2accuracy(newTarget.clone().sub(newPos).toArray()) as number[]).join(', '),
+        Pitch: to2accuracy(pitchAngle),
+        "Distance to first": to2accuracy(distanceVal),
+        "Angle to first": to2accuracy(pairAngleVal),
+        Iterations: 1000 - numTries,
+      });
+    }
+
+    return {
+      position: newPos,
+      target: newTarget,
+      quaternion: quaternionRotation,
+      fov: pose.fov,
+      type: PoseType.PAIR,
+      series: numSeries,
+    };
   }
 
   const takeScreenshots = async () => {
-    const blobs = await takeOffscreenScreenshots({ poses, width: imageSize[0], height: imageSize[1], numImages });
+    const labeledScreenshots = await takeOffscreenScreenshots({ poses, width: imageSize[0], height: imageSize[1] });
     const zip = new JSZip();
     const folder = zip.folder("screenshots");
-    blobs.forEach((blob, index) => {
+    labeledScreenshots.forEach((labeledScreenshot, index) => {
+      const { blob, pose, width, height } = labeledScreenshot;
+      const label = {
+        pose,
+        width,
+        height,
+      }
       folder?.file(`screenshot_${index + 1}.png`, blob);
+      folder?.file(`screenshot_${index + 1}.json`, JSON.stringify(label, null, 2));
     });
     const content = await zip.generateAsync({ type: "blob" });
     saveAs(content, "screenshots.zip");
@@ -276,10 +345,10 @@ const useDataGeneratorUtils = () => {
       stop = true;
     }
 
-    for (let i = 0; i < numImages; i++) {
+    for (let i = 0; i < numSeries; i++) {
       if (stop)
         break;
-      const progress = ((i + 1) / numImages);
+      const progress = ((i + 1) / numSeries);
 
       if (progressToastId.current === null) {
         progressToastId.current = toast(ProgressToast, {
@@ -292,9 +361,15 @@ const useDataGeneratorUtils = () => {
       } else {
         toast.update(progressToastId.current, { progress, data: { progress, type: ProgressType.POSES } });
       }
-      const pose = await getRandomPoseInPolygons();
+      const pose = await getRandomPoseInPolygons(i);
       addPose(pose);
-      if (progressLogging) console.log(`Generated ${i + 1}/${numImages} poses`);
+      if (progressLogging) console.log(`Generated ${i + 1}/${numSeries} poses`);
+
+      // If we are doing pair generation, add a second pose
+      if (pair) {
+        const pairPose = await getPairPoint(pose, i);
+        addPose(pairPose);
+      }
 
       // Yield control to avoid blocking the UI.
       await new Promise(resolve => setTimeout(resolve, 0));
