@@ -218,7 +218,7 @@ const useDataGeneratorUtils = () => {
     };
   }
 
-  const getPairPoint = async (pose: Pose, numSeries: number, numTries = 1000) => {
+  const getPairPoint = async (pose: Pose, numSeries: number, numTries = 10000) => {
     if (numTries <= 0) {
       throw new Error('getPairPoint failed after maximum attempts');
     }
@@ -232,7 +232,6 @@ const useDataGeneratorUtils = () => {
     const pairAngleDist = createDistribution(pairAngleConcentration);
     const pairAngleSample = takeRandomSample({ dist: pairAngleDist });
     const pairAngleVal = pairAngleSample * pairAngleOffset * (Math.PI / 180);
-    console.log(pairAngleVal);
 
     // POSITION
     const newPos = pose.position.clone().add(new Vector3(
@@ -259,20 +258,39 @@ const useDataGeneratorUtils = () => {
     const pitchQuat = new Quaternion().setFromAxisAngle(right, pitchAngle);
     direction.applyQuaternion(pitchQuat);
     direction.normalize();
-
-    // Compute the new target position
+    // Compute the new target position and quaternion
     const newTarget = newPos.clone().add(direction);
-
-    // get quaternion
     const quaternionRotation = getQuaternionFromTarget(newPos, newTarget);
 
-    // // check if we are in the polygon. If not, recurse
-    // const isInPolygon = polygonsEX.some((polygonEX) => {
-    //   polygonEX.triangulation.isInPolygon(newPos);
-    // });
-    // if (!isInPolygon) {
-    //   return getPairPoint(pose, numTries - 1);
+    // THE DEALBREAKERS
+
+    // // If we are outside the allowed pitch angle.. too bad, try again
+    // // This works, but we need to think about if this is something we want :)
+    // if (pitchAngle / Math.PI * 180 > anglesRange[1] || pitchAngle / Math.PI * 180 < anglesRange[0]) {
+    //   return getPairPoint(pose, numSeries, numTries - 1);
     // }
+
+    // check if we are in the polygon. If not, recurse
+    let isInPolygon = false;
+    for (const polygon of polygonsEX) {
+      if (polygon.triangulation.isInPolygon(newPos, heightOffset)) {
+        isInPolygon = true;
+        break;
+      }
+    }
+    if (!isInPolygon) {
+      return getPairPoint(pose, numSeries, numTries - 1);
+    }
+
+    // check if we accidentally went through a wall. If so, recurse
+    const intersections = await doOffscreenRaycast(pose.position, newPos, true);
+    if (intersections.length > 0) {
+      return getPairPoint(pose, numSeries, numTries - 1);
+    }
+
+
+    // HAPPY PATH
+    // If we are here, all checks have passed. We can now log and return the pose
 
     if (logging) {
       console.table({
@@ -282,6 +300,7 @@ const useDataGeneratorUtils = () => {
         Pitch: to2accuracy(pitchAngle),
         "Distance to first": to2accuracy(distanceVal),
         "Angle to first": to2accuracy(pairAngleVal),
+        Iterations: 1000 - numTries,
       });
     }
 
