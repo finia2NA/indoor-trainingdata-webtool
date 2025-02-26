@@ -15,6 +15,7 @@ import { Matrix4 } from "three";
 
 const logging = false;
 const progressLogging = false;
+const wallAvoidanceThreshold = 0.3;
 
 export enum PoseType {
   SINGLE = 'single',
@@ -60,19 +61,6 @@ const getQuaternionFromTarget = (position: Vector3, target: Vector3) => {
   m.lookAt(position, target, up);
   return new Quaternion().setFromRotationMatrix(m);
 }
-
-/**
- * Function that when given the distance from the nearest wall, returns the angle that the camera should be allowed to look at
- */
-const getAllowedAngle = (distance: number) => {
-  const min = 0.15;
-  const max = 0.30;
-  const clampedScaler = Math.min(Math.max(0, (distance - min) / (max - min)), 1); // linear between min and max, constant outside
-  console.log(clampedScaler)
-  const angle = Math.PI / 2 + clampedScaler * (Math.PI * (3.0 / 2.0)); // between 90 and 360 degrees
-  return angle;
-}
-
 
 const useDataGeneratorUtils = () => {
   const { takeOffscreenScreenshots, doOffscreenRaycast } = useOffscreenThree();
@@ -130,7 +118,12 @@ const useDataGeneratorUtils = () => {
 
 
 
-  const getRandomPoseInPolygons = async (numSeries: number) => {
+  const getRandomPoseInPolygons = async (numSeries: number, maxTries = 10000) => {
+
+    if (maxTries <= 0) {
+      throw new Error('getRandomPoseInPolygons failed after maximum attempts');
+    }
+
     // pick a random polygon. This is similar to how it is in triangulate.ts.
     // Then, use the polygon's triangulation to get a random point inside the polygon
     const randomArea = Math.random() * totalArea;
@@ -151,20 +144,6 @@ const useDataGeneratorUtils = () => {
 
     // Let's first do the XZ angle
     const directionXZ = new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1);
-
-    // TODO: this is for the wall avoidance
-    // let directionXZ: Vector2;
-    // if (!avoidWalls) {
-    //   directionXZ = new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1);
-    // } else {
-    //   // In this case, use the triag method to find the closest wall edge. Find the distance.
-    //   const { closestPoint, closestDistance } = selectedPolygon!.triangulation.getClosestEdgePoint(new Vector2(selectedPoint.x, selectedPoint.z));
-    //   const direction = closestPoint.clone().sub(selectedPoint);
-    //   // first, turn the direction by 180 degrees
-    //   direction.multiplyScalar(-1);
-    //
-    //   // then we can figure out how much we are allowed to move in that direction
-    // }
 
     // sample pitch angle
     const anglesDist = createDistribution(anglesConcentration);
@@ -196,6 +175,20 @@ const useDataGeneratorUtils = () => {
     const fovDist = createDistribution(fovConcentration);
     const fovSample = takeRandomSample({ dist: fovDist });
     const fov = (fovRange[0] + fovRange[1]) / 2 + fovSample * (fovRange[1] - fovRange[0]) / 2;
+
+
+    // THE DEALBREAKERS
+    // TODO: this is for the wall avoidance
+    if (avoidWalls) {
+      const intersections = await doOffscreenRaycast(selectedPoint, targetPoint, false);
+      if (intersections.length > 0) {
+        const intersection = intersections[0];
+        const distance = selectedPoint.distanceTo(intersection.point);
+        if (distance < wallAvoidanceThreshold) {
+          return getRandomPoseInPolygons(numSeries, maxTries - 1);
+        }
+      }
+    }
 
 
     if (logging) {
@@ -286,6 +279,16 @@ const useDataGeneratorUtils = () => {
     const intersections = await doOffscreenRaycast(pose.position, newPos, true);
     if (intersections.length > 0) {
       return getPairPoint(pose, numSeries, numTries - 1);
+    }
+
+    // check if we are too close to a wall. If so, recurse
+    const wallIntersections = await doOffscreenRaycast(newPos, newTarget, false);
+    if (wallIntersections.length > 0) {
+      const intersection = wallIntersections[0];
+      const distance = newPos.distanceTo(intersection.point);
+      if (distance < wallAvoidanceThreshold) {
+        return getPairPoint(pose, numSeries, numTries - 1);
+      }
     }
 
 

@@ -135,11 +135,10 @@ const GenerateSidebar = () => {
                 id="avoidWalls"
                 type="checkbox"
                 checked={avoidWalls}
-                disabled
                 onChange={(e) => setAvoidWalls(e.target.checked)}
               />
             </div>
-            <p className="text-gray-400">If checked, poses close to and looking at a polygon edge are not possible</p>
+            <p className="text-gray-400">If checked, poses close to and looking at a wall are not possible</p>
           </div>
         </SidebarSection>
 

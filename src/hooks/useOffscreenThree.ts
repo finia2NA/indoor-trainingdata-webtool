@@ -153,7 +153,6 @@ const useOffscreenThree = () => {
     // build the scene
     const { offscreen, renderer, scene, camera } =
       await setupScene(project, getVisibility, getTransformation, width, height);
-    debugger;
 
     // take the pictures.
     // we need to keep track of the progress, and also allow the user to stop the process

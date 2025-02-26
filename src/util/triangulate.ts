@@ -151,8 +151,8 @@ class Triangulation {
       }
 
 
-      return true;
-      // // else, we are in the triangle. Now, check the height
+      // else, we are in the triangle. Now, check the height
+      // debugger;
       // const a3 = tri[0].position;
       // const b3 = tri[1].position;
       // const c3 = tri[2].position;
@@ -165,6 +165,10 @@ class Triangulation {
       // } else {
       //   return false;
       // }
+
+
+      return true;
+
     }
     return false;
   }
