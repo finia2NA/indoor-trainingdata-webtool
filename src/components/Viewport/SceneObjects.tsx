@@ -7,7 +7,7 @@ import useEditorStore from '../../hooks/useEditorStore';
 import { TransformControls } from '@react-three/drei';
 import useTransformingSync from '../../hooks/useTransformingSync';
 import Transformation from '../../data/Transformation';
-import { loadModel } from '../../utils/loadModel';
+import { loadModel } from '../../util/loadModel';
 import { useParams } from 'react-router-dom';
 
 type SceneObjectProps = {

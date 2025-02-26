@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useParams } from 'react-router-dom';
 import db, { Project } from "../data/db";
 import { Pose, ScreenShotResult } from './useDataGeneratorUtils';
-import { loadModel } from '../utils/loadModel';
+import { loadModel } from '../util/loadModel';
 import { Id, toast } from 'react-toastify';
 import { ProgressToast, ProgressType } from '../components/UI/Toasts';
 import useMultiTransformationStore from './useMultiTransformationStore';
@@ -187,10 +187,14 @@ const useOffscreenThree = () => {
       });
     }
 
-    if (!stop)
+    if (!stop) {
+      console.log('Screenshots complete');
       toast("Screenshots complete", { type: "success" });
-    else
+    }
+    else {
+      console.log('Screenshots stopped prematurely');
       toast("Screenshots stopped", { type: "warning" });
+    }
 
     if (progressToastId.current !== null) {
       toast.dismiss(progressToastId.current);

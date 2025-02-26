@@ -14,7 +14,6 @@ const ProjectOverview = () => {
   const [editingProject, setEditingProject] = useState<number | null>(null);
 
   const sizes = projects?.map(project => project.models.reduce((acc, model) => acc + model.size, 0));
-  console.log(sizes)
 
   const onView = (id?: number) => {
     if (id === undefined) return;

@@ -319,6 +319,7 @@ const useDataGeneratorUtils = () => {
   }
 
   const takeScreenshots = async () => {
+    console.log("Taking screenshots");
     const labeledScreenshots = await takeOffscreenScreenshots({ poses, width: imageSize[0], height: imageSize[1] });
     const timeStamp = new Date().toISOString().replace(/:/g, '-');
     const zip = new JSZip();
@@ -331,7 +332,6 @@ const useDataGeneratorUtils = () => {
         height,
       }
       const filename = `screenshot_${pose.series + (pose.type === PoseType.PAIR ? "b" : "a")}`;
-      console.log(filename);
       folder?.file(`screenshot_${filename}.png`, blob);
       folder?.file(`screenshot_${filename}.json`, JSON.stringify(label, null, 2));
     });
@@ -341,6 +341,7 @@ const useDataGeneratorUtils = () => {
 
 
   const generatePoses = async () => {
+    console.log("Generating poses");
     clearPoses();
 
     let stop = false
@@ -378,10 +379,15 @@ const useDataGeneratorUtils = () => {
       // Yield control to avoid blocking the UI.
       await new Promise(resolve => setTimeout(resolve, 0));
     }
-    if (!stop)
+
+    if (!stop) {
+      console.log("Pose generation complete");
       toast("Pose generation complete", { type: "success" });
-    else
+    }
+    else {
+      console.log("Pose generation stopped prematurely");
       toast("Pose generation stopped", { type: "warning" });
+    }
 
     if (progressToastId.current !== null) {
       toast.dismiss(progressToastId.current);

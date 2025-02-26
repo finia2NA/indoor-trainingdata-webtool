@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import db, { Model3D } from "../data/db";
 import { useLiveQuery } from "dexie-react-hooks";
-import { isNumeric } from "../utils";
+import { isNumeric } from "../util/validation";
 import Sidebar from "../components/UI/Sidebar/Sidebar";
 import Editor from "../components/Viewport/Editor";
 import { useEffect } from "react";
