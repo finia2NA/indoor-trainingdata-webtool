@@ -266,7 +266,7 @@ const GenerateSidebar = () => {
               step={1}
             />
           </div>
-          <label htmlFor="dist" className="mr-2 w-20">Distance Distribution</label>
+          <label htmlFor="dist" className="mr-2 w-20">FOV Distribution</label>
           <Slider
             color="secondary"
             getAriaLabel={() => 'FOV Distribution'}

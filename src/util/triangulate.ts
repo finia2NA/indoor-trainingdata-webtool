@@ -119,20 +119,54 @@ class Triangulation {
    * an even number indicates that it is outside.
    *
    * @param point - The point with x and z coordinates to test against the polygon.
+   * @param heightOffset - The maximum allowed height offset to the triangle.
    * @returns True if the point is inside the polygon, false otherwise.
    */
-  isInPolygon = (point: Vector3) => {
-    let isInside = false;
-    for (let i = 0, j = this.polygon.length - 1; i < this.polygon.length; j = i++) {
-      const xi = this.polygon[i].x;
-      const zi = this.polygon[i].z;
-      const xj = this.polygon[j].x;
-      const zj = this.polygon[j].z;
-      const intersect = ((zi > point.z) !== (zj > point.z)) &&
-        (point.x < (xj - xi) * (point.z - zi) / (zj - zi) + xi);
-      if (intersect) isInside = !isInside;
+  isInPolygon = (point: Vector3, heightOffset: number) => {
+    const p = new Vector2(point.x, point.z);
+    for (const tri of this.triangles) {
+      const a = new Vector2(tri[0].position.x, tri[0].position.z);
+      const b = new Vector2(tri[1].position.x, tri[1].position.z);
+      const c = new Vector2(tri[2].position.x, tri[2].position.z);
+      const v0 = c.clone().sub(a);
+      const v1 = b.clone().sub(a);
+      const v2 = p.clone().sub(a);
+
+      const d00 = v0.dot(v0);
+      const d01 = v0.dot(v1);
+      const d11 = v1.dot(v1);
+      const d20 = v2.dot(v0);
+      const d21 = v2.dot(v1);
+
+      // Compute determinant
+      const denom = d00 * d11 - d01 * d01;
+
+      // Compute barycentric coordinates
+      const i = (d11 * d20 - d01 * d21) / denom;
+      const j = (d00 * d21 - d01 * d20) / denom;
+
+      // If we are not in the triangle, continue
+      if (!(i >= 0 && j >= 0 && i + j <= 1)) {
+        continue;
+      }
+
+
+      return true;
+      // // else, we are in the triangle. Now, check the height
+      // const a3 = tri[0].position;
+      // const b3 = tri[1].position;
+      // const c3 = tri[2].position;
+      // const trianglePoint = a3.clone().multiplyScalar(1 - i - j)
+      //   .add(b3.clone().multiplyScalar(i))
+      //   .add(c3.clone().multiplyScalar(j));
+      // //FIXME: this is not perfectly accurate due to the points having a y warping it so the sampled point is not perfectly under/over the 3d triangle point
+      // if (Math.abs(trianglePoint.y - point.y) < (heightOffset / 2)) {
+      //   return true;
+      // } else {
+      //   return false;
+      // }
     }
-    return isInside;
+    return false;
   }
   /**
    Returns the distance to the closest edge of the polygon
