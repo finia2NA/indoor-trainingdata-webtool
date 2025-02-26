@@ -158,7 +158,7 @@ class Triangulation {
       const c3 = tri[2].position;
       const myPlane = new Plane().setFromCoplanarPoints(a3, b3, c3);
 
-      // now, intersect this plane with the line from the point to the triangle
+      // now, intersect this plane with the perpendicular line of length 2*heightOffset going through the point
       const pointDown = point.clone().setY(point.y - heightOffset);
       const pointUp = point.clone().setY(point.y + heightOffset);
       const myLine = new Line3(pointDown, pointUp);

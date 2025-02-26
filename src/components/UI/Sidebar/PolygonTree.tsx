@@ -95,7 +95,6 @@ function Node({ node, style, dragHandle }: NodeProps) {
   };
   const handleReheightClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    debugger;
     if (type === 'Point') {
       editPosition({ id, polygonIndex: node.data.polygonIndex, pointIndex: node.data.pointIndex, y: polygonHeight });
     } else if (type === 'Polygon') {
