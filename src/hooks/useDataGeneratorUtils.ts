@@ -330,7 +330,8 @@ const useDataGeneratorUtils = () => {
         width,
         height,
       }
-      const filename = `screenshot_${pose.series + pose.type === PoseType.PAIR ? "b" : "a"}`;
+      const filename = `screenshot_${pose.series + (pose.type === PoseType.PAIR ? "b" : "a")}`;
+      console.log(filename);
       folder?.file(`screenshot_${filename}.png`, blob);
       folder?.file(`screenshot_${filename}.json`, JSON.stringify(label, null, 2));
     });
