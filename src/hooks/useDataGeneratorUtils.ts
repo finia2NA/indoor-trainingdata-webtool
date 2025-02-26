@@ -41,7 +41,7 @@ export type Pose = {
   quaternion: Quaternion;
   fov: number;
   series: number;
-  type?: PoseType
+  type: PoseType
 }
 
 /**
@@ -178,7 +178,6 @@ const useDataGeneratorUtils = () => {
 
 
     // THE DEALBREAKERS
-    // TODO: this is for the wall avoidance
     if (avoidWalls) {
       const intersections = await doOffscreenRaycast(selectedPoint, targetPoint, false);
       if (intersections.length > 0) {
@@ -282,12 +281,14 @@ const useDataGeneratorUtils = () => {
     }
 
     // check if we are too close to a wall. If so, recurse
-    const wallIntersections = await doOffscreenRaycast(newPos, newTarget, false);
-    if (wallIntersections.length > 0) {
-      const intersection = wallIntersections[0];
-      const distance = newPos.distanceTo(intersection.point);
-      if (distance < wallAvoidanceThreshold) {
-        return getPairPoint(pose, numSeries, numTries - 1);
+    if (avoidWalls) {
+      const wallIntersections = await doOffscreenRaycast(newPos, newTarget, false);
+      if (wallIntersections.length > 0) {
+        const intersection = wallIntersections[0];
+        const distance = newPos.distanceTo(intersection.point);
+        if (distance < wallAvoidanceThreshold) {
+          return getPairPoint(pose, numSeries, numTries - 1);
+        }
       }
     }
 
@@ -319,8 +320,9 @@ const useDataGeneratorUtils = () => {
 
   const takeScreenshots = async () => {
     const labeledScreenshots = await takeOffscreenScreenshots({ poses, width: imageSize[0], height: imageSize[1] });
+    const timeStamp = new Date().toISOString().replace(/:/g, '-');
     const zip = new JSZip();
-    const folder = zip.folder("screenshots");
+    const folder = zip.folder("screenshots_" + timeStamp);
     labeledScreenshots.forEach((labeledScreenshot, index) => {
       const { blob, pose, width, height } = labeledScreenshot;
       const label = {
@@ -328,8 +330,9 @@ const useDataGeneratorUtils = () => {
         width,
         height,
       }
-      folder?.file(`screenshot_${index + 1}.png`, blob);
-      folder?.file(`screenshot_${index + 1}.json`, JSON.stringify(label, null, 2));
+      const filename = `screenshot_${pose.series + pose.type === PoseType.PAIR ? "b" : "a"}`;
+      folder?.file(`screenshot_${filename}.png`, blob);
+      folder?.file(`screenshot_${filename}.json`, JSON.stringify(label, null, 2));
     });
     const content = await zip.generateAsync({ type: "blob" });
     saveAs(content, "screenshots.zip");
