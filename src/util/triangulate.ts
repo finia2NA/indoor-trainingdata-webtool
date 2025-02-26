@@ -1,4 +1,4 @@
-import { Line3, Vector2, Vector3 } from "three";
+import { Line3, Plane, Vector2, Vector3 } from "three";
 import earcut from 'earcut';
 
 type IndexedPoint = {
@@ -58,7 +58,7 @@ class Triangulation {
     return area;
   }
 
-  getRandomPoint(avoidWalls = false) {
+  getRandomPoint() {
     // First, get a triangle weighted by area
     // We do this by first computing a goal area as a fraction of the total shape area,
     // then iterating over the triangles and taking the first one that pushes us over the goal area
@@ -123,6 +123,7 @@ class Triangulation {
    * @returns True if the point is inside the polygon, false otherwise.
    */
   isInPolygon = (point: Vector3, heightOffset: number) => {
+    // part 1: find the triangle we project to
     const p = new Vector2(point.x, point.z);
     for (const tri of this.triangles) {
       const a = new Vector2(tri[0].position.x, tri[0].position.z);
@@ -150,24 +151,20 @@ class Triangulation {
         continue;
       }
 
+      // part 2: check if we are above/below the triangle with height < heightOffset
+      // for this, first get abc in 3d, construct the plane from this
+      const a3 = tri[0].position;
+      const b3 = tri[1].position;
+      const c3 = tri[2].position;
+      const myPlane = new Plane().setFromCoplanarPoints(a3, b3, c3);
 
-      // else, we are in the triangle. Now, check the height
-      // debugger;
-      // const a3 = tri[0].position;
-      // const b3 = tri[1].position;
-      // const c3 = tri[2].position;
-      // const trianglePoint = a3.clone().multiplyScalar(1 - i - j)
-      //   .add(b3.clone().multiplyScalar(i))
-      //   .add(c3.clone().multiplyScalar(j));
-      // //FIXME: this is not perfectly accurate due to the points having a y warping it so the sampled point is not perfectly under/over the 3d triangle point
-      // if (Math.abs(trianglePoint.y - point.y) < (heightOffset / 2)) {
-      //   return true;
-      // } else {
-      //   return false;
-      // }
+      // now, intersect this plane with the line from the point to the triangle
+      const pointDown = point.clone().setY(point.y - heightOffset);
+      const pointUp = point.clone().setY(point.y + heightOffset);
+      const myLine = new Line3(pointDown, pointUp);
+      const hasIntersection = myPlane.intersectsLine(myLine);
 
-
-      return true;
+      return hasIntersection;
 
     }
     return false;
