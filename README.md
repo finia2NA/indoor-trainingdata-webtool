@@ -2,7 +2,7 @@
 ![](sourceimages/1.png)
 
 A web based tool to generate image-pose-pair training data for training neural networks.  
-Optinally, offset pose pairs can be generated for training a relative localization task.  
+Optionally, offset pose pairs can be generated for training a relative localization task.  
 You can load a .glft model of an indoor scene, map out areas to generate poses, and generate poses based on many changeable parameters.  
 Supports multiple projects, and multiple 3D models per project.  
 Models, settings and polygons are persisted locally using a mix of localstorage and indexedDB.
