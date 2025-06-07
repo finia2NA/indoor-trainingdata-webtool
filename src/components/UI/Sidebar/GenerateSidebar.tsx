@@ -9,7 +9,6 @@ import { ResetConfirmationToast } from "../Toasts";
 import { toast } from "react-toastify";
 import useDataGeneratorUtils from "../../../hooks/useDataGeneratorUtils";
 import usePrecomputedPoses from "../../../hooks/usePrecomputedPoses";
-import { useState } from "react";
 
 
 const GenerateSidebar = () => {
@@ -115,9 +114,6 @@ const GenerateSidebar = () => {
   }
 
   const screenshotColor = poses.length === 0 ? "inactive" : "confirm";
-
-  const [generatePosttraining, setGeneratePosttraining] = useState(false);
-  const [imagesPerSphere, setImagesPerSphere] = useState(1);
 
   return (
     <SidebarSection title="Generate">

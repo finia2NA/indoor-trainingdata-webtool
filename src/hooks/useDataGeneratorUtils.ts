@@ -328,11 +328,12 @@ const useDataGeneratorUtils = () => {
 
   const takeScreenshots = async () => {
     console.log("Taking screenshots");
-    const allPoses = [...poses, ...posttrainingPoses];
+    const allPoses = [...poses]; // Only use mesh poses, not posttraining poses
     const labeledScreenshots = await takeOffscreenScreenshots({ poses: allPoses, width: imageSize[0], height: imageSize[1] });
     const timeStamp = new Date().toISOString().replace(/:/g, '-');
     const zip = new JSZip();
-    const folder = zip.folder("screenshots_" + timeStamp);
+    const screenshotsFolder = zip.folder("screenshots_" + timeStamp);
+    const meshFolder = screenshotsFolder?.folder("mesh"); // Create mesh subfolder inside screenshots
     labeledScreenshots.forEach((labeledScreenshot, index) => {
       const { blob, pose, width, height } = labeledScreenshot;
       const label = {
@@ -341,8 +342,8 @@ const useDataGeneratorUtils = () => {
         height,
       }
       const filename = `screenshot_${pose.series + (pose.type === PoseType.PAIR ? "b" : "a")}`;
-      folder?.file(`screenshot_${filename}.png`, blob);
-      folder?.file(`screenshot_${filename}.json`, JSON.stringify(label, null, 2));
+      meshFolder?.file(`screenshot_${filename}.png`, blob);
+      meshFolder?.file(`screenshot_${filename}.json`, JSON.stringify(label, null, 2));
     });
     const content = await zip.generateAsync({ type: "blob" });
     saveAs(content, "screenshots.zip");
