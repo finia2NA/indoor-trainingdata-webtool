@@ -7,9 +7,7 @@ import SceneObjects from './SceneObjects';
 import PolygonCreator from './PolygonCreator/PolygonCreator';
 import LabeledAxesHelper from './LabeledAxesHelper';
 import CameraPosLogging from './CameraPoseLogging';
-import { useRef, useEffect, useCallback } from 'react';
-import { Camera, PerspectiveCamera, Vector3 } from 'three';
-import { ScreenShotResult } from '../../hooks/useDataGeneratorUtils';
+import Image360Markers from './Image360Markers';
 
 type ViewportProps = {
   project: Project;
@@ -40,6 +38,7 @@ const Viewport = ({ project }: ViewportProps) => {
         <directionalLight position={[10, 10, 5]} intensity={1} />
 
         <SceneObjects project={project} />
+        <Image360Markers project={project} />
 
         {[EditorMode.MAP, EditorMode.GENERATE].includes(editorMode) && <PolygonCreator />}
 
