@@ -12,6 +12,7 @@ import useOffscreenThree from "./useOffscreenThree";
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Matrix4 } from "three";
+import db from "../data/db";
 
 const logging = false;
 const progressLogging = false;
@@ -44,6 +45,10 @@ export type Pose = {
   type: PoseType
 }
 
+export type PostTrainingPose = Pose & {
+  imageName: string;
+}
+
 /**
  * Function that rounds a number to 2 decimal places
  */
@@ -64,7 +69,7 @@ const getQuaternionFromTarget = (position: Vector3, target: Vector3) => {
 
 const useDataGeneratorUtils = () => {
   const { takeOffscreenScreenshots, doOffscreenRaycast } = useOffscreenThree();
-  const { poses, addPose, clearPoses } = usePrecomputedPoses();
+  const { poses, posttrainingPoses, addPose, addPosttrainingPose, clearPoses, clearPosttrainingPoses } = usePrecomputedPoses();
   const id = Number(useParams<{ id: string }>().id);
   const { getPolygons } = useMultiPolygonStore();
   const polygons = getPolygons(id);
@@ -84,6 +89,7 @@ const useDataGeneratorUtils = () => {
     getFovConcentration,
     getNumSeries,
     getImageDimensions,
+    getNumPosttrainingImages,
   } = useMultiGenerationStore();
   const heightOffset = getHeightOffset(id);
   const anglesRange = getAnglesRange(id);
@@ -97,6 +103,7 @@ const useDataGeneratorUtils = () => {
   const fovRange = getFovRange(id);
   const fovConcentration = getFovConcentration(id);
   const numSeries = getNumSeries(id);
+  const numPosttrainingImages = getNumPosttrainingImages(id);
   const imageSize = getImageDimensions(id);
 
 
@@ -320,7 +327,8 @@ const useDataGeneratorUtils = () => {
 
   const takeScreenshots = async () => {
     console.log("Taking screenshots");
-    const labeledScreenshots = await takeOffscreenScreenshots({ poses, width: imageSize[0], height: imageSize[1] });
+    const allPoses = [...poses, ...posttrainingPoses];
+    const labeledScreenshots = await takeOffscreenScreenshots({ poses: allPoses, width: imageSize[0], height: imageSize[1] });
     const timeStamp = new Date().toISOString().replace(/:/g, '-');
     const zip = new JSZip();
     const folder = zip.folder("screenshots_" + timeStamp);
@@ -343,6 +351,13 @@ const useDataGeneratorUtils = () => {
   const generatePoses = async () => {
     console.log("Generating poses");
     clearPoses();
+
+    console.log("Polygons", polygons);
+    // Check if we have any polygons to generate poses in
+    if (polygons.length === 0 || polygons[0].length === 0) {
+      toast.error("No polygons defined. Please create at least one polygon before generating poses.");
+      return;
+    }
 
     let stop = false
     const doStop = () => {
@@ -395,8 +410,157 @@ const useDataGeneratorUtils = () => {
     }
   }
 
+  const generatePosttrainingImages = async () => {
+    console.log("Generating posttraining images");
+    clearPosttrainingPoses();
 
-  return { takeScreenshots, generatePoses };
+    let stop = false;
+    const doStop = () => {
+      console.log("Aborting pose generation");
+      stop = true;
+    }
+
+    // Get the project and its metadata
+    const project = await db.projects.get(id);
+    if (!project || !project.metadataFile) {
+      toast.error("No 360° image metadata found");
+      return;
+    }
+
+    // Load the metadata
+    const metadataText = await project.metadataFile.content.text();
+    const positions = JSON.parse(metadataText) as { name: string; x: number; y: number; z: number; course: number }[];
+
+    if (positions.length === 0) {
+      toast.error("No 360° image positions found in metadata");
+      return;
+    }
+
+    // Initialize progress toast
+    if (progressToastId.current === null) {
+      progressToastId.current = toast(ProgressToast, {
+        progress: 0.00001,
+        data: { progress: 0.00001, type: ProgressType.POSES },
+        type: "info",
+        onClose(reason) {
+          if (reason === "stop") {
+            doStop();
+          }
+        },
+      });
+    }
+
+    let totalPoses = 0;
+    const totalPosesToGenerate = positions.length * numPosttrainingImages;
+
+    // Generate poses for each position
+    for (const position of positions) {
+      if (stop) break;
+
+      // Generate the specified number of poses for this position
+      for (let i = 0; i < numPosttrainingImages; i++) {
+        if (stop) break;
+        totalPoses++;
+        const progress = totalPoses / totalPosesToGenerate;
+
+        if (progressToastId.current === null) {
+          throw new Error('Progress toast was not initialized');
+        } else {
+          toast.update(progressToastId.current, { progress, data: { progress, type: ProgressType.POSES } });
+        }
+
+        // Create position vector
+        const pos = new Vector3(position.x, position.y, position.z);
+
+        // Generate random direction in XZ plane
+        const directionXZ = new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1);
+        if (directionXZ.length() > 0) {
+          directionXZ.normalize();
+        } else {
+          directionXZ.set(1, 0);
+        }
+
+        // Sample pitch angle
+        const anglesDist = createDistribution(anglesConcentration);
+        const angleSample = takeRandomSample({ dist: anglesDist });
+        const angleVal = (anglesRange[0] + anglesRange[1]) / 2 + // midpoint
+          angleSample * (anglesRange[1] - anglesRange[0]) / 2; // random sampled offset
+
+        // Compute the Y component using the pitch angle
+        const y = Math.sin((angleVal / 180.0) * Math.PI); // Upward component
+        const horizontalScale = Math.cos((angleVal / 180.0) * Math.PI); // Scale for XZ to maintain unit length
+
+        // Final target vector
+        const target = new Vector3(
+          pos.x + directionXZ.x * horizontalScale,
+          pos.y + y,
+          pos.z + directionXZ.y * horizontalScale
+        );
+
+        // Check wall avoidance if enabled
+        if (avoidWalls) {
+          const intersections = await doOffscreenRaycast(pos, target, false);
+          if (intersections.length > 0) {
+            const intersection = intersections[0];
+            const distance = pos.distanceTo(intersection.point);
+            if (distance < wallAvoidanceThreshold) {
+              // Skip this pose and try again
+              i--;
+              continue;
+            }
+          }
+        }
+
+        // Generate random FOV based on settings
+        const fovDist = createDistribution(fovConcentration);
+        const fovSample = takeRandomSample({ dist: fovDist });
+        const fov = (fovRange[0] + fovRange[1]) / 2 + fovSample * (fovRange[1] - fovRange[0]) / 2;
+
+        // Create the pose
+        const pose: PostTrainingPose = {
+          position: pos,
+          target: target,
+          quaternion: getQuaternionFromTarget(pos, target),
+          fov,
+          type: PoseType.SINGLE,
+          series: totalPoses - 1,
+          imageName: position.name
+        };
+
+        addPosttrainingPose(pose);
+
+        // If we are doing pair generation, add a second pose
+        if (pair) {
+          const pairPose = await getPairPoint(pose, totalPoses - 1);
+          // Add the image name to the pair pose as well
+          const postTrainingPairPose: PostTrainingPose = {
+            ...pairPose,
+            imageName: position.name
+          };
+          addPosttrainingPose(postTrainingPairPose);
+        }
+
+        // Yield control to avoid blocking the UI
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    }
+
+    if (!stop) {
+      console.log("Posttraining pose generation complete");
+      toast("Posttraining pose generation complete", { type: "success" });
+    } else {
+      console.log("Posttraining pose generation stopped prematurely");
+      toast("Posttraining pose generation stopped", { type: "warning" });
+    }
+
+    if (progressToastId.current !== null) {
+      toast.dismiss(progressToastId.current);
+      progressToastId.current = null;
+    }
+  }
+
+
+  return { takeScreenshots, generatePoses, generatePosttrainingImages };
 }
 
 export default useDataGeneratorUtils;

@@ -15,8 +15,8 @@ import { useState } from "react";
 const GenerateSidebar = () => {
   const id = Number(useParams<{ id: string }>().id);
 
-  const { generatePoses, takeScreenshots } = useDataGeneratorUtils();
-  const { poses } = usePrecomputedPoses();
+  const { generatePoses, takeScreenshots, generatePosttrainingImages } = useDataGeneratorUtils();
+  const { poses, posttrainingPoses } = usePrecomputedPoses();
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
   let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize, usePosttraining, numPosttrainingImages;
@@ -109,7 +109,7 @@ const GenerateSidebar = () => {
 
   const takeScreenshotsHandler = () => {
     console.log("Taking screenshots");
-    if (poses.length === 0)
+    if (poses.length === 0 && posttrainingPoses.length === 0)
       toast.error('Need to generate poses first');
     takeScreenshots();
   }
@@ -355,20 +355,43 @@ const GenerateSidebar = () => {
       </SidebarSection>
 
       <SidebarSection title="Generate" level={3}>
-        <div className="flex flex-row gap-2 justify-around">
-          <button
-            className="bg-primary p-1 px-4"
-            onClick={() => generatePoses()}
-          >Generate Poses</button>
-          <button
-            className={`bg-${screenshotColor} p-1 px-4`}
-            onClick={takeScreenshotsHandler}>
-            Take Screenshots
-          </button>
-          <button
-            className="bg-danger p-1 px-4"
-            onClick={resetHandler}
-          >Reset Generator Settings</button>
+
+        <div className="flex flex-col gap-1 text-sm text-gray-400">
+          <div className="flex justify-between">
+            <span>Normal Poses:</span>
+            <span>{poses.length}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Posttraining Poses:</span>
+            <span>{posttrainingPoses.length}</span>
+          </div>
+          <div className="flex justify-between font-medium">
+            <span>Total Poses:</span>
+            <span>{poses.length + posttrainingPoses.length}</span>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-row gap-2 justify-around">
+            <button
+              className="bg-primary p-1 px-4"
+              onClick={() => generatePoses()}
+            >Generate Poses</button>
+            <button
+              className={`bg-${screenshotColor} p-1 px-4`}
+              disabled={poses.length === 0 && posttrainingPoses.length === 0}
+              onClick={takeScreenshotsHandler}>
+              Take Screenshots
+            </button>
+            <button
+              className="bg-primary p-1 px-4"
+              onClick={() => generatePosttrainingImages()}
+            >Generate Posttraining Images</button>
+            <button
+              className="bg-danger p-1 px-4"
+              onClick={resetHandler}
+            >Reset Generator Settings</button>
+          </div>
+
         </div>
       </SidebarSection>
     </SidebarSection >
