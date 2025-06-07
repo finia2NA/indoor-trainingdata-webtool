@@ -4,7 +4,7 @@ import { FiTrash2 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ProjectDeletionToast } from "./UI/Toasts";
 import UploadComponent from "./UploadComponent";
-import db from "../data/db";
+import db, { Image360, MetadataFile } from "../data/db";
 import { useLiveQuery } from "dexie-react-hooks";
 import byteSize from "byte-size";
 
@@ -38,6 +38,83 @@ const ProjectFile: React.FC<ProjectFileProps> = ({ name, size, index, onDelete }
   );
 }
 
+type ImageUploadProps = {
+  projectId: number;
+};
+
+const ImageUpload: React.FC<ImageUploadProps> = ({ projectId }) => {
+  const handleImageUpload = async (files: FileList | null) => {
+    if (!files) return;
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.type.startsWith('image/')) {
+        const image360 = new Image360(file);
+        await db.addImageToProject(projectId, image360);
+      }
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="cursor-pointer bg-blue-500 text-white p-2 rounded-md text-center hover:bg-blue-600">
+        Upload 360° Images
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => handleImageUpload(e.target.files)}
+        />
+      </label>
+    </div>
+  );
+};
+
+type MetadataUploadProps = {
+  projectId: number;
+  metadataFile?: MetadataFile;
+};
+
+const MetadataUpload: React.FC<MetadataUploadProps> = ({ projectId, metadataFile }) => {
+  const handleMetadataUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    
+    const file = files[0];
+    if (file.name.endsWith('.json')) {
+      const metadata = new MetadataFile(file);
+      await db.setMetadataFile(projectId, metadata);
+    }
+  };
+
+  const handleMetadataDelete = async () => {
+    await db.setMetadataFile(projectId, undefined);
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      {metadataFile ? (
+        <div className="bg-green-100 p-2 rounded-md flex justify-between items-center">
+          <span>{metadataFile.name} ({byteSize(metadataFile.size, { units: 'iec', precision: 1 }).toString()})</span>
+          <button onClick={handleMetadataDelete}>
+            <FiTrash2 className="text-danger" />
+          </button>
+        </div>
+      ) : (
+        <label className="cursor-pointer bg-green-500 text-white p-2 rounded-md text-center hover:bg-green-600">
+          Upload JSON Metadata
+          <input
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={(e) => handleMetadataUpload(e.target.files)}
+          />
+        </label>
+      )}
+    </div>
+  );
+};
+
 enum CloseReason {
   BACKGROUND = "background",
   CANCEL = "cancel",
@@ -50,19 +127,14 @@ type ProjectModalProps = {
   isNew?: boolean,
 };
 
-const placeholder = {
-  name: "P1",
-  files: [
-    { name: "F1", size: 100 },
-    { name: "Verylongprojectnamelikeyouwouldn'tbelieve", size: 200 },
-  ]
-}
 
 
 export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) => {
   const project = useLiveQuery(() => db.projects.get(projectId), []);
   const [name, setName] = useState(project?.name || "");
   const models = project?.models || [];
+  const images360 = project?.images360 || [];
+  const metadataFile = project?.metadataFile;
 
   useEffect(() => {
     async function fetchData() {
@@ -144,6 +216,53 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
             <h3 className="font-medium">Upload a new model</h3>
 
             <UploadComponent projectId={projectId} />
+          </div>
+          <hr className="mt-2" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-medium">360° Images</h2>
+            {images360.length > 0 && (
+              <button
+                className="bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600"
+                onClick={async () => {
+                  try {
+                    await db.deleteAllImagesFromProject(projectId);
+                  } catch (error) {
+                    console.error('Failed to delete all images:', error);
+                  }
+                }}
+              >
+                Delete All Images
+              </button>
+            )}
+          </div>
+          {images360.length > 0 &&
+            <div className="border-bg border-2 border-dashed p-2 rounded-md">
+              {images360.map((image, i) => (
+                <ProjectFile
+                  key={`image-${i}`}
+                  index={i}
+                  name={image.name}
+                  size={image.size}
+                  onDelete={async () => { 
+                    try {
+                      await db.deleteImageFromProject(projectId, image.id);
+                    } catch (error) {
+                      console.error('Failed to delete image:', error);
+                    }
+                  }}
+                />
+              ))}
+            </div>
+          }
+          <div className="flex flex-col pt-2">
+            <h3 className="font-medium">Upload 360° images</h3>
+            <ImageUpload projectId={projectId} />
+          </div>
+          <div className="flex flex-col pt-2">
+            <h3 className="font-medium">Upload JSON metadata</h3>
+            <MetadataUpload projectId={projectId} metadataFile={metadataFile} />
           </div>
           <hr className="mt-2" />
         </div>

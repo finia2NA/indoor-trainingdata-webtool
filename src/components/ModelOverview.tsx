@@ -13,7 +13,21 @@ const ProjectOverview = () => {
   const navigate = useNavigate();
   const [editingProject, setEditingProject] = useState<number | null>(null);
 
-  const sizes = projects?.map(project => project.models.reduce((acc, model) => acc + model.size, 0));
+  const sizes = projects?.map(project => {
+    const modelSize = project.models.reduce((acc, model) => acc + model.size, 0);
+    const imageSize = project.images360?.reduce((acc, image) => acc + image.size, 0) || 0;
+    const metadataSize = project.metadataFile?.size || 0;
+    return modelSize + imageSize + metadataSize;
+  });
+
+  const getImageInfo = (project: any) => {
+    const imageCount = project.images360?.length || 0;
+    const hasMetadata = !!project.metadataFile;
+    if (imageCount === 0 && !hasMetadata) return "No 360° content";
+    if (imageCount > 0 && hasMetadata) return `${imageCount} images + metadata`;
+    if (imageCount > 0) return `${imageCount} images (no metadata)`;
+    return "Metadata only";
+  };
 
   const onView = (id?: number) => {
     if (id === undefined) return;
@@ -44,6 +58,7 @@ const ProjectOverview = () => {
             <tr>
               <th>Name</th>
               <th>Size</th>
+              <th>360° Content</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -51,7 +66,8 @@ const ProjectOverview = () => {
             {projects && projects.map((project, idx) => (
               <tr key={idx} className='border-2'>
                 <td className='border-2'>{project.name}</td>
-                < td className=' border-2'>{byteSize(sizes![idx], { units: 'iec', precision: 1 }).toString()}</td>
+                <td className='border-2'>{byteSize(sizes![idx], { units: 'iec', precision: 1 }).toString()}</td>
+                <td className='border-2'>{getImageInfo(project)}</td>
                 <td onClick={() => onView(project.id)} className='border-2 cursor-pointer'>View</td>
                 <td onClick={() => onEdit(project.id)} className='border-2 cursor-pointer'>Edit</td>
                 <td onClick={() => onDelete(project.id)} className='border-2 cursor-pointer'>Delete</td>
