@@ -9,6 +9,7 @@ import { ResetConfirmationToast } from "../Toasts";
 import { toast } from "react-toastify";
 import useDataGeneratorUtils from "../../../hooks/useDataGeneratorUtils";
 import usePrecomputedPoses from "../../../hooks/usePrecomputedPoses";
+import { useState } from "react";
 
 
 const GenerateSidebar = () => {
@@ -18,8 +19,8 @@ const GenerateSidebar = () => {
   const { poses } = usePrecomputedPoses();
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
-  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize;
-  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, reset;
+  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize, usePosttraining, numPosttrainingImages;
+  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, setUsePosttraining, setNumPosttrainingImages, reset;
   {
     // getting values from store
     const {
@@ -49,6 +50,10 @@ const GenerateSidebar = () => {
       setNumSeries: storeSetNumSeries,
       getImageDimensions,
       setImageDimensions: storeSetImageDimensions,
+      getUsePosttrainingImages,
+      setUsePosttrainingImages: storeSetUsePosttrainingImages,
+      getNumPosttrainingImages,
+      setNumPosttrainingImages: storeSetNumPosttrainingImages,
       reset: storeReset
     } = useMultiGenerationStore();
     offset = getHeightOffset(id);
@@ -64,6 +69,8 @@ const GenerateSidebar = () => {
     fovConcentration = getFovConcentration(id);
     numSeries = getNumSeries(id);
     imageSize = getImageDimensions(id);
+    usePosttraining = getUsePosttrainingImages(id);
+    numPosttrainingImages = getNumPosttrainingImages(id);
 
     setHeightOffset = (offset: number) => storeSetHeightOffset(id, offset);
     setAnglesRange = (angles: GenPair) => storeSetAnglesRange(id, angles);
@@ -78,6 +85,8 @@ const GenerateSidebar = () => {
     setFovConcentration = (concentration: number) => storeSetFovConcentration(id, concentration);
     setNumSeries = (numSeries: number) => storeSetNumSeries(id, numSeries);
     setImageSize = (size: [number, number]) => storeSetImageDimensions(id, size);
+    setUsePosttraining = (usePosttraining: boolean) => storeSetUsePosttrainingImages(id, usePosttraining);
+    setNumPosttrainingImages = (numImages: number) => storeSetNumPosttrainingImages(id, numImages);
     reset = () => storeReset(id);
   }
 
@@ -106,6 +115,10 @@ const GenerateSidebar = () => {
   }
 
   const screenshotColor = poses.length === 0 ? "inactive" : "confirm";
+
+  const [generatePosttraining, setGeneratePosttraining] = useState(false);
+  const [imagesPerSphere, setImagesPerSphere] = useState(1);
+
   return (
     <SidebarSection title="Generate">
       <SidebarSection title="Poses" level={3}>
@@ -314,6 +327,33 @@ const GenerateSidebar = () => {
           </div>
         </div>
       </SidebarSection>
+
+      <SidebarSection title="Posttraining Images" level={3}>
+        <div className="flex items-center mb-2">
+          <label htmlFor="posttraining" className="mr-2 w-400">Generate Posttraining Images</label>
+          <input
+            id="posttraining"
+            type="checkbox"
+            checked={usePosttraining}
+            onChange={(e) => setUsePosttraining(e.target.checked)}
+          />
+        </div>
+        {usePosttraining && (
+          <div className="flex items-center mb-2">
+            <label htmlFor="imagesPerSphere" className="mr-2 w-20">Images per Sphere</label>
+            <InteractiveInput
+              id="imagesPerSphere"
+              className='w-32 text-center bg-inactive basis-1/3'
+              type="number"
+              min={1}
+              step={1}
+              value={numPosttrainingImages}
+              onChange={(e) => setNumPosttrainingImages(parseInt(e.target.value))}
+            />
+          </div>
+        )}
+      </SidebarSection>
+
       <SidebarSection title="Generate" level={3}>
         <div className="flex flex-row gap-2 justify-around">
           <button

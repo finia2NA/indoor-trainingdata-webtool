@@ -19,6 +19,8 @@ const defaults = {
   fovConcentration: 0.5,
   numSeries: 1000,
   imageDimensions: [256, 256],
+  usePosttrainingImages: false,
+  numPosttrainingImages: 5,
 }
 
 export type MultiGenrationState = {
@@ -66,6 +68,14 @@ export type MultiGenrationState = {
   multiImageDimensions: Record<number, GenPair>;
   getImageDimensions: (id: number) => GenPair;
   setImageDimensions: (id: number, dimensions: GenPair) => void;
+
+  // posttraining
+  multiUsePosttrainingImages: Record<number, boolean>;
+  getUsePosttrainingImages: (id: number) => boolean;
+  setUsePosttrainingImages: (id: number, usePosttraining: boolean) => void;
+  multiNumPosttrainingImages: Record<number, number>;
+  getNumPosttrainingImages: (id: number) => number;
+  setNumPosttrainingImages: (id: number, numImages: number) => void;
 
   reset(id: number): void;
 }
@@ -183,6 +193,24 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
         },
       })),
 
+      // posttraining
+      multiUsePosttrainingImages: {},
+      getUsePosttrainingImages: (id) => get().multiUsePosttrainingImages[id] ?? defaults.usePosttrainingImages,
+      setUsePosttrainingImages: (id, usePosttraining) => set((state) => ({
+        multiUsePosttrainingImages: {
+          ...state.multiUsePosttrainingImages,
+          [id]: usePosttraining,
+        },
+      })),
+      multiNumPosttrainingImages: {},
+      getNumPosttrainingImages: (id) => get().multiNumPosttrainingImages[id] ?? defaults.numPosttrainingImages,
+      setNumPosttrainingImages: (id, numImages) => set((state) => ({
+        multiNumPosttrainingImages: {
+          ...state.multiNumPosttrainingImages,
+          [id]: numImages,
+        },
+      })),
+
       reset: (id) => {
         get().setHeightOffset(id, defaults.heightOffset);
         get().setAnglesRange(id, defaults.anglesRange as GenPair);
@@ -199,6 +227,9 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
         get().setFovConcentration(id, defaults.fovConcentration);
         get().setNumSeries(id, defaults.numSeries);
         get().setImageDimensions(id, defaults.imageDimensions as GenPair);
+
+        get().setUsePosttrainingImages(id, defaults.usePosttrainingImages);
+        get().setNumPosttrainingImages(id, defaults.numPosttrainingImages);
       }
     }),
     {
