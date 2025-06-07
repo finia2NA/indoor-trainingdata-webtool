@@ -2,6 +2,7 @@ import { ToastContentProps } from 'react-toastify';
 
 export enum ProgressType {
   POSES = "poses",
+  POSTTRAINING = "posttraining",
   SCREENSHOT = "screenshot"
 }
 
@@ -36,7 +37,12 @@ export const ResetConfirmationToast = ({ closeToast }: ToastContentProps) => {
 
 export const ProgressToast = ({ closeToast, data }: ToastContentProps) => {
   const type = (data as { type: ProgressType }).type;
-  const msg = type === ProgressType.POSES ? "Generating poses" : "Taking screenshots";
+  let msg = "Taking screenshots";
+  if (type === ProgressType.POSES) {
+    msg = "Generating mesh poses";
+  } else if (type === ProgressType.POSTTRAINING) {
+    msg = "Generating posttraining poses";
+  }
   const progressPercent = Math.round((data as { progress: number }).progress * 100);
 
   return (

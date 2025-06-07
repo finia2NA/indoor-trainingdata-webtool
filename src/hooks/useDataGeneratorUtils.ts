@@ -74,6 +74,7 @@ const useDataGeneratorUtils = () => {
   const { getPolygons } = useMultiPolygonStore();
   const polygons = getPolygons(id);
   const progressToastId = useRef<null | Id>(null);
+  const posttrainingProgressToastId = useRef<null | Id>(null);
 
   const {
     getHeightOffset,
@@ -347,9 +348,16 @@ const useDataGeneratorUtils = () => {
     saveAs(content, "screenshots.zip");
   }
 
-
   const generatePoses = async () => {
-    console.log("Generating poses");
+    await Promise.all([
+      generateMeshPoses(),
+      generatePosttrainingPoses()
+    ]);
+  }
+
+
+  const generateMeshPoses = async () => {
+    console.log("Generating mesh poses");
     clearPoses();
 
     console.log("Polygons", polygons);
@@ -397,11 +405,11 @@ const useDataGeneratorUtils = () => {
 
     if (!stop) {
       console.log("Pose generation complete");
-      toast("Pose generation complete", { type: "success" });
+      toast("Mesh pose generation complete", { type: "success" });
     }
     else {
       console.log("Pose generation stopped prematurely");
-      toast("Pose generation stopped", { type: "warning" });
+      toast("Mesh pose generation stopped", { type: "warning" });
     }
 
     if (progressToastId.current !== null) {
@@ -410,7 +418,7 @@ const useDataGeneratorUtils = () => {
     }
   }
 
-  const generatePosttrainingImages = async () => {
+  const generatePosttrainingPoses = async () => {
     console.log("Generating posttraining images");
     clearPosttrainingPoses();
 
@@ -437,10 +445,10 @@ const useDataGeneratorUtils = () => {
     }
 
     // Initialize progress toast
-    if (progressToastId.current === null) {
-      progressToastId.current = toast(ProgressToast, {
+    if (posttrainingProgressToastId.current === null) {
+      posttrainingProgressToastId.current = toast(ProgressToast, {
         progress: 0.00001,
-        data: { progress: 0.00001, type: ProgressType.POSES },
+        data: { progress: 0.00001, type: ProgressType.POSTTRAINING },
         type: "info",
         onClose(reason) {
           if (reason === "stop") {
@@ -463,10 +471,10 @@ const useDataGeneratorUtils = () => {
         totalPoses++;
         const progress = totalPoses / totalPosesToGenerate;
 
-        if (progressToastId.current === null) {
+        if (posttrainingProgressToastId.current === null) {
           throw new Error('Progress toast was not initialized');
         } else {
-          toast.update(progressToastId.current, { progress, data: { progress, type: ProgressType.POSES } });
+          toast.update(posttrainingProgressToastId.current, { progress, data: { progress, type: ProgressType.POSTTRAINING } });
         }
 
         // Create position vector
@@ -553,14 +561,14 @@ const useDataGeneratorUtils = () => {
       toast("Posttraining pose generation stopped", { type: "warning" });
     }
 
-    if (progressToastId.current !== null) {
-      toast.dismiss(progressToastId.current);
-      progressToastId.current = null;
+    if (posttrainingProgressToastId.current !== null) {
+      toast.dismiss(posttrainingProgressToastId.current);
+      posttrainingProgressToastId.current = null;
     }
   }
 
 
-  return { takeScreenshots, generatePoses, generatePosttrainingImages };
+  return { takeScreenshots, generatePoses, generateMeshPoses, generatePosttrainingPoses };
 }
 
 export default useDataGeneratorUtils;

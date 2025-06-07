@@ -23,7 +23,7 @@ function App() {
         </div >
       </Router>
       <ToastContainer
-        position='bottom-right'
+        position='top-right'
         transition={Flip}
         hideProgressBar
         theme="dark"

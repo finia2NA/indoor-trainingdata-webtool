@@ -15,7 +15,7 @@ import { useState } from "react";
 const GenerateSidebar = () => {
   const id = Number(useParams<{ id: string }>().id);
 
-  const { generatePoses, takeScreenshots, generatePosttrainingImages } = useDataGeneratorUtils();
+  const { generatePoses, takeScreenshots } = useDataGeneratorUtils();
   const { poses, posttrainingPoses } = usePrecomputedPoses();
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
@@ -382,10 +382,6 @@ const GenerateSidebar = () => {
               onClick={takeScreenshotsHandler}>
               Take Screenshots
             </button>
-            <button
-              className="bg-primary p-1 px-4"
-              onClick={() => generatePosttrainingImages()}
-            >Generate Posttraining Images</button>
             <button
               className="bg-danger p-1 px-4"
               onClick={resetHandler}
