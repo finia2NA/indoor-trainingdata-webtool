@@ -3,9 +3,11 @@ import { GiMeshNetwork } from "react-icons/gi";
 import { LuExpand, LuMousePointer2, LuMove, LuRotate3D } from "react-icons/lu";
 import { MdLabel, MdLabelOff, MdOutlineAddLocationAlt, MdOutlineGridOff, MdOutlineGridOn, MdOutlinePolyline } from "react-icons/md";
 import { PiTargetBold } from "react-icons/pi";
+import { TbView360, TbView360Off } from "react-icons/tb";
 import { TbPerspective, TbPerspectiveOff } from "react-icons/tb";
 import { toast, Zoom } from "react-toastify";
 import useEditorStore, { EditorMode, EditorState, Perspective, PolygonToolMode, TransformMode } from "../../hooks/useEditorStore";
+
 
 
 
@@ -135,11 +137,12 @@ export const PolygonCreatorToggles = () => {
 export const ViewmodeToggles = () => {
   // Perspective stuff
   // state
-  const { editorMode, perspectiveMode, setPerspectiveMode, showLabels: showLabel, setShowLabel, showGrid, setShowGrid, showTriangulation, setShowTriangulation, showPoses, setShowPoses } = useEditorStore();
+  const { editorMode, perspectiveMode, setPerspectiveMode, showLabels: showLabel, setShowLabel, showGrid, setShowGrid, showTriangulation, setShowTriangulation, showImages, setShowImages, showPoses, setShowPoses } = useEditorStore();
 
   // icons
   const PerspectiveOrthographicIcon = perspectiveMode === Perspective.ORTHOGRAPHIC ? TbPerspectiveOff : TbPerspective;
-  const LabelIcon = showLabel ? MdLabel : MdLabelOff;
+  const LabelIcon = showLabel ? MdLabel : MdLabelOff
+  const ImagesIcon = showImages ? TbView360 : TbView360Off;
 
   // onClicks
   const togglePerspectiveMode = () => {
@@ -154,6 +157,11 @@ export const ViewmodeToggles = () => {
   const toggleShowTriangulation = () => {
     const newTriangulation = !showTriangulation;
     setShowTriangulation(newTriangulation);
+  }
+
+  const toggleShowImages = () => {
+    const newShowImages = !showImages;
+    setShowImages(newShowImages);
   }
 
   const toggleShowPoses = () => {
@@ -199,6 +207,13 @@ export const ViewmodeToggles = () => {
       icon: () => <LabelIcon />,
       active: showLabel,
       onClick: toggleShowLabel,
+    },
+    {
+      id: 'images',
+      title: 'Toggle Images',
+      icon: () => <ImagesIcon />,
+      active: showImages,
+      onClick: toggleShowImages,
     }
   ];
 

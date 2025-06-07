@@ -56,6 +56,9 @@ export type EditorState = {
   showTriangulation: boolean;
   setShowTriangulation: (show: boolean) => void;
 
+  showImages: boolean;
+  setShowImages: (show: boolean) => void;
+
   showPoses: boolean;
   setShowPoses: (show: boolean) => void;
 
@@ -94,6 +97,9 @@ const useEditorStore = create<EditorState>((set) => ({
   showTriangulation: false,
   setShowTriangulation: (show: boolean) => set({ showTriangulation: show }),
 
+  showImages: true,
+  setShowImages: (show: boolean) => set({ showImages: show }),
+
   showPoses: false,
   setShowPoses: (show: boolean) => set({ showPoses: show }),
 
@@ -112,6 +118,9 @@ const useEditorStore = create<EditorState>((set) => ({
     transformMode: TransformMode.NONE,
     showGrid: true,
     showLabels: false,
+    showTriangulation: false,
+    showImages: false,
+    showPoses: true,
     polygonHeight: 0,
     polygonSize: 5,
     polygonToolMode: PolygonToolMode.NONE,

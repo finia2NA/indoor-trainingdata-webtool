@@ -25,7 +25,7 @@ const raycasterParams = {
 }
 
 const Viewport = ({ project }: ViewportProps) => {
-  const { showGrid, editorMode } = useEditorStore((state) => (state as EditorState));
+  const { showGrid, editorMode, showImages } = useEditorStore((state) => (state as EditorState));
 
 
   return (
@@ -38,7 +38,9 @@ const Viewport = ({ project }: ViewportProps) => {
         <directionalLight position={[10, 10, 5]} intensity={1} />
 
         <SceneObjects project={project} />
-        <Image360Markers project={project} />
+        {showImages &&
+          <Image360Markers project={project} />
+        }
 
         {[EditorMode.MAP, EditorMode.GENERATE].includes(editorMode) && <PolygonCreator />}
 
