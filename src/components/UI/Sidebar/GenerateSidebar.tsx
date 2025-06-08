@@ -113,7 +113,7 @@ const GenerateSidebar = () => {
     takeScreenshots();
   }
 
-  const screenshotColor = poses.length === 0 ? "inactive" : "confirm";
+  const screenshotColor = (poses.length || posttrainingPoses.length) ? "confirm" : "inactive";
 
   return (
     <SidebarSection title="Generate">
