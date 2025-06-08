@@ -131,6 +131,18 @@ class MyAppDatabase extends Dexie {
     await this.projects.put(project);
   }
 
+  async getImages360(projectId: number): Promise<Image360[]> {
+    const project = await this.projects.get(projectId);
+    if (!project) throw new Error('Project not found');
+    return project.images360 || [];
+  }
+
+  async getMetadataFile(projectId: number): Promise<MetadataFile | undefined> {
+    const project = await this.projects.get(projectId);
+    if (!project) throw new Error('Project not found');
+    return project.metadataFile;
+  }
+
   async getProject(id: number): Promise<Project | undefined> {
     return await this.projects.get(id);
   }

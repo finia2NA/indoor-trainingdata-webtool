@@ -161,7 +161,7 @@ const useOffscreenThree = () => {
       stop = true;
     }
 
-    const results: ScreenShotResult[] = [];
+    const results: ScreenShotResult<Pose>[] = [];
     for (let i = 0; i < poses.length; i++) {
       if (stop) break;
       const progress = (i + 1) / poses.length;

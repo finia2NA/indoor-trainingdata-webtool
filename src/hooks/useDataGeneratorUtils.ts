@@ -13,6 +13,7 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Matrix4 } from "three";
 import db from "../data/db";
+import take360Screenshots from "../vanilla/Offscreen360";
 
 const logging = false;
 const progressLogging = false;
@@ -23,9 +24,9 @@ export enum PoseType {
   PAIR = 'pair',
 }
 
-export type ScreenShotResult = {
+export type ScreenShotResult<T extends Pose> = {
   blob: Blob;
-  pose: Pose;
+  pose: T;
   width: number;
   height: number;
 }
@@ -334,25 +335,26 @@ const useDataGeneratorUtils = () => {
     const meshFolder = screenshotsFolder?.folder("mesh");
     const posttrainingFolder = screenshotsFolder?.folder("posttraining");
 
-    // We're using closures to gc memory after the screenshots are taken. I'm worried about memory usage, so that's why
-    {
-      const meshScreenshots = await takeMeshScreenshots();
-      meshScreenshots.forEach((screenshot) => {
-        const { blob, pose, width, height } = screenshot;
-        const label = {
-          pose,
-          width,
-          height,
-        }
-        const filename = `screenshot_${pose.series + (pose.type === PoseType.PAIR ? "b" : "a")}`;
-        meshFolder?.file(`screenshot_${filename}.png`, blob);
-        meshFolder?.file(`screenshot_${filename}.json`, JSON.stringify(label, null, 2));
-      });
-    }
+    // // We're using closures to gc memory after the screenshots are taken. I'm worried about memory usage, so that's why
+    // {
+    //   const meshScreenshots = await takeMeshScreenshots();
+    //   meshScreenshots.forEach((screenshot) => {
+    //     const { blob, pose, width, height } = screenshot;
+    //     const label = {
+    //       pose,
+    //       width,
+    //       height,
+    //     }
+    //     const filename = `screenshot_${pose.series + (pose.type === PoseType.PAIR ? "b" : "a")}`;
+    //     meshFolder?.file(`screenshot_${filename}.png`, blob);
+    //     meshFolder?.file(`screenshot_${filename}.json`, JSON.stringify(label, null, 2));
+    //   });
+    // }
 
     {
-      const posttrainingScreenshots = await takePosttrainingScreenshots();
-      posttrainingScreenshots.forEach((screenshot) => {
+
+      const postTrainingScreenshots = await take360Screenshots(id, posttrainingPoses, imageSize[0], imageSize[1]);
+      postTrainingScreenshots.forEach((screenshot) => {
         const { blob, pose, width, height } = screenshot;
         const label = {
           pose,
