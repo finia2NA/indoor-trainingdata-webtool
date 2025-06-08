@@ -3,7 +3,8 @@ import { ToastContentProps } from 'react-toastify';
 export enum ProgressType {
   POSES = "poses",
   POSTTRAINING = "posttraining",
-  SCREENSHOT = "screenshot"
+  SCREENSHOT = "screenshot",
+  POSTTRAININGSCREENSHOT = "posttrainingscreenshot",
 }
 
 export const ProjectDeletionToast = ({ closeToast }: ToastContentProps) => {
@@ -37,12 +38,25 @@ export const ResetConfirmationToast = ({ closeToast }: ToastContentProps) => {
 
 export const ProgressToast = ({ closeToast, data }: ToastContentProps) => {
   const type = (data as { type: ProgressType }).type;
-  let msg = "Taking screenshots";
-  if (type === ProgressType.POSES) {
-    msg = "Generating mesh poses";
-  } else if (type === ProgressType.POSTTRAINING) {
-    msg = "Generating posttraining poses";
+
+  let msg = "Processing";
+  switch (type) {
+    case ProgressType.POSES:
+      msg = "Generating mesh poses";
+      break;
+    case ProgressType.POSTTRAINING:
+      msg = "Generating posttraining poses";
+      break;
+    case ProgressType.SCREENSHOT:
+      msg = "Taking screenshots";
+      break;
+    case ProgressType.POSTTRAININGSCREENSHOT:
+      msg = "Taking posttraining screenshots";
+      break;
+    default:
+      throw new Error(`Unknown progress type: ${type}`);
   }
+
   const progressPercent = Math.round((data as { progress: number }).progress * 100);
 
   return (

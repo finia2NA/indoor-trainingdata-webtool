@@ -267,9 +267,39 @@ const useOffscreenThree = () => {
     }
   }, [getOrCreateScene, project]);
 
+
+  // --------------- 360 ------------------
+
+  const createScene360 = async (w: number, h: number) => {
+    const offscreen = new OffscreenCanvas(w, h);
+    const renderer = new THREE.WebGLRenderer({ canvas: offscreen, preserveDrawingBuffer: true });
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
+
+    // Create sphere with material that can have its texture updated
+    const sphere = new THREE.Mesh(
+      new THREE.SphereGeometry(5, 64, 64),
+      new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })
+    );
+    scene.add(sphere);
+
+    return { offscreen, scene, renderer, camera, sphere };
+  };
+
+
+
   // 360° screenshot function moved from offscreen360.ts
-  const take360Screenshots = useCallback(async ({ poses, width, height }: TakeScreenshotProps<PostTrainingPose>): Promise<ScreenShotResult<PostTrainingPose>[]> => {
+  const take360Screenshots = useCallback(async ({ poses: ptPoses, width, height }: TakeScreenshotProps<PostTrainingPose>): Promise<ScreenShotResult<PostTrainingPose>[]> => {
     if (!project || !project.id) throw new Error('Project not found');
+
+    // Init the toast ASAP so the user knows what's going on
+    progressToastId.current = toast(ProgressToast, {
+      progress: 0.00001, data: { progress: 0.00001, type: ProgressType.POSTTRAININGSCREENSHOT }, type: "info", onClose(reason) {
+        if (reason === "stop") {
+          doStop();
+        }
+      },
+    });
 
     // --------- VALIDATION ---------
     const images360 = await db.getImages360(project.id);
@@ -290,7 +320,7 @@ const useOffscreenThree = () => {
     const imageMap = new Map(images360.map(img => [img.name, img.content]));
 
     // Validate that each pose has a corresponding image and metadata entry
-    for (const pose of poses) {
+    for (const pose of ptPoses) {
       if (!pose.imageName) {
         throw new Error(`Pose ${pose.series} has no imageName`);
       }
@@ -309,28 +339,28 @@ const useOffscreenThree = () => {
 
     // --------- TAKING SCREENSHOTS ---------
 
-    // Helper to create offscreen scene
-    const getOrCreateScene360 = async (w: number, h: number) => {
-      const offscreen = new OffscreenCanvas(w, h);
-      const renderer = new THREE.WebGLRenderer({ canvas: offscreen, preserveDrawingBuffer: true });
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
-
-      // Create sphere with material that can have its texture updated
-      const sphere = new THREE.Mesh(
-        new THREE.SphereGeometry(5, 64, 64),
-        new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })
-      );
-      scene.add(sphere);
-
-      return { offscreen, scene, renderer, camera, sphere };
-    };
-
     const textureLoader = new THREE.TextureLoader();
     const textures = new Map<string, THREE.Texture>(); // Let's cache textures to avoid reloading them
     const results: ScreenShotResult<PostTrainingPose>[] = [];
 
-    for (const pose of poses) {
+    const { offscreen, scene, renderer, camera, sphere } = await createScene360(width, height);
+
+    // Add stop functionality
+    let stop = false;
+    const doStop = () => {
+      stop = true;
+    }
+
+    for (const pose of ptPoses) {
+      if (stop) break;
+      const progress = (results.length + 1) / ptPoses.length;
+
+      if (progressToastId.current === null) {
+        throw new Error('Screenshot toast was not initialized');
+      } else {
+        toast.update(progressToastId.current, { progress, data: { progress, type: ProgressType.POSTTRAININGSCREENSHOT } });
+      }
+
       // Load the corresponding 360° image for this pose if not already loaded
       if (!textures.has(pose.imageName)) {
         const imageBlob = imageMap.get(pose.imageName);
@@ -361,7 +391,6 @@ const useOffscreenThree = () => {
       if (!texture) {
         throw new Error(`Texture for ${pose.imageName} not found`);
       }
-      const { offscreen, scene, renderer, camera, sphere } = await getOrCreateScene360(width, height);
       sphere.material.map = texture;
       sphere.material.needsUpdate = true;
 
@@ -388,6 +417,20 @@ const useOffscreenThree = () => {
         width,
         height,
       });
+    }
+
+    if (!stop) {
+      console.log('Screenshots complete');
+      toast("Screenshots complete", { type: "success" });
+    }
+    else {
+      console.log('Screenshots stopped prematurely');
+      toast("Screenshots stopped", { type: "warning" });
+    }
+
+    if (progressToastId.current !== null) {
+      toast.dismiss(progressToastId.current);
+      progressToastId.current = null;
     }
 
     return results;

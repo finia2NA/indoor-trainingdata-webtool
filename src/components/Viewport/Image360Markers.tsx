@@ -39,10 +39,10 @@ const Image360Markers = ({ project }: Image360MarkersProps) => {
       {positions.map((pos, index) => (
         <group key={index} position={[pos.x, pos.y, pos.z]}>
           {/* Sphere marker */}
-          <mesh>
-            <sphereGeometry args={[0.1, 16, 16]} />
-            <meshBasicMaterial color="#ff0000" />
-          </mesh>
+            <mesh>
+            <sphereGeometry args={[0.03, 16, 16]} />
+            <meshBasicMaterial color="#ffff00" />
+            </mesh>
           
           {/* Direction indicator line */}
           <group rotation={[0, THREE.MathUtils.degToRad(pos.course), 0]}>
