@@ -3,15 +3,15 @@ import * as THREE from 'three';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useParams } from 'react-router-dom';
 import db, { Project } from "../data/db";
-import { Pose, ScreenShotResult } from './useDataGeneratorUtils';
+import { Pose, ScreenShotResult, PostTrainingPose } from './useDataGeneratorUtils';
 import { loadModel } from '../util/loadModel';
 import { Id, toast } from 'react-toastify';
 import { ProgressToast, ProgressType } from '../components/UI/Toasts';
 import useMultiTransformationStore from './useMultiTransformationStore';
 import Transformation from '../data/Transformation';
 
-type takeScreenshotProps = {
-  poses: Pose[];
+type TakeScreenshotProps<T extends Pose> = {
+  poses: T[];
   width: number;
   height: number;
 }
@@ -136,7 +136,7 @@ const useOffscreenThree = () => {
     return sceneData;
   }, [project, projectId, getVisibility, getTransformation]);
 
-  const takeOffscreenScreenshots = useCallback(async ({ poses, width, height }: takeScreenshotProps) => {
+  const takeOffscreenScreenshots = useCallback(async ({ poses, width, height }: TakeScreenshotProps<Pose>) => {
     if (!project) throw new Error('Model not found');
     if (!project.id) throw new Error('Model id not found');
     if (!poses || poses.length === 0) throw new Error('Poses not given');
@@ -267,10 +267,137 @@ const useOffscreenThree = () => {
     }
   }, [getOrCreateScene, project]);
 
+  // 360° screenshot function moved from offscreen360.ts
+  const take360Screenshots = useCallback(async ({ poses, width, height }: TakeScreenshotProps<PostTrainingPose>): Promise<ScreenShotResult<PostTrainingPose>[]> => {
+    if (!project || !project.id) throw new Error('Project not found');
+
+    // --------- VALIDATION ---------
+    const images360 = await db.getImages360(project.id);
+    const metadataFile = await db.getMetadataFile(project.id);
+
+    if (!images360.length) {
+      throw new Error('No images360 found');
+    }
+
+    // Parse metadata file content
+    const metadataText = await metadataFile?.content.text();
+    if (!metadataText) {
+      throw new Error('No metadata file found');
+    }
+    const metadata = JSON.parse(metadataText) as { name: string; x: number; y: number; z: number; course: number }[];
+
+    // Create a map of image names to their content for quick lookup
+    const imageMap = new Map(images360.map(img => [img.name, img.content]));
+
+    // Validate that each pose has a corresponding image and metadata entry
+    for (const pose of poses) {
+      if (!pose.imageName) {
+        throw new Error(`Pose ${pose.series} has no imageName`);
+      }
+
+      // Check if image exists
+      if (!imageMap.has(pose.imageName)) {
+        throw new Error(`Image ${pose.imageName} not found in images360`);
+      }
+
+      // Check if position exists in metadata
+      const position = metadata.find(p => p.name === pose.imageName);
+      if (!position) {
+        throw new Error(`Position for image ${pose.imageName} not found in metadata`);
+      }
+    }
+
+    // --------- TAKING SCREENSHOTS ---------
+
+    // Helper to create offscreen scene
+    const getOrCreateScene360 = async (w: number, h: number) => {
+      const offscreen = new OffscreenCanvas(w, h);
+      const renderer = new THREE.WebGLRenderer({ canvas: offscreen, preserveDrawingBuffer: true });
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
+
+      // Create sphere with material that can have its texture updated
+      const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(5, 64, 64),
+        new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })
+      );
+      scene.add(sphere);
+
+      return { offscreen, scene, renderer, camera, sphere };
+    };
+
+    const textureLoader = new THREE.TextureLoader();
+    const textures = new Map<string, THREE.Texture>(); // Let's cache textures to avoid reloading them
+    const results: ScreenShotResult<PostTrainingPose>[] = [];
+
+    for (const pose of poses) {
+      // Load the corresponding 360° image for this pose if not already loaded
+      if (!textures.has(pose.imageName)) {
+        const imageBlob = imageMap.get(pose.imageName);
+        if (!imageBlob) {
+          throw new Error(`Image blob for ${pose.imageName} not found`);
+        }
+        // Create URL from blob and load as texture
+        const imageUrl = URL.createObjectURL(imageBlob);
+        const texture = await new Promise<THREE.Texture>((resolve, reject) => {
+          textureLoader.load(
+            imageUrl,
+            (texture) => {
+              URL.revokeObjectURL(imageUrl); // Clean up URL
+              resolve(texture);
+            },
+            undefined,
+            (error) => {
+              URL.revokeObjectURL(imageUrl); // Clean up URL even on error
+              reject(error);
+            }
+          );
+        });
+
+        textures.set(pose.imageName, texture);
+      }
+
+      const texture = textures.get(pose.imageName);
+      if (!texture) {
+        throw new Error(`Texture for ${pose.imageName} not found`);
+      }
+      const { offscreen, scene, renderer, camera, sphere } = await getOrCreateScene360(width, height);
+      sphere.material.map = texture;
+      sphere.material.needsUpdate = true;
+
+      // Get the course value from metadata and rotate the sphere
+      const position = metadata.find(p => p.name === pose.imageName);
+      if (!position) {
+        throw new Error(`Position for image ${pose.imageName} not found in metadata`);
+      }
+      sphere.rotation.y = THREE.MathUtils.degToRad(position.course);
+
+      // Set camera properties
+      camera.fov = pose.fov;
+      camera.updateProjectionMatrix();
+
+      // The camera stays at 0, so we need to translate the target.
+      const translatedTarget = pose.target.clone().sub(pose.position);
+      camera.lookAt(translatedTarget);
+
+      renderer.render(scene, camera);
+      const blob = await offscreen.convertToBlob({ type: 'image/png' });
+      results.push({
+        blob,
+        pose,
+        width,
+        height,
+      });
+    }
+
+    return results;
+  }, [project]);
+
   return {
     takeOffscreenScreenshots,
     doOffscreenRaycast,
-    doBatchOffscreenRaycast
+    doBatchOffscreenRaycast,
+    take360Screenshots
   };
 };
 

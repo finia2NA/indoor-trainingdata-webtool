@@ -13,7 +13,6 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Matrix4 } from "three";
 import db from "../data/db";
-import take360Screenshots from "../vanilla/Offscreen360";
 
 const logging = false;
 const progressLogging = false;
@@ -69,7 +68,7 @@ const getQuaternionFromTarget = (position: Vector3, target: Vector3) => {
 }
 
 const useDataGeneratorUtils = () => {
-  const { takeOffscreenScreenshots, doOffscreenRaycast } = useOffscreenThree();
+  const { takeOffscreenScreenshots, take360Screenshots, doOffscreenRaycast } = useOffscreenThree();
   const { poses, posttrainingPoses, addPose, addPosttrainingPose, clearPoses, clearPosttrainingPoses } = usePrecomputedPoses();
   const id = Number(useParams<{ id: string }>().id);
   const { getPolygons } = useMultiPolygonStore();
@@ -335,25 +334,26 @@ const useDataGeneratorUtils = () => {
     const meshFolder = screenshotsFolder?.folder("mesh");
     const posttrainingFolder = screenshotsFolder?.folder("posttraining");
 
-    // // We're using closures to gc memory after the screenshots are taken. I'm worried about memory usage, so that's why
-    // {
-    //   const meshScreenshots = await takeMeshScreenshots();
-    //   meshScreenshots.forEach((screenshot) => {
-    //     const { blob, pose, width, height } = screenshot;
-    //     const label = {
-    //       pose,
-    //       width,
-    //       height,
-    //     }
-    //     const filename = `screenshot_${pose.series + (pose.type === PoseType.PAIR ? "b" : "a")}`;
-    //     meshFolder?.file(`screenshot_${filename}.png`, blob);
-    //     meshFolder?.file(`screenshot_${filename}.json`, JSON.stringify(label, null, 2));
-    //   });
-    // }
+    // We're using closures to gc memory after the screenshots are taken. I'm worried about memory usage, so that's why
+    {
+      console.log("Taking mesh screenshots");
+      const meshScreenshots = await takeOffscreenScreenshots({ poses: poses, width: imageSize[0], height: imageSize[1] });
+      meshScreenshots.forEach((screenshot) => {
+        const { blob, pose, width, height } = screenshot;
+        const label = {
+          pose,
+          width,
+          height,
+        }
+        const filename = `screenshot_${pose.series + (pose.type === PoseType.PAIR ? "b" : "a")}`;
+        meshFolder?.file(`screenshot_${filename}.png`, blob);
+        meshFolder?.file(`screenshot_${filename}.json`, JSON.stringify(label, null, 2));
+      });
+    }
 
     {
-
-      const postTrainingScreenshots = await take360Screenshots(id, posttrainingPoses, imageSize[0], imageSize[1]);
+      console.log("Taking posttraining screenshots");
+      const postTrainingScreenshots = await take360Screenshots({ poses: posttrainingPoses, width: imageSize[0], height: imageSize[1] });
       postTrainingScreenshots.forEach((screenshot) => {
         const { blob, pose, width, height } = screenshot;
         const label = {
@@ -369,18 +369,6 @@ const useDataGeneratorUtils = () => {
 
     const content = await zip.generateAsync({ type: "blob" });
     saveAs(content, "screenshots.zip");
-  }
-
-  const takeMeshScreenshots = async () => {
-    console.log("Taking mesh screenshots");
-    const allPoses = [...poses]; // Only use mesh poses, not posttraining poses
-    return await takeOffscreenScreenshots({ poses: allPoses, width: imageSize[0], height: imageSize[1] });
-  }
-
-  const takePosttrainingScreenshots = async () => {
-    console.log("Taking posttraining screenshots");
-    const allPoses = [...posttrainingPoses];
-    return await takeOffscreenScreenshots({ poses: allPoses, width: imageSize[0], height: imageSize[1] });
   }
 
   const generatePoses = async () => {
