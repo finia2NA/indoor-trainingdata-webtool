@@ -21,7 +21,7 @@ const Sidebar = ({ project }: SidebarProps) => {
       <div className="text-white">
         {editorMode === EditorMode.LAYOUT && <LayoutSidebar project={project} />}
         {editorMode === EditorMode.MAP && <PolygonSidebar />}
-        {editorMode === EditorMode.GENERATE && <GenerateSidebar />}
+        {editorMode === EditorMode.GENERATE && <GenerateSidebar project={project}/>}
       </div>
     </div>
   );

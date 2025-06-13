@@ -9,9 +9,10 @@ import { ResetConfirmationToast } from "../Toasts";
 import { toast } from "react-toastify";
 import useDataGeneratorUtils from "../../../hooks/useDataGeneratorUtils";
 import usePrecomputedPoses from "../../../hooks/usePrecomputedPoses";
+import { Project } from "../../../data/db";
 
 
-const GenerateSidebar = () => {
+const GenerateSidebar = ({ project }: { project: Project }) => {
   const id = Number(useParams<{ id: string }>().id);
 
   const { generatePoses, takeScreenshots } = useDataGeneratorUtils();
@@ -88,6 +89,8 @@ const GenerateSidebar = () => {
     setNumPosttrainingImages = (numImages: number) => storeSetNumPosttrainingImages(id, numImages);
     reset = () => storeReset(id);
   }
+
+  const img360Available = project.metadataFile && project.images360;
 
   const resetHandler = () => {
     toast.warn(ResetConfirmationToast,
@@ -324,31 +327,35 @@ const GenerateSidebar = () => {
         </div>
       </SidebarSection>
 
-      <SidebarSection title="Posttraining Images" level={3}>
-        <div className="flex items-center mb-2">
-          <label htmlFor="posttraining" className="mr-2 w-400">Generate Posttraining Images</label>
-          <input
-            id="posttraining"
-            type="checkbox"
-            checked={usePosttraining}
-            onChange={(e) => setUsePosttraining(e.target.checked)}
-          />
-        </div>
-        {usePosttraining && (
+      {img360Available &&
+        <SidebarSection title="Posttraining Images" level={3}>
           <div className="flex items-center mb-2">
-            <label htmlFor="imagesPerSphere" className="mr-2 w-20">Images per Sphere</label>
-            <InteractiveInput
-              id="imagesPerSphere"
-              className='w-32 text-center bg-inactive basis-1/3'
-              type="number"
-              min={1}
-              step={1}
-              value={numPosttrainingImages}
-              onChange={(e) => setNumPosttrainingImages(parseInt(e.target.value))}
+            <label htmlFor="posttraining" className="mr-2 w-400">Generate Posttraining Images</label>
+            <input
+              id="posttraining"
+              type="checkbox"
+              checked={usePosttraining}
+              onChange={(e) => setUsePosttraining(e.target.checked)}
             />
           </div>
-        )}
-      </SidebarSection>
+          {usePosttraining && (
+            <div className="flex items-center mb-2">
+              <label htmlFor="imagesPerSphere" className="mr-2 w-20">Images per Sphere</label>
+              <InteractiveInput
+                id="imagesPerSphere"
+                className='w-32 text-center bg-inactive basis-1/3'
+                type="number"
+                min={1}
+                step={1}
+                value={numPosttrainingImages}
+                onChange={(e) => setNumPosttrainingImages(parseInt(e.target.value))}
+              />
+            </div>
+          )}
+        </SidebarSection>
+
+      }
+
 
       <SidebarSection title="Generate" level={3}>
 

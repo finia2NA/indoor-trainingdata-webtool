@@ -292,6 +292,11 @@ const useOffscreenThree = () => {
   const take360Screenshots = useCallback(async ({ poses: ptPoses, width, height }: TakeScreenshotProps<PostTrainingPose>): Promise<ScreenShotResult<PostTrainingPose>[]> => {
     if (!project || !project.id) throw new Error('Project not found');
 
+    if(!ptPoses || ptPoses.length === 0) {
+      console.warn('No poses provided for 360° screenshots');
+      return [];
+    }
+
     // Init the toast ASAP so the user knows what's going on
     progressToastId.current = toast(ProgressToast, {
       progress: 0.00001, data: { progress: 0.00001, type: ProgressType.POSTTRAININGSCREENSHOT }, type: "info", onClose(reason) {

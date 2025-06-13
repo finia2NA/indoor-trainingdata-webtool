@@ -372,10 +372,14 @@ const useDataGeneratorUtils = () => {
   }
 
   const generatePoses = async () => {
-    await Promise.all([
-      generateMeshPoses(),
-      generatePosttrainingPoses()
-    ]);
+    const project = await db.projects.get(id);
+    const promises = [generateMeshPoses()];
+
+    if (project?.metadataFile) {
+      promises.push(generatePosttrainingPoses());
+    }
+
+    await Promise.all(promises);
   }
 
 
