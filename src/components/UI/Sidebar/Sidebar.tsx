@@ -1,4 +1,4 @@
-import useEditorStore, { EditorMode, EditorState } from "../../../hooks/useEditorStore";
+import useEditorStore, { EditorMode, EditorState } from "../../../hooks/state/useEditorStore";
 import LayoutSidebar from "./LayoutSidebar";
 import Progress from "../Progress";
 import PolygonSidebar from "./PolygonSidebar";

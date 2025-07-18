@@ -1,6 +1,6 @@
 import React from 'react';
 import { Html } from '@react-three/drei'
-import useEditorStore from '../../hooks/useEditorStore';
+import useEditorStore from '../../hooks/state/useEditorStore';
 
 type LabeledAxesHelperProps = {
   size?: number;

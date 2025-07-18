@@ -5,7 +5,7 @@ import { isNumeric } from "../util/validation";
 import Sidebar from "../components/UI/Sidebar/Sidebar";
 import Editor from "../components/Viewport/Editor";
 import { useEffect } from "react";
-import useEditorStore, { EditorMode } from "../hooks/useEditorStore";
+import useEditorStore, { EditorMode } from "../hooks/state/useEditorStore";
 
 const ViewPage = () => {
   const { id, editorMode } = useParams();

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import useDataGeneratorUtils from '../../hooks/useDataGeneratorUtils';
+import useDataGeneratorUtils from '../../hooks/offscreen/useDataGeneratorUtils';
 import { useFrame, useThree } from '@react-three/fiber';
-import useCameraPoseStore from '../../hooks/useCameraPoseStore';
+import useCameraPoseStore from '../../hooks/state/useCameraPoseStore';
 import { Vector3 } from 'three';
 
 const speed = 0.1;

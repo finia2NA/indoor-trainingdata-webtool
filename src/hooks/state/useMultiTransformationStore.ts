@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import Transformation from '../data/Transformation';
+import Transformation from '../../data/Transformation';
 
 type MultiTransformationState = {
   mulitTransformations: Record<number, Record<number, Transformation>>;

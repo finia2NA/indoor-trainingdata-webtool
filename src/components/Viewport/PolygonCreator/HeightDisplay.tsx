@@ -1,10 +1,10 @@
 import { BufferGeometry, Vector3, BufferAttribute, DoubleSide } from "three";
-import useMultiPolygonStore from "../../../hooks/useMultiPolygonStore";
+import useMultiPolygonStore from "../../../hooks/state/useMultiPolygonStore";
 import { useEffect, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
-import useMultiGenerationStore from "../../../hooks/useMultiGenerationStore";
+import useMultiGenerationStore from "../../../hooks/state/useMultiGenerationStore";
 import Triangulation from "../../../util/triangulate";
-import useEditorStore from "../../../hooks/useEditorStore";
+import useEditorStore from "../../../hooks/state/useEditorStore";
 
 type PolygonHeightDisplayProps = {
   polygon: Vector3[];

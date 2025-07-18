@@ -6,7 +6,7 @@ import { PiTargetBold } from "react-icons/pi";
 import { TbView360, TbView360Off } from "react-icons/tb";
 import { TbPerspective, TbPerspectiveOff } from "react-icons/tb";
 import { toast, Zoom } from "react-toastify";
-import useEditorStore, { EditorMode, EditorState, Perspective, PolygonToolMode, TransformMode } from "../../hooks/useEditorStore";
+import useEditorStore, { EditorMode, EditorState, Perspective, PolygonToolMode, TransformMode } from "../../hooks/state/useEditorStore";
 
 
 

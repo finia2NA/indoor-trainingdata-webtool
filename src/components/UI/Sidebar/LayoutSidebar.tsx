@@ -1,6 +1,6 @@
-import useMultiTransformationStore from '../../../hooks/useMultiTransformationStore';
+import useMultiTransformationStore from '../../../hooks/state/useMultiTransformationStore';
 import { LuExpand, LuMove, LuRotate3D } from "react-icons/lu";
-import useEditorStore, { EditorState } from '../../../hooks/useEditorStore';
+import useEditorStore, { EditorState } from '../../../hooks/state/useEditorStore';
 import { InteractiveInput } from '@designbyadrian/react-interactive-input';
 import SidebarSection from './SidebarSection';
 import { Model3D, Project } from '../../../data/db';

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Pose, PostTrainingPose } from './useDataGeneratorUtils'
+import { Pose, PostTrainingPose } from '../offscreen/useDataGeneratorUtils'
 
 interface PrecomputedPosesState {
   poses: Pose[];

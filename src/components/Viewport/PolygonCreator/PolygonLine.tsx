@@ -1,8 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from "react";
 import { Vector3 } from "three";
-import useEditorStore, { EditorState, PolygonToolMode } from "../../../hooks/useEditorStore";
-import useMultiPolygonStore from '../../../hooks/useMultiPolygonStore';
+import useEditorStore, { EditorState, PolygonToolMode } from "../../../hooks/state/useEditorStore";
+import useMultiPolygonStore from '../../../hooks/state/useMultiPolygonStore';
 
 type PolygonLineProps = {
   startPoint: Vector3;

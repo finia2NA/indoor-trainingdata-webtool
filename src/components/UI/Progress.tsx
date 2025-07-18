@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import useEditorStore, { EditorState } from '../../hooks/useEditorStore';
+import useEditorStore, { EditorState } from '../../hooks/state/useEditorStore';
 
 type ProgressArrowProps = {
   text: string;

@@ -2,14 +2,14 @@ import { useCallback, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useParams } from 'react-router-dom';
-import db, { Project } from "../data/db";
+import db, { Project } from "../../data/db";
 import { Pose, ScreenShotResult, PostTrainingPose } from './useDataGeneratorUtils';
-import { loadModel } from '../util/loadModel';
+import { loadModel } from '../../util/loadModel';
 import { Id, toast } from 'react-toastify';
-import { ProgressToast, ProgressType } from '../components/UI/Toasts';
-import useMultiTransformationStore from './useMultiTransformationStore';
-import Transformation from '../data/Transformation';
-import { get360s } from '../util/get360s';
+import { ProgressToast, ProgressType } from '../../components/UI/Toasts';
+import useMultiTransformationStore from '../state/useMultiTransformationStore';
+import Transformation from '../../data/Transformation';
+import { get360s } from '../../util/get360s';
 
 type TakeScreenshotProps<T extends Pose> = {
   poses: T[];

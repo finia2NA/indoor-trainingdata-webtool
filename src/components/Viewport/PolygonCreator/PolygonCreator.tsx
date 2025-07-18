@@ -5,12 +5,12 @@ import React, { Fragment } from 'react';
 
 import { Vector3 } from 'three';
 import { useEffect } from 'react';
-import useEditorStore, { EditorMode, PolygonToolMode } from '../../../hooks/useEditorStore.ts';
+import useEditorStore, { EditorMode, PolygonToolMode } from '../../../hooks/state/useEditorStore.ts';
 import { toast } from 'react-toastify';
 import PolygonVertex from './PolygonVertex.tsx';
 import CreatorSurface from './CreatorSurface.tsx';
 import PolygonLine from './PolygonLine.tsx';
-import useMultiPolygonStore from '../../../hooks/useMultiPolygonStore.ts';
+import useMultiPolygonStore from '../../../hooks/state/useMultiPolygonStore.ts';
 import HeightDisplay from './HeightDisplay.tsx';
 import { useParams } from 'react-router-dom';
 import TriangulationDisplay from './TriangulizationDisplay.tsx';

@@ -1,11 +1,11 @@
 import { Model3D, Project } from '../../data/db';
 import { useEffect, useState } from 'react';
 import { Object3DEventMap } from 'three';
-import useMultiTransformationStore from '../../hooks/useMultiTransformationStore';
+import useMultiTransformationStore from '../../hooks/state/useMultiTransformationStore';
 import * as THREE from 'three';
-import useEditorStore from '../../hooks/useEditorStore';
+import useEditorStore from '../../hooks/state/useEditorStore';
 import { TransformControls } from '@react-three/drei';
-import useTransformingSync from '../../hooks/useTransformingSync';
+import useTransformingSync from '../../hooks/sync/useTransformingSync';
 import Transformation from '../../data/Transformation';
 import { loadModel } from '../../util/loadModel';
 import { useParams } from 'react-router-dom';

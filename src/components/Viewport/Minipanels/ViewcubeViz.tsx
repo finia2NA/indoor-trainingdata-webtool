@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import WrappedOrbitControls, { OrbitUsecase } from '../WrappedOrbitControls';
 import * as THREE from 'three';
-import useOrbitAngleSync from '../../../hooks/useOrbitAngleSync';
+import useOrbitAngleSync from '../../../hooks/sync/useOrbitAngleSync';
 
 enum CUBEFACE {
   RIGHT = "right", LEFT = "left", TOP = "top", BOTTOM = "bottom", FRONT = "front", BACK = "back"

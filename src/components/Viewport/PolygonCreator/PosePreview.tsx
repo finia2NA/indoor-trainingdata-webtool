@@ -1,5 +1,5 @@
-import { PoseType } from "../../../hooks/useDataGeneratorUtils";
-import usePrecomputedPoses from "../../../hooks/usePrecomputedPoses";
+import { PoseType } from "../../../hooks/offscreen/useDataGeneratorUtils";
+import usePrecomputedPoses from "../../../hooks/state/usePrecomputedPoses";
 import React from "react";
 
 const PosesPreview = () => {

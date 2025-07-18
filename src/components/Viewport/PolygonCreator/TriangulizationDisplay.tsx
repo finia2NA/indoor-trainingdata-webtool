@@ -1,6 +1,6 @@
 import { Vector3, BufferAttribute, DoubleSide } from "three";
 import Triangulation from "../../../util/triangulate";
-import useEditorStore, { EditorMode } from "../../../hooks/useEditorStore";
+import useEditorStore, { EditorMode } from "../../../hooks/state/useEditorStore";
 
 type TriangulationDisplayProps = {
   polygon: Vector3[];

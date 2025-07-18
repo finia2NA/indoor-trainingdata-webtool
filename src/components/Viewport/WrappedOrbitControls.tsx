@@ -1,10 +1,10 @@
 import { OrbitControls, OrbitControlsProps } from "@react-three/drei";
 import React, { useEffect, useRef, useCallback } from "react";
-import useOrbitAngleSync from "../../hooks/useOrbitAngleSync";
-import useTransformingSync from "../../hooks/useTransformingSync";
+import useOrbitAngleSync from "../../hooks/sync/useOrbitAngleSync";
+import useTransformingSync from "../../hooks/sync/useTransformingSync";
 // @ts-expect-error No types, no idea where they are
 import { OrbitControls as ThreeOrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import useCameraPoseStore from "../../hooks/useCameraPoseStore";
+import useCameraPoseStore from "../../hooks/state/useCameraPoseStore";
 import { useFrame } from "@react-three/fiber";
 
 export enum OrbitUsecase {

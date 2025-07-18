@@ -1,5 +1,5 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import useCameraPoseStore from "../../hooks/useCameraPoseStore";
+import useCameraPoseStore from "../../hooks/state/useCameraPoseStore";
 const CameraPosLogging = () => {
   const { camera } = useThree();
   const { setReactiveCameraPosition, setReactiveCameraRotation } = useCameraPoseStore();

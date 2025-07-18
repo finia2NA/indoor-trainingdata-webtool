@@ -1,8 +1,8 @@
 import { Html, TransformControls } from "@react-three/drei";
 import { Mesh, Vector3 } from "three";
-import useTransformingSync from "../../../hooks/useTransformingSync";
+import useTransformingSync from "../../../hooks/sync/useTransformingSync";
 import { useEffect, useRef, useState } from "react";
-import useEditorStore, { EditorState, PolygonToolMode } from "../../../hooks/useEditorStore";
+import useEditorStore, { EditorState, PolygonToolMode } from "../../../hooks/state/useEditorStore";
 
 type VertexObjectProps = {
   position: Vector3;

@@ -1,5 +1,5 @@
 import { Model3D, Project } from "../../data/db"
-import useEditorStore, { EditorMode, EditorState } from "../../hooks/useEditorStore";
+import useEditorStore, { EditorMode, EditorState } from "../../hooks/state/useEditorStore";
 import { PolygonCreatorToggles, TransformToggles, ViewmodeToggles } from "./Multitoggle"
 import ViewcubeViz from "./Minipanels/ViewcubeViz"
 import Viewport from "./Viewport"

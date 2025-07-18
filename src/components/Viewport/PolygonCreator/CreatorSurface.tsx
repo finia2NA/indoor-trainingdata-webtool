@@ -1,7 +1,7 @@
 import { useState } from "react";
-import useEditorStore, { EditorState, PolygonToolMode } from "../../../hooks/useEditorStore";
+import useEditorStore, { EditorState, PolygonToolMode } from "../../../hooks/state/useEditorStore";
 import { DoubleSide, Vector3 } from "three";
-import useMultiPolygonStore from "../../../hooks/useMultiPolygonStore";
+import useMultiPolygonStore from "../../../hooks/state/useMultiPolygonStore";
 import { useParams } from "react-router-dom";
 
 

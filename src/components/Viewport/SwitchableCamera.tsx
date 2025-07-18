@@ -1,5 +1,5 @@
 import { OrthographicCamera, PerspectiveCamera } from "@react-three/drei";
-import useEditorStore, { Perspective } from "../../hooks/useEditorStore";
+import useEditorStore, { Perspective } from "../../hooks/state/useEditorStore";
 import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import * as THREE from "three";
 

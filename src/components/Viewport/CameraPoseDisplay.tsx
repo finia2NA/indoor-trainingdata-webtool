@@ -1,4 +1,4 @@
-import useCameraPoseStore from "../../hooks/useCameraPoseStore";
+import useCameraPoseStore from "../../hooks/state/useCameraPoseStore";
 import { VscChevronDown, VscChevronUp } from "react-icons/vsc";
 import { atom, useAtom } from "jotai";
 

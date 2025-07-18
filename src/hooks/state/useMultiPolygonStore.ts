@@ -2,7 +2,7 @@ import { toast } from "react-toastify";
 import { Vector3 } from "three";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { PolygonDeletionToast } from "../components/UI/Toasts";
+import { PolygonDeletionToast } from "../../components/UI/Toasts";
 
 export type Polygon = Vector3[];
 export type PolygonList = Polygon[];

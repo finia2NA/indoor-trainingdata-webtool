@@ -1,19 +1,19 @@
 import { useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Quaternion, Vector2, Vector3 } from "three";
-import useMultiGenerationStore from "../hooks/useMultiGenerationStore";
-import { createDistribution, takeRandomSample } from "../util/probability";
-import Triangulation from "../util/triangulate";
-import useMultiPolygonStore from "./useMultiPolygonStore";
-import usePrecomputedPoses from "./usePrecomputedPoses";
+import useMultiGenerationStore from "../state/useMultiGenerationStore";
+import { createDistribution, takeRandomSample } from "../../util/probability";
+import Triangulation from "../../util/triangulate";
+import useMultiPolygonStore from "../state/useMultiPolygonStore";
+import usePrecomputedPoses from "../state/usePrecomputedPoses";
 import { Id, toast } from "react-toastify";
-import { ProgressToast, ProgressType } from "../components/UI/Toasts";
+import { ProgressToast, ProgressType } from "../../components/UI/Toasts";
 import useOffscreenThree from "./useOffscreenThree";
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Matrix4 } from "three";
-import db from "../data/db";
-import { get360s } from "../util/get360s";
+import db from "../../data/db";
+import { get360s } from "../../util/get360s";
 
 const logging = false;
 const progressLogging = false;

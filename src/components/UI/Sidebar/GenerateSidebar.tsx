@@ -4,11 +4,11 @@ import { Slider } from "@mui/material";
 import AngleDisplay from "../../Viewport/Minipanels/AngleDisplay";
 import DistributionViz from "../../Viewport/Minipanels/DistributionViz";
 import { useParams } from "react-router-dom";
-import useMultiGenerationStore, { GenPair } from "../../../hooks/useMultiGenerationStore";
+import useMultiGenerationStore, { GenPair } from "../../../hooks/state/useMultiGenerationStore";
 import { ResetConfirmationToast } from "../Toasts";
 import { toast } from "react-toastify";
-import useDataGeneratorUtils from "../../../hooks/useDataGeneratorUtils";
-import usePrecomputedPoses from "../../../hooks/usePrecomputedPoses";
+import useDataGeneratorUtils from "../../../hooks/offscreen/useDataGeneratorUtils";
+import usePrecomputedPoses from "../../../hooks/state/usePrecomputedPoses";
 import { Project } from "../../../data/db";
 
 

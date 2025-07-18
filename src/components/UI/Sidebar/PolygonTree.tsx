@@ -1,9 +1,9 @@
 import { Tree } from "react-arborist";
-import useMultiPolygonStore from "../../../hooks/useMultiPolygonStore";
+import useMultiPolygonStore from "../../../hooks/state/useMultiPolygonStore";
 import { useState } from "react";
 import { PiDotFill, PiFolder, PiPolygon, PiTrash } from "react-icons/pi";
 import { useParams } from "react-router-dom";
-import useEditorStore, { PolygonToolMode } from "../../../hooks/useEditorStore";
+import useEditorStore, { PolygonToolMode } from "../../../hooks/state/useEditorStore";
 import { TbArrowAutofitHeight } from "react-icons/tb";
 
 
