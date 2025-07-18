@@ -1,15 +1,9 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import * as THREE from 'three';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { useParams } from 'react-router-dom';
-import db, { Project } from "../data/db";
 import { Pose, ScreenShotResult, PostTrainingPose } from './useDataGeneratorUtils';
-import { loadModel } from '../util/loadModel';
 import { Id, toast } from 'react-toastify';
 import { ProgressToast, ProgressType } from '../components/UI/Toasts';
-import useMultiTransformationStore from './useMultiTransformationStore';
-import Transformation from '../data/Transformation';
-import { get360s, Image360 } from '../util/get360s';
+import useSceneCache from './useSceneCache';
 
 type TakeScreenshotProps<T extends Pose> = {
   poses: T[];
@@ -17,201 +11,9 @@ type TakeScreenshotProps<T extends Pose> = {
   height: number;
 }
 
-const setupScene = async (
-  project: Project,
-  getVisibility: (projectId: number, modelId: number) => boolean,
-  getTransformation: (projectId: number, modelId: number) => Transformation | null,
-  width: number,
-  height: number,
-  doubleSided: boolean = false,
-  load360Images: boolean = false) => {
-
-  if (!project) throw new Error('Model not found');
-  if (!project.id) throw new Error('Model id not found');
-
-  // first, basic setup: canvas, scene, renderer, lights, camera, etc
-  const offscreen = new OffscreenCanvas(width, height);
-  const renderer = new THREE.WebGLRenderer({ canvas: offscreen, preserveDrawingBuffer: true });
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x484848);
-  const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-  const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-  scene.add(ambientLight);
-
-  // Load 360° images if requested
-  let imageData: { 
-    images360Data: Image360[], 
-    textureMap: Map<string, THREE.Texture>, 
-    metadataMap: Map<string, { x: number; y: number; z: number; course: number }> 
-  } | null = null;
-  
-  if (load360Images) {
-    try {
-      const images360Data = await get360s(project, true);
-      if (images360Data.length > 0) {
-        const textureMap = new Map<string, THREE.Texture>();
-        const textureLoader = new THREE.TextureLoader();
-        
-        for (const imageData360 of images360Data) {
-          if (imageData360.image instanceof Blob) {
-            const imageUrl = URL.createObjectURL(imageData360.image);
-            const texture = await new Promise<THREE.Texture>((resolve, reject) => {
-              textureLoader.load(
-                imageUrl,
-                (texture) => {
-                  URL.revokeObjectURL(imageUrl);
-                  resolve(texture);
-                },
-                undefined,
-                (error) => {
-                  URL.revokeObjectURL(imageUrl);
-                  reject(error);
-                }
-              );
-            });
-            textureMap.set(imageData360.name, texture);
-          }
-        }
-
-        const metadataMap = new Map(
-          images360Data.map(img => [
-            img.name, 
-            { x: img.x, y: img.y, z: img.z, course: img.course }
-          ])
-        );
-
-        imageData = { images360Data, textureMap, metadataMap };
-      }
-    } catch (error) {
-      console.warn('Could not load 360° images:', error);
-    }
-  }
-
-  // now, add all applicable models to the scene
-  const models = project.models;
-  if (!models) throw new Error('Models not found');
-  for (const model of models) {
-    if (!getVisibility(project.id, model.id)) continue;
-
-    const transformation = getTransformation(project.id, model.id);
-    if (!transformation) throw new Error(`Transformation not found for model${model.name}, ids p-${project.id}, m-${model.id}`);
-
-    const loadedObject = await loadModel(model.name, model.content);
-    if (doubleSided) {
-      loadedObject.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.material.side = THREE.DoubleSide;
-        }
-      });
-    }
-    
-    // TODO: Apply 360° shading here if imageData is available
-    // if (imageData) {
-    //   loadedObject.traverse((child) => {
-    //     if (child instanceof THREE.Mesh) {
-    //       // Apply your custom shader material here
-    //       // child.material = create360ShadedMaterial(child.material, imageData);
-    //     }
-    //   });
-    // }
-    
-    loadedObject.position.set(transformation.translation[0], transformation.translation[1], transformation.translation[2]);
-    loadedObject.setRotationFromEuler(new THREE.Euler(transformation.rotation[0], transformation.rotation[1], transformation.rotation[2]));
-    loadedObject.scale.set(transformation.scale[0], transformation.scale[1], transformation.scale[2]);
-    scene.add(loadedObject);
-  }
-
-  return { offscreen, renderer, scene, camera, imageData };
-}
-
-
 const useOffscreenThree = () => {
-  const { id: projectId } = useParams();
   const progressToastId = useRef<null | Id>(null);
-  const { getTransformation, getVisibility } = useMultiTransformationStore();
-
-  // Scene cache to avoid rebuilding for each raycast
-  const sceneCache = useRef<{
-    projectId: number | null;
-    scene: THREE.Scene | null;
-    renderer: THREE.WebGLRenderer | null;
-    camera: THREE.PerspectiveCamera | null;
-    imageData: { 
-      images360Data: Image360[], 
-      textureMap: Map<string, THREE.Texture>, 
-      metadataMap: Map<string, { x: number; y: number; z: number; course: number }> 
-    } | null;
-    initialized?: boolean;
-  }>({
-    projectId: null,
-    scene: null,
-    renderer: null,
-    camera: null,
-    imageData: null,
-    initialized: false
-  });
-
-  const project = useLiveQuery<Project | null>(
-    async () => {
-      return (await db.projects.where('id').equals(Number(projectId)).first()) ?? null;
-    },
-    [projectId]
-  );
-
-
-  // Clear cache when project changes or when transformation/visibility functions change
-  useEffect(() => {
-    // Dispose of textures from scene cache to prevent memory leaks
-    if (sceneCache.current.imageData?.textureMap) {
-      sceneCache.current.imageData.textureMap.forEach(texture => texture.dispose());
-    }
-    
-    sceneCache.current = {
-      projectId: null,
-      scene: null,
-      renderer: null,
-      camera: null,
-      imageData: null,
-      initialized: false
-    };
-  }, [projectId, getTransformation, getVisibility]);
-
-  // Get or create scene (for performance)
-  const getOrCreateScene = useCallback(async (width: number, height: number, doubleSided: boolean = false, load360Images: boolean = false) => {
-    if (sceneCache.current.scene &&
-      sceneCache.current.projectId === Number(projectId) &&
-      project?.id === sceneCache.current.projectId) {
-      return {
-        scene: sceneCache.current.scene,
-        renderer: sceneCache.current.renderer!,
-        camera: sceneCache.current.camera!,
-        imageData: sceneCache.current.imageData,
-        offscreen: null // Not needed for raycasting
-      };
-    }
-
-    console.log('Creating new scene (not from cache)');
-    const sceneData = await setupScene(
-      project!,
-      getVisibility,
-      getTransformation,
-      width,
-      height,
-      doubleSided,
-      load360Images
-    );
-
-    // Cache the scene
-    sceneCache.current = {
-      projectId: Number(projectId),
-      scene: sceneData.scene,
-      renderer: sceneData.renderer,
-      camera: sceneData.camera,
-      imageData: sceneData.imageData
-    };
-
-    return sceneData;
-  }, [project, projectId, getVisibility, getTransformation]);
+  const { getSceneData, project, sceneCache } = useSceneCache();
 
   const takeOffscreenScreenshots = useCallback(async ({ poses, width, height }: TakeScreenshotProps<Pose>) => {
     if (!project) throw new Error('Model not found');
@@ -227,9 +29,18 @@ const useOffscreenThree = () => {
       },
     });
 
-    // build the scene with 360° images if available
-    const { offscreen, renderer, scene, camera, imageData } =
-      await setupScene(project, getVisibility, getTransformation, width, height, false, true);
+    // Get scene with 360° images if available
+    const sceneData = await getSceneData();
+    if (!sceneData) {
+      throw new Error('Failed to create scene');
+    }
+
+    const { offscreen, renderer, scene, camera, imageData } = sceneData;
+
+    // Update renderer size for this screenshot batch
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
 
     if (imageData) {
       console.log(`Loaded ${imageData.images360Data.length} 360° images for shading`);
@@ -284,7 +95,7 @@ const useOffscreenThree = () => {
     }
 
     return results;
-  }, [getTransformation, getVisibility, project]);
+  }, [getSceneData, project]);
 
 
 
@@ -293,10 +104,15 @@ const useOffscreenThree = () => {
     if (!project.id) throw new Error('Model id not found');
 
     try {
-      const { scene, renderer, camera } = await getOrCreateScene(512, 512, true);
+      const sceneData = await getSceneData();
+      if (!sceneData) {
+        throw new Error('Failed to create scene');
+      }
+
+      const { scene, renderer, camera } = sceneData;
 
       // Set up camera to ensure scene is properly initialized
-      if (!sceneCache.current.initialized) {
+      if (!sceneCache.initialized) {
         camera.position.copy(start);
         camera.lookAt(target);
         camera.updateProjectionMatrix();
@@ -304,13 +120,13 @@ const useOffscreenThree = () => {
 
         // Update matrices and compute bounding boxes only once
         scene.updateMatrixWorld(true);
-        scene.traverse((object) => {
+        scene.traverse((object: any) => {
           if (object instanceof THREE.Mesh && !object.geometry.boundingBox) {
             object.geometry.computeBoundingBox();
           }
         });
 
-        sceneCache.current.initialized = true;
+        sceneCache.initialized = true;
       }
 
       // Perform the raycast
@@ -327,14 +143,19 @@ const useOffscreenThree = () => {
       console.error('Raycast error:', error);
       throw error;
     }
-  }, [getOrCreateScene, project]);
+  }, [getSceneData, project]);
 
   // Add a batch raycast function for even better performance when needed
   const doBatchOffscreenRaycast = useCallback(async (raycastRequests: { start: THREE.Vector3, target: THREE.Vector3 }[]) => {
     if (!project || raycastRequests.length === 0) return [];
 
     try {
-      const { scene } = await getOrCreateScene(512, 512, true);
+      const sceneData = await getSceneData();
+      if (!sceneData) {
+        throw new Error('Failed to create scene');
+      }
+
+      const { scene } = sceneData;
 
       const raycaster = new THREE.Raycaster();
       return raycastRequests.map(req => {
@@ -347,7 +168,7 @@ const useOffscreenThree = () => {
       console.error('Batch raycast error:', error);
       throw error;
     }
-  }, [getOrCreateScene, project]);
+  }, [getSceneData, project]);
 
 
   // --------------- 360 ------------------
@@ -389,8 +210,8 @@ const useOffscreenThree = () => {
     });
 
     // --------- LOAD 360° IMAGES FROM CACHE ---------
-    const sceneData = await getOrCreateScene(512, 512, true, true);
-    if (!sceneData.imageData) {
+    const sceneData = await getSceneData();
+    if (!sceneData?.imageData) {
       throw new Error('No 360° images found for this project');
     }
 
@@ -481,7 +302,7 @@ const useOffscreenThree = () => {
     }
 
     return results;
-  }, [project, getOrCreateScene]);
+  }, [project, getSceneData]);
 
   return {
     takeOffscreenScreenshots,
