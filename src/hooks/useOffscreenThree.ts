@@ -9,6 +9,7 @@ import { Id, toast } from 'react-toastify';
 import { ProgressToast, ProgressType } from '../components/UI/Toasts';
 import useMultiTransformationStore from './useMultiTransformationStore';
 import Transformation from '../data/Transformation';
+import { get360s } from '../util/get360s';
 
 type TakeScreenshotProps<T extends Pose> = {
   poses: T[];
@@ -292,7 +293,7 @@ const useOffscreenThree = () => {
   const take360Screenshots = useCallback(async ({ poses: ptPoses, width, height }: TakeScreenshotProps<PostTrainingPose>): Promise<ScreenShotResult<PostTrainingPose>[]> => {
     if (!project || !project.id) throw new Error('Project not found');
 
-    if(!ptPoses || ptPoses.length === 0) {
+    if (!ptPoses || ptPoses.length === 0) {
       console.warn('No poses provided for 360° screenshots');
       return [];
     }
@@ -307,47 +308,31 @@ const useOffscreenThree = () => {
     });
 
     // --------- VALIDATION ---------
-    const images360 = await db.getImages360(project.id);
-    const metadataFile = await db.getMetadataFile(project.id);
-
-    if (!images360.length) {
-      throw new Error('No images360 found');
+    const images360 = await get360s(project, true);
+    if (images360.length === 0) {
+      throw new Error('No 360° images found in project metadata');
     }
+    const images360Map = new Map(images360.map(img => [img.name, img]));
 
-    // Parse metadata file content
-    const metadataText = await metadataFile?.content.text();
-    if (!metadataText) {
-      throw new Error('No metadata file found');
-    }
-    const metadata = JSON.parse(metadataText) as { name: string; x: number; y: number; z: number; course: number }[];
-
-    // Create a map of image names to their content for quick lookup
-    const imageMap = new Map(images360.map(img => [img.name, img.content]));
-
-    // Validate that each pose has a corresponding image and metadata entry
+    // Validate that each pose has a corresponding image with texture loaded
     for (const pose of ptPoses) {
       if (!pose.imageName) {
         throw new Error(`Pose ${pose.series} has no imageName`);
       }
 
-      // Check if image exists
-      if (!imageMap.has(pose.imageName)) {
+      const imageData = images360Map.get(pose.imageName);
+      if (!imageData) {
         throw new Error(`Image ${pose.imageName} not found in images360`);
       }
 
-      // Check if position exists in metadata
-      const position = metadata.find(p => p.name === pose.imageName);
-      if (!position) {
-        throw new Error(`Position for image ${pose.imageName} not found in metadata`);
+      if (!imageData.image) {
+        throw new Error(`Texture for image ${pose.imageName} not loaded`);
       }
     }
 
     // --------- TAKING SCREENSHOTS ---------
 
-    const textureLoader = new THREE.TextureLoader();
-    const textures = new Map<string, THREE.Texture>(); // Let's cache textures to avoid reloading them
     const results: ScreenShotResult<PostTrainingPose>[] = [];
-
     const { offscreen, scene, renderer, camera, sphere } = await createScene360(width, height);
 
     // Add stop functionality
@@ -366,45 +351,18 @@ const useOffscreenThree = () => {
         toast.update(progressToastId.current, { progress, data: { progress, type: ProgressType.POSTTRAININGSCREENSHOT } });
       }
 
-      // Load the corresponding 360° image for this pose if not already loaded
-      if (!textures.has(pose.imageName)) {
-        const imageBlob = imageMap.get(pose.imageName);
-        if (!imageBlob) {
-          throw new Error(`Image blob for ${pose.imageName} not found`);
-        }
-        // Create URL from blob and load as texture
-        const imageUrl = URL.createObjectURL(imageBlob);
-        const texture = await new Promise<THREE.Texture>((resolve, reject) => {
-          textureLoader.load(
-            imageUrl,
-            (texture) => {
-              URL.revokeObjectURL(imageUrl); // Clean up URL
-              resolve(texture);
-            },
-            undefined,
-            (error) => {
-              URL.revokeObjectURL(imageUrl); // Clean up URL even on error
-              reject(error);
-            }
-          );
-        });
-
-        textures.set(pose.imageName, texture);
+      // Get the image data (texture and position are already loaded)
+      const imageData = images360Map.get(pose.imageName);
+      if (!imageData || !imageData.image) {
+        throw new Error(`Image data or texture for ${pose.imageName} not found`);
       }
 
-      const texture = textures.get(pose.imageName);
-      if (!texture) {
-        throw new Error(`Texture for ${pose.imageName} not found`);
-      }
-      sphere.material.map = texture;
+      // Set the texture on the sphere
+      sphere.material.map = imageData.image;
       sphere.material.needsUpdate = true;
 
-      // Get the course value from metadata and rotate the sphere
-      const position = metadata.find(p => p.name === pose.imageName);
-      if (!position) {
-        throw new Error(`Position for image ${pose.imageName} not found in metadata`);
-      }
-      sphere.rotation.y = THREE.MathUtils.degToRad(position.course);
+      // Rotate the sphere based on course value
+      sphere.rotation.y = THREE.MathUtils.degToRad(imageData.course);
 
       // Set camera properties
       camera.fov = pose.fov;

@@ -1,5 +1,6 @@
 import { Project } from "../data/db"
 import db from "../data/db";
+import * as THREE from 'three';
 
 export type Image360 = {
   name: string;
@@ -7,7 +8,7 @@ export type Image360 = {
   y: number;
   z: number;
   course: number;
-  image?: string | Blob;
+  image?: THREE.Texture;
 };
 
 export async function get360s(project: Project, withImages: boolean = false): Promise<Image360[]> {
@@ -41,8 +42,24 @@ export async function get360s(project: Project, withImages: boolean = false): Pr
     for (const imageData of images360Data) {
       const storedImage = imageMap.get(imageData.name);
       if (storedImage) {
-        // Attach the blob directly - Three.js can handle this with URL.createObjectURL()
-        imageData.image = storedImage;
+        // Create a URL from the blob and load it as a Three.js texture
+        const imageUrl = URL.createObjectURL(storedImage);
+        const loader = new THREE.TextureLoader();
+        
+        // Load the texture synchronously (note: this creates a texture that loads asynchronously)
+        const texture = loader.load(imageUrl, 
+          () => {
+            // Clean up the object URL after the texture is loaded
+            URL.revokeObjectURL(imageUrl);
+          },
+          undefined,
+          (error) => {
+            console.error('Failed to load texture:', error);
+            URL.revokeObjectURL(imageUrl);
+          }
+        );
+        
+        imageData.image = texture;
       }
     }
   }

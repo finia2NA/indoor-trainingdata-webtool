@@ -13,6 +13,7 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Matrix4 } from "three";
 import db from "../data/db";
+import { get360s } from "../util/get360s";
 
 const logging = false;
 const progressLogging = false;
@@ -463,8 +464,7 @@ const useDataGeneratorUtils = () => {
     }
 
     // Load the metadata
-    const metadataText = await project.metadataFile.content.text();
-    const positions = JSON.parse(metadataText) as { name: string; x: number; y: number; z: number; course: number }[];
+    const positions = await get360s(project, false);
 
     if (positions.length === 0) {
       toast.error("No 360° image positions found in metadata");
