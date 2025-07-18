@@ -2,32 +2,23 @@ import { useEffect, useState } from 'react';
 import { Project } from '../../data/db';
 import * as THREE from 'three';
 import { Line } from '@react-three/drei';
+import { Image360, get360s } from '../../util/get360s';
 
-type Image360Position = {
-  name: string;
-  x: number;
-  y: number;
-  z: number;
-  course: number;
-};
 
 type Image360MarkersProps = {
   project: Project;
 };
 
 const Image360Markers = ({ project }: Image360MarkersProps) => {
-  const [positions, setPositions] = useState<Image360Position[]>([]);
+  const [positions, setPositions] = useState<Image360[]>([]);
 
   useEffect(() => {
     const loadMetadata = async () => {
-      if (!project.metadataFile) return;
-      
       try {
-        const text = await project.metadataFile.content.text();
-        const data = JSON.parse(text) as Image360Position[];
-        setPositions(data);
+        const images = await get360s(project);
+        setPositions(images);
       } catch (error) {
-        console.error('Failed to load metadata:', error);
+        console.error('Error loading 360 images:', error);
       }
     };
 
@@ -39,11 +30,11 @@ const Image360Markers = ({ project }: Image360MarkersProps) => {
       {positions.map((pos, index) => (
         <group key={index} position={[pos.x, pos.y, pos.z]}>
           {/* Sphere marker */}
-            <mesh>
+          <mesh>
             <sphereGeometry args={[0.03, 16, 16]} />
             <meshBasicMaterial color="#ffff00" />
-            </mesh>
-          
+          </mesh>
+
           {/* Direction indicator line */}
           <group rotation={[0, THREE.MathUtils.degToRad(pos.course), 0]}>
             <Line
