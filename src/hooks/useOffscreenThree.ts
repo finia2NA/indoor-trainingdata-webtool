@@ -9,6 +9,7 @@ import { Id, toast } from 'react-toastify';
 import { ProgressToast, ProgressType } from '../components/UI/Toasts';
 import useMultiTransformationStore from './useMultiTransformationStore';
 import Transformation from '../data/Transformation';
+import { get360s, Image360 } from '../util/get360s';
 
 type TakeScreenshotProps<T extends Pose> = {
   poses: T[];
@@ -22,7 +23,8 @@ const setupScene = async (
   getTransformation: (projectId: number, modelId: number) => Transformation | null,
   width: number,
   height: number,
-  doubleSided: boolean = false) => {
+  doubleSided: boolean = false,
+  load360Images: boolean = false) => {
 
   if (!project) throw new Error('Model not found');
   if (!project.id) throw new Error('Model id not found');
@@ -35,6 +37,55 @@ const setupScene = async (
   const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
   const ambientLight = new THREE.AmbientLight(0xffffff, 1);
   scene.add(ambientLight);
+
+  // Load 360° images if requested
+  let imageData: { 
+    images360Data: Image360[], 
+    textureMap: Map<string, THREE.Texture>, 
+    metadataMap: Map<string, { x: number; y: number; z: number; course: number }> 
+  } | null = null;
+  
+  if (load360Images) {
+    try {
+      const images360Data = await get360s(project, true);
+      if (images360Data.length > 0) {
+        const textureMap = new Map<string, THREE.Texture>();
+        const textureLoader = new THREE.TextureLoader();
+        
+        for (const imageData360 of images360Data) {
+          if (imageData360.image instanceof Blob) {
+            const imageUrl = URL.createObjectURL(imageData360.image);
+            const texture = await new Promise<THREE.Texture>((resolve, reject) => {
+              textureLoader.load(
+                imageUrl,
+                (texture) => {
+                  URL.revokeObjectURL(imageUrl);
+                  resolve(texture);
+                },
+                undefined,
+                (error) => {
+                  URL.revokeObjectURL(imageUrl);
+                  reject(error);
+                }
+              );
+            });
+            textureMap.set(imageData360.name, texture);
+          }
+        }
+
+        const metadataMap = new Map(
+          images360Data.map(img => [
+            img.name, 
+            { x: img.x, y: img.y, z: img.z, course: img.course }
+          ])
+        );
+
+        imageData = { images360Data, textureMap, metadataMap };
+      }
+    } catch (error) {
+      console.warn('Could not load 360° images:', error);
+    }
+  }
 
   // now, add all applicable models to the scene
   const models = project.models;
@@ -53,13 +104,24 @@ const setupScene = async (
         }
       });
     }
+    
+    // TODO: Apply 360° shading here if imageData is available
+    // if (imageData) {
+    //   loadedObject.traverse((child) => {
+    //     if (child instanceof THREE.Mesh) {
+    //       // Apply your custom shader material here
+    //       // child.material = create360ShadedMaterial(child.material, imageData);
+    //     }
+    //   });
+    // }
+    
     loadedObject.position.set(transformation.translation[0], transformation.translation[1], transformation.translation[2]);
     loadedObject.setRotationFromEuler(new THREE.Euler(transformation.rotation[0], transformation.rotation[1], transformation.rotation[2]));
     loadedObject.scale.set(transformation.scale[0], transformation.scale[1], transformation.scale[2]);
     scene.add(loadedObject);
   }
 
-  return { offscreen, renderer, scene, camera };
+  return { offscreen, renderer, scene, camera, imageData };
 }
 
 
@@ -74,12 +136,18 @@ const useOffscreenThree = () => {
     scene: THREE.Scene | null;
     renderer: THREE.WebGLRenderer | null;
     camera: THREE.PerspectiveCamera | null;
+    imageData: { 
+      images360Data: Image360[], 
+      textureMap: Map<string, THREE.Texture>, 
+      metadataMap: Map<string, { x: number; y: number; z: number; course: number }> 
+    } | null;
     initialized?: boolean;
   }>({
     projectId: null,
     scene: null,
     renderer: null,
     camera: null,
+    imageData: null,
     initialized: false
   });
 
@@ -93,17 +161,23 @@ const useOffscreenThree = () => {
 
   // Clear cache when project changes or when transformation/visibility functions change
   useEffect(() => {
+    // Dispose of textures from scene cache to prevent memory leaks
+    if (sceneCache.current.imageData?.textureMap) {
+      sceneCache.current.imageData.textureMap.forEach(texture => texture.dispose());
+    }
+    
     sceneCache.current = {
       projectId: null,
       scene: null,
       renderer: null,
       camera: null,
+      imageData: null,
       initialized: false
     };
   }, [projectId, getTransformation, getVisibility]);
 
   // Get or create scene (for performance)
-  const getOrCreateScene = useCallback(async (width: number, height: number, doubleSided: boolean = false) => {
+  const getOrCreateScene = useCallback(async (width: number, height: number, doubleSided: boolean = false, load360Images: boolean = false) => {
     if (sceneCache.current.scene &&
       sceneCache.current.projectId === Number(projectId) &&
       project?.id === sceneCache.current.projectId) {
@@ -111,6 +185,7 @@ const useOffscreenThree = () => {
         scene: sceneCache.current.scene,
         renderer: sceneCache.current.renderer!,
         camera: sceneCache.current.camera!,
+        imageData: sceneCache.current.imageData,
         offscreen: null // Not needed for raycasting
       };
     }
@@ -122,7 +197,8 @@ const useOffscreenThree = () => {
       getTransformation,
       width,
       height,
-      doubleSided
+      doubleSided,
+      load360Images
     );
 
     // Cache the scene
@@ -130,7 +206,8 @@ const useOffscreenThree = () => {
       projectId: Number(projectId),
       scene: sceneData.scene,
       renderer: sceneData.renderer,
-      camera: sceneData.camera
+      camera: sceneData.camera,
+      imageData: sceneData.imageData
     };
 
     return sceneData;
@@ -150,9 +227,14 @@ const useOffscreenThree = () => {
       },
     });
 
-    // build the scene
-    const { offscreen, renderer, scene, camera } =
-      await setupScene(project, getVisibility, getTransformation, width, height);
+    // build the scene with 360° images if available
+    const { offscreen, renderer, scene, camera, imageData } =
+      await setupScene(project, getVisibility, getTransformation, width, height, false, true);
+
+    if (imageData) {
+      console.log(`Loaded ${imageData.images360Data.length} 360° images for shading`);
+      // TODO: Your shader will use imageData.textureMap and imageData.metadataMap here
+    }
 
     // take the pictures.
     // we need to keep track of the progress, and also allow the user to stop the process
@@ -306,23 +388,13 @@ const useOffscreenThree = () => {
       },
     });
 
-    // --------- VALIDATION ---------
-    const images360 = await db.getImages360(project.id);
-    const metadataFile = await db.getMetadataFile(project.id);
-
-    if (!images360.length) {
-      throw new Error('No images360 found');
+    // --------- LOAD 360° IMAGES FROM CACHE ---------
+    const sceneData = await getOrCreateScene(512, 512, true, true);
+    if (!sceneData.imageData) {
+      throw new Error('No 360° images found for this project');
     }
 
-    // Parse metadata file content
-    const metadataText = await metadataFile?.content.text();
-    if (!metadataText) {
-      throw new Error('No metadata file found');
-    }
-    const metadata = JSON.parse(metadataText) as { name: string; x: number; y: number; z: number; course: number }[];
-
-    // Create a map of image names to their content for quick lookup
-    const imageMap = new Map(images360.map(img => [img.name, img.content]));
+    const { textureMap, metadataMap } = sceneData.imageData;
 
     // Validate that each pose has a corresponding image and metadata entry
     for (const pose of ptPoses) {
@@ -331,23 +403,18 @@ const useOffscreenThree = () => {
       }
 
       // Check if image exists
-      if (!imageMap.has(pose.imageName)) {
-        throw new Error(`Image ${pose.imageName} not found in images360`);
+      if (!textureMap.has(pose.imageName)) {
+        throw new Error(`Image ${pose.imageName} not found in loaded textures`);
       }
 
       // Check if position exists in metadata
-      const position = metadata.find(p => p.name === pose.imageName);
-      if (!position) {
+      if (!metadataMap.has(pose.imageName)) {
         throw new Error(`Position for image ${pose.imageName} not found in metadata`);
       }
     }
 
     // --------- TAKING SCREENSHOTS ---------
-
-    const textureLoader = new THREE.TextureLoader();
-    const textures = new Map<string, THREE.Texture>(); // Let's cache textures to avoid reloading them
     const results: ScreenShotResult<PostTrainingPose>[] = [];
-
     const { offscreen, scene, renderer, camera, sphere } = await createScene360(width, height);
 
     // Add stop functionality
@@ -366,33 +433,8 @@ const useOffscreenThree = () => {
         toast.update(progressToastId.current, { progress, data: { progress, type: ProgressType.POSTTRAININGSCREENSHOT } });
       }
 
-      // Load the corresponding 360° image for this pose if not already loaded
-      if (!textures.has(pose.imageName)) {
-        const imageBlob = imageMap.get(pose.imageName);
-        if (!imageBlob) {
-          throw new Error(`Image blob for ${pose.imageName} not found`);
-        }
-        // Create URL from blob and load as texture
-        const imageUrl = URL.createObjectURL(imageBlob);
-        const texture = await new Promise<THREE.Texture>((resolve, reject) => {
-          textureLoader.load(
-            imageUrl,
-            (texture) => {
-              URL.revokeObjectURL(imageUrl); // Clean up URL
-              resolve(texture);
-            },
-            undefined,
-            (error) => {
-              URL.revokeObjectURL(imageUrl); // Clean up URL even on error
-              reject(error);
-            }
-          );
-        });
-
-        textures.set(pose.imageName, texture);
-      }
-
-      const texture = textures.get(pose.imageName);
+      // Get the cached texture for this pose
+      const texture = textureMap.get(pose.imageName);
       if (!texture) {
         throw new Error(`Texture for ${pose.imageName} not found`);
       }
@@ -400,7 +442,7 @@ const useOffscreenThree = () => {
       sphere.material.needsUpdate = true;
 
       // Get the course value from metadata and rotate the sphere
-      const position = metadata.find(p => p.name === pose.imageName);
+      const position = metadataMap.get(pose.imageName);
       if (!position) {
         throw new Error(`Position for image ${pose.imageName} not found in metadata`);
       }
@@ -439,7 +481,7 @@ const useOffscreenThree = () => {
     }
 
     return results;
-  }, [project]);
+  }, [project, getOrCreateScene]);
 
   return {
     takeOffscreenScreenshots,
