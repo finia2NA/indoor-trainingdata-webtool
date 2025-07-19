@@ -16,6 +16,10 @@ const Image360Markers = ({ project }: Image360MarkersProps) => {
     const loadMetadata = async () => {
       try {
         const images = await get360s(project);
+        if (!images) {
+          console.log('No 360 images found in project metadata');
+          return;
+        }
         setPositions(images);
       } catch (error) {
         console.error('Error loading 360 images:', error);

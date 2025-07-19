@@ -233,7 +233,7 @@ const useOffscreenThree = () => {
 
     // --------- VALIDATION ---------
     const images360 = await get360s(project, true);
-    if (images360.length === 0) {
+    if (!images360 || images360.length === 0) {
       throw new Error('No 360° images found in project metadata');
     }
     const images360Map = new Map(images360.map(img => [img.name, img]));
@@ -318,6 +318,18 @@ const useOffscreenThree = () => {
     if (progressToastId.current !== null) {
       toast.dismiss(progressToastId.current);
       progressToastId.current = null;
+    }
+
+
+    // Clean up
+    renderer.dispose();
+    sphere.geometry.dispose();
+    sphere.material.dispose();
+
+    for (const imageData of images360) {
+      if (imageData.image) {
+        imageData.image.dispose();
+      }
     }
 
     return results;

@@ -4,6 +4,7 @@ import { loadModel } from '../../util/loadModel';
 import Transformation from '../../data/Transformation';
 import { useCallback, useEffect, useRef } from 'react';
 import useMultiTransformationStore from '../state/useMultiTransformationStore';
+import { get360s, Image360 } from '../../util/get360s';
 
 const setupScene = async (
   project: Project,
@@ -24,6 +25,7 @@ const setupScene = async (
   const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
   const ambientLight = new THREE.AmbientLight(0xffffff, 1);
   scene.add(ambientLight);
+
 
   // now, add all applicable models to the scene
   const models = project.models;
@@ -48,13 +50,29 @@ const setupScene = async (
     scene.add(loadedObject);
   }
 
-  return { offscreen, renderer, scene, camera };
+
+  // New code: if images are available, load them and then use them in a shader
+  let images360: Image360[] | null = [];
+  try {
+    images360 = await get360s(project, true);
+    if (!images360 || images360.length === 0) {
+      console.log('No 360° images found in project metadata');
+      images360 = null;
+    }
+  } catch (error) {
+    console.error('Failed to load 360 images:', error);
+  }
+
+  if (!images360)
+    return { offscreen, renderer, scene, camera, images360 };
+
+  // At this point, we have images360 loaded
+  return { offscreen, renderer, scene, camera, images360 };
+
 }
 
 
 const useScene = (project?: Project) => {
-
-
   // Get the data we need
   const projectId = project?.id ?? null;
 
@@ -69,6 +87,7 @@ const useScene = (project?: Project) => {
     scene: THREE.Scene | null;
     renderer: THREE.WebGLRenderer | null;
     camera: THREE.PerspectiveCamera | null;
+    images360?: Image360[];
     initialized?: boolean;
   }>({
     projectId: null,
@@ -76,6 +95,7 @@ const useScene = (project?: Project) => {
     scene: null,
     renderer: null,
     camera: null,
+    images360: [],
     initialized: false
   });
 
@@ -87,6 +107,7 @@ const useScene = (project?: Project) => {
       scene: null,
       renderer: null,
       camera: null,
+      images360: [],
       initialized: false
     };
   }, [projectId, getTransformation, getVisibility]);
@@ -101,7 +122,8 @@ const useScene = (project?: Project) => {
         scene: sceneCache.current.scene,
         renderer: sceneCache.current.renderer!,
         camera: sceneCache.current.camera!,
-        offscreen: sceneCache.current.offscreen!
+        offscreen: sceneCache.current.offscreen!,
+        images360: sceneCache.current.images360 || []
       };
     }
 
