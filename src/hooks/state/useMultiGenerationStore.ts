@@ -21,6 +21,8 @@ const defaults = {
   imageDimensions: [256, 256],
   usePosttrainingImages: false,
   numPosttrainingImages: 5,
+  use360Shading: false
+
 }
 
 export type MultiGenrationState = {
@@ -76,6 +78,10 @@ export type MultiGenrationState = {
   multiNumPosttrainingImages: Record<number, number>;
   getNumPosttrainingImages: (id: number) => number;
   setNumPosttrainingImages: (id: number, numImages: number) => void;
+
+  multiUse360Shading: Record<number, boolean>;
+  getUse360Shading: (id: number) => boolean;
+  setUse360Shading: (id: number, use360Shading: boolean) => void;
 
   reset(id: number): void;
 }
@@ -210,6 +216,16 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
           [id]: numImages,
         },
       })),
+
+      multiUse360Shading: {},
+      getUse360Shading: (id) => get().multiUse360Shading[id] ?? defaults.use360Shading,
+      setUse360Shading: (id, use360Shading) => set((state) => ({
+        multiUse360Shading: {
+          ...state.multiUse360Shading,
+          [id]: use360Shading,
+        },
+      })),
+
 
       reset: (id) => {
         get().setHeightOffset(id, defaults.heightOffset);

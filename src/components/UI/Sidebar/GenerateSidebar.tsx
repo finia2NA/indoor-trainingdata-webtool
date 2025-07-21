@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import useDataGeneratorUtils from "../../../hooks/offscreen/useDataGeneratorUtils";
 import usePrecomputedPoses from "../../../hooks/state/usePrecomputedPoses";
 import { Project } from "../../../data/db";
+import Sidebar from "./Sidebar";
 
 
 const GenerateSidebar = ({ project }: { project: Project }) => {
@@ -19,8 +20,8 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
   const { poses, posttrainingPoses } = usePrecomputedPoses();
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
-  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize, usePosttraining, numPosttrainingImages;
-  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, setUsePosttraining, setNumPosttrainingImages, reset;
+  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize, usePosttraining, numPosttrainingImages, use360Shading;
+  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, setUsePosttraining, setNumPosttrainingImages, setUse360Shading, reset;
   {
     // getting values from store
     const {
@@ -54,6 +55,8 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
       setUsePosttrainingImages: storeSetUsePosttrainingImages,
       getNumPosttrainingImages,
       setNumPosttrainingImages: storeSetNumPosttrainingImages,
+      getUse360Shading,
+      setUse360Shading: storeSetUse360Shading,
       reset: storeReset
     } = useMultiGenerationStore();
     offset = getHeightOffset(id);
@@ -71,6 +74,7 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
     imageSize = getImageDimensions(id);
     usePosttraining = getUsePosttrainingImages(id);
     numPosttrainingImages = getNumPosttrainingImages(id);
+    use360Shading = getUse360Shading(id);
 
     setHeightOffset = (offset: number) => storeSetHeightOffset(id, offset);
     setAnglesRange = (angles: GenPair) => storeSetAnglesRange(id, angles);
@@ -87,6 +91,7 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
     setImageSize = (size: [number, number]) => storeSetImageDimensions(id, size);
     setUsePosttraining = (usePosttraining: boolean) => storeSetUsePosttrainingImages(id, usePosttraining);
     setNumPosttrainingImages = (numImages: number) => storeSetNumPosttrainingImages(id, numImages);
+    setUse360Shading = (use360Shading: boolean) => storeSetUse360Shading(id, use360Shading);
     reset = () => storeReset(id);
   }
 
@@ -355,6 +360,22 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
         </SidebarSection>
 
       }
+
+      <SidebarSection title="Shading" level={2} className="mt-4">
+        <div className="flex items-center mb-2">
+          <label htmlFor="use360Shading" className="mr-2 w-400">Use 360° Shading</label>
+          <input
+            id="use360Shading"
+            type="checkbox"
+            checked={use360Shading}
+            onChange={(e) => setUse360Shading(e.target.checked)}
+          />
+        </div>
+        <p className="text-gray-400">If enabled, the generated images will be shaded using the 360° images from the project.</p>
+
+
+
+      </SidebarSection>
 
 
       <SidebarSection title="Generate" level={3}>

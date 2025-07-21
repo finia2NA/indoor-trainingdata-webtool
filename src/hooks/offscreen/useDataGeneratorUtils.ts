@@ -92,6 +92,7 @@ const useDataGeneratorUtils = () => {
     getNumSeries,
     getImageDimensions,
     getNumPosttrainingImages,
+    getUse360Shading
   } = useMultiGenerationStore();
   const heightOffset = getHeightOffset(id);
   const anglesRange = getAnglesRange(id);
@@ -107,6 +108,7 @@ const useDataGeneratorUtils = () => {
   const numSeries = getNumSeries(id);
   const numPosttrainingImages = getNumPosttrainingImages(id);
   const imageSize = getImageDimensions(id);
+  const use360Shading = getUse360Shading(id);
 
 
   // we need the areas of the polygons often, so let's precompute
@@ -338,7 +340,7 @@ const useDataGeneratorUtils = () => {
     // We're using closures to gc memory after the screenshots are taken. I'm worried about memory usage, so that's why
     {
       console.log("Taking mesh screenshots");
-      const meshScreenshots = await takeOffscreenScreenshots({ poses: poses, width: imageSize[0], height: imageSize[1] });
+      const meshScreenshots = await takeOffscreenScreenshots({ poses: poses, width: imageSize[0], height: imageSize[1], use360Shading });
       meshScreenshots.forEach((screenshot) => {
         const { blob, pose, width, height } = screenshot;
         const label = {

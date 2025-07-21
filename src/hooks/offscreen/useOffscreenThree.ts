@@ -4,11 +4,9 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useParams } from 'react-router-dom';
 import db, { Project } from "../../data/db";
 import { Pose, ScreenShotResult, PostTrainingPose } from './useDataGeneratorUtils';
-import { loadModel } from '../../util/loadModel';
 import { Id, toast } from 'react-toastify';
 import { ProgressToast, ProgressType } from '../../components/UI/Toasts';
 import useMultiTransformationStore from '../state/useMultiTransformationStore';
-import Transformation from '../../data/Transformation';
 import { get360s } from '../../util/get360s';
 import useScene from './useScene';
 
@@ -16,6 +14,7 @@ type TakeScreenshotProps<T extends Pose> = {
   poses: T[];
   width: number;
   height: number;
+  use360Shading?: boolean;
 }
 
 
@@ -61,7 +60,7 @@ const useOffscreenThree = () => {
 
   const { getOrCreateScene } = useScene(project ?? undefined);
 
-  const takeOffscreenScreenshots = useCallback(async ({ poses, width, height }: TakeScreenshotProps<Pose>) => {
+  const takeOffscreenScreenshots = useCallback(async ({ poses, width, height, use360Shading }: TakeScreenshotProps<Pose>) => {
     if (!project) throw new Error('Model not found');
     if (!project.id) throw new Error('Model id not found');
     if (!poses || poses.length === 0) throw new Error('Poses not given');
@@ -77,7 +76,7 @@ const useOffscreenThree = () => {
 
     // build the scene
     const { offscreen, renderer, scene, camera } =
-      await getOrCreateScene(width, height, true);
+      await getOrCreateScene({ width, height, doubleSided: true, use360Shading: true });
 
     // take the pictures.
     // we need to keep track of the progress, and also allow the user to stop the process
@@ -177,7 +176,7 @@ const useOffscreenThree = () => {
     if (!project || raycastRequests.length === 0) return [];
 
     try {
-      const { scene } = await getOrCreateScene(512, 512, true);
+      const { scene } = await getOrCreateScene({ width: 512, height: 512, doubleSided: true });
 
       const raycaster = new THREE.Raycaster();
       return raycastRequests.map(req => {
