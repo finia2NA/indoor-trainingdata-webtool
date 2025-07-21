@@ -94,6 +94,11 @@ const useOffscreenThree = () => {
 
     const pl = new THREE.PointLight(0xffffff, 1, 1000);
     pl.castShadow = true;
+    pl.decay = 0;
+    pl.shadow.mapSize.width = 1024;
+    pl.shadow.mapSize.height = 1024;
+    pl.shadow.camera.near = 0.1;
+    pl.shadow.camera.far = 1000;
     scene.add(pl);
 
     // determine the up to 5 closest images360 to the pose
@@ -130,7 +135,8 @@ const useOffscreenThree = () => {
 
     }
 
-    // After we are done, reactivate the ambient light
+    // After we are done, clean up and reactivate the ambient light
+    scene.remove(pl);
     if (ambientLight) {
       ambientLight.visible = true;
     }
