@@ -19,7 +19,7 @@ function makeDoubleSided(object: THREE.Object3D) {
   });
 }
 
-export function loadModel(fileName: string, content: Blob): Promise<THREE.Object3D> {
+export function loadModel(fileName: string, content: Blob, doubleSided: boolean = true): Promise<THREE.Object3D> {
   return new Promise((resolve, reject) => {
     const fileType = fileName.split('.').pop()?.toLowerCase();
     if (!fileType) {
@@ -33,7 +33,9 @@ export function loadModel(fileName: string, content: Blob): Promise<THREE.Object
         const loader = new GLTFLoader();
         loader.load(url, (gltf) => {
           const model = gltf.scene || gltf;
-          makeDoubleSided(model);
+          if (doubleSided) {
+            makeDoubleSided(model);
+          }
           resolve(model);
         }, undefined, reject);
         break;
@@ -41,7 +43,9 @@ export function loadModel(fileName: string, content: Blob): Promise<THREE.Object
       case 'fbx': {
         const loader = new FBXLoader();
         loader.load(url, (object) => {
-          makeDoubleSided(object);
+          if (doubleSided) {
+            makeDoubleSided(object);
+          }
           resolve(object);
         }, undefined, reject);
         break;
@@ -49,7 +53,9 @@ export function loadModel(fileName: string, content: Blob): Promise<THREE.Object
       case 'obj': {
         const loader = new OBJLoader();
         loader.load(url, (object) => {
-          makeDoubleSided(object);
+          if (doubleSided) {
+            makeDoubleSided(object);
+          }
           resolve(object);
         }, undefined, reject);
         break;
