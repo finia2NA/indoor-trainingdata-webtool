@@ -20,7 +20,7 @@ const defaults = {
   numSeries: 1000,
   imageDimensions: [256, 256],
   usePosttrainingImages: false,
-  numPosttrainingImages: 5,
+  numPosttrainingImages: 0,
   use360Shading: false
 
 }
@@ -246,6 +246,8 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
 
         get().setUsePosttrainingImages(id, defaults.usePosttrainingImages);
         get().setNumPosttrainingImages(id, defaults.numPosttrainingImages);
+
+        get().setUse360Shading(id, defaults.use360Shading);
       }
     }),
     {

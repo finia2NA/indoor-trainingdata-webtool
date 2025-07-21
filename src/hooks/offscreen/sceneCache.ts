@@ -182,7 +182,7 @@ class SceneCache {
     this.cache.set(keyString, sceneData);
 
     // Optionally limit cache size to prevent memory leaks
-    if (this.cache.size > 10) {
+    if (this.cache.size > 2) {
       const firstKey = this.cache.keys().next().value;
       if (firstKey) {
         const oldScene = this.cache.get(firstKey);
