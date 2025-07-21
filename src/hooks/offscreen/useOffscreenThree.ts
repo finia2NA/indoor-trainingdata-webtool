@@ -265,8 +265,9 @@ const useOffscreenThree = () => {
       stop = true;
     }
 
-    for (const pose of ptPoses) {
+    for (const [index, pose] of ptPoses.entries()) {
       if (stop) break;
+
       const progress = (results.length + 1) / ptPoses.length;
 
       if (progressToastId.current === null) {
@@ -296,6 +297,13 @@ const useOffscreenThree = () => {
       const translatedTarget = pose.target.clone().sub(pose.position);
       camera.lookAt(translatedTarget);
 
+      // For the first pose (index 0), do a warm-up render that we discard
+      if (index === 0) {
+        renderer.render(scene, camera);
+        await offscreen.convertToBlob({ type: 'image/png' }); // Discard this blob
+      }
+
+      // Now do the actual render that we keep
       renderer.render(scene, camera);
       const blob = await offscreen.convertToBlob({ type: 'image/png' });
       results.push({
