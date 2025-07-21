@@ -229,6 +229,9 @@ const useOffscreenThree = () => {
       // Apply the uniforms to the objects in the scene
       setUniforms(scene, closest.image);
 
+      // wait for a bit to ensure the uniforms are applied (Three does not tell us when textures are ready so that's annoying)
+      await new Promise(resolve => setTimeout(resolve, 10));
+
       // Create a render pass with the point light and the sphere map
       const target = new THREE.WebGLRenderTarget(width, height);
       renderer.setRenderTarget(target);
