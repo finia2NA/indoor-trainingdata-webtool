@@ -25,6 +25,7 @@ const setupScene = async (
   scene.background = new THREE.Color(0x484848);
   const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
   const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+  ambientLight.name = 'ambientLight';
   scene.add(ambientLight);
 
   // now, add all applicable models to the scene
@@ -50,6 +51,7 @@ const setupScene = async (
     loadedObject.setRotationFromEuler(new THREE.Euler(transformation.rotation[0], transformation.rotation[1], transformation.rotation[2]));
     loadedObject.scale.set(transformation.scale[0], transformation.scale[1], transformation.scale[2]);
     scene.add(loadedObject);
+    loadedObject.name = "sceneOBJ" + model.name;
     loadedObjects.push(loadedObject);
   }
 
@@ -70,7 +72,6 @@ const setupScene = async (
     // Apply composite shader if images are available
     loadedObjects.forEach(obj => {
       setShader(obj, 'composite', doubleSided);
-      setUniforms(obj, images360);
     });
 
     return { offscreen, renderer, scene, camera, images360 };
@@ -166,7 +167,7 @@ class SceneCache {
     }
 
     console.log('Creating new scene (not from cache)');
-    
+
     // Create new scene
     const sceneData = await setupScene(
       project,

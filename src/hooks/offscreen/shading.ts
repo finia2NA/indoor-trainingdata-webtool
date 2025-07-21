@@ -82,23 +82,70 @@ uniform sampler2D sphereMap;`
     }
   });
 };
-export const setUniforms = (object: THREE.Object3D, images360: Image360[]) => {
+export const setUniforms = (object: THREE.Object3D, image360: Image360) => {
   object.traverse((child) => {
-    if (child instanceof THREE.Mesh && child.material && (child.material as any).uniforms) {
+    if (child instanceof THREE.Mesh &&
+      child.name.startsWith('sceneOBJ') &&
+      child.material &&
+      (child.material as any).uniforms) {
       const material = child.material as any;
 
       // Set sphereMap uniform if we have images
-      if (images360.length > 0 && images360[0].image) {
-        material.uniforms.sphereMap.value = images360[0].image;
+      material.uniforms.sphereMap.value = image360.image;
 
-        // Set light position and course from the first 360 image coordinates
-        material.uniforms.lightPos.value = new THREE.Vector4(
-          images360[0].x,
-          images360[0].y,
-          images360[0].z,
-          images360[0].course // Use course as course
-        );
-      }
+      // Set light position and course from the first 360 image coordinates
+      material.uniforms.lightPos.value = new THREE.Vector4(
+        image360.x,
+        image360.y,
+        image360.z,
+        image360.course
+      );
     }
   });
 };
+
+export const createPostMaterial = (targets: THREE.WebGLRenderTarget[]) => {
+
+  // Build the fragment shader with dynamic texture sampling
+  const fragmentShader = `
+    varying vec2 vUv;
+    ${targets.map((_, i) => `uniform sampler2D uTexture${i};`).join('\n    ')}
+    
+    void main() {
+      vec3 sum = vec3(0.0);
+      float totalAlpha = 0.0;
+      
+      ${targets.map((_, i) => `
+      vec4 sample${i} = texture2D(uTexture${i}, vUv);
+      sum += sample${i}.rgb;
+      totalAlpha += sample${i}.a;`).join('')}
+      
+      vec3 finalColor = totalAlpha > 0.0 ? sum / totalAlpha : vec3(0.0);
+      float finalAlpha = totalAlpha > 0.0 ? 1.0 : 0.0;
+      
+      gl_FragColor = vec4(finalColor, finalAlpha);
+    }
+  `;
+
+  const vertexShader = `
+    varying vec2 vUv;
+    
+    void main() {
+      vUv = uv;
+      gl_Position = vec4(position, 1.0);
+    }
+  `;
+
+  // Create uniforms for each texture
+  const uniforms: Record<string, any> = {};
+  targets.forEach((rt, i) => {
+    uniforms[`uTexture${i}`] = { value: rt.texture };
+  });
+
+  return new THREE.ShaderMaterial({
+    uniforms,
+    vertexShader,
+    fragmentShader,
+    transparent: true
+  });
+}

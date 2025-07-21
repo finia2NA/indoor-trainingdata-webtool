@@ -7,8 +7,10 @@ import { Pose, ScreenShotResult, PostTrainingPose } from './useDataGeneratorUtil
 import { Id, toast } from 'react-toastify';
 import { ProgressToast, ProgressType } from '../../components/UI/Toasts';
 import useMultiTransformationStore from '../state/useMultiTransformationStore';
-import { get360s } from '../../util/get360s';
+import { get360s, Image360 } from '../../util/get360s';
 import useScene from './useScene';
+import Renderer from 'three/examples/jsm/renderers/common/Renderer.js';
+import { createPostMaterial, setUniforms } from './shading';
 
 type TakeScreenshotProps<T extends Pose> = {
   poses: T[];
@@ -60,6 +62,113 @@ const useOffscreenThree = () => {
 
   const { getOrCreateScene } = useScene(project ?? undefined);
 
+  async function takeNormalScreenshot(pose: Pose, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, results: ScreenShotResult<Pose>[], scene: THREE.Scene, offscreen: OffscreenCanvas, width: number, height: number) {
+    camera.position.set(...pose.position.toArray());
+    camera.fov = pose.fov;
+    camera.updateProjectionMatrix();
+    camera.lookAt(...pose.target.toArray());
+    renderer.render(scene, camera);
+    const blob = await offscreen.convertToBlob({ type: 'image/png' });
+    results.push({
+      blob,
+      pose,
+      width,
+      height,
+    });
+  }
+
+  async function takeShadedScreenshot(pose: Pose, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, results: ScreenShotResult<Pose>[], scene: THREE.Scene, offscreen: OffscreenCanvas, width: number, height: number, images360: Image360[]) {
+    camera.position.set(...pose.position.toArray());
+    camera.fov = pose.fov;
+    camera.updateProjectionMatrix();
+    camera.lookAt(...pose.target.toArray());
+
+    // remove the ambient light from the scene
+    const ambientLight = scene.getObjectByName('ambientLight');
+    if (ambientLight) {
+      scene.remove(ambientLight);
+    }
+
+    // Turn on casting and receiving shadows on the meshes
+    scene.traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        object.castShadow = true;
+        object.receiveShadow = true;
+      }
+    });
+
+    // Find the 5 closest images360 to the pose
+    const closestImages = images360
+      .map(image => ({
+        image,
+        distance: pose.position.distanceTo(new THREE.Vector3(image.x, image.y, image.z))
+      }))
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 5);
+
+    // Init a point light
+    const pointLight = new THREE.PointLight(0xffffff, 1.5);
+    pointLight.castShadow = true;
+    pointLight.shadow.mapSize.width = 1024;
+    pointLight.shadow.mapSize.height = 1024;
+    pointLight.shadow.camera.near = 0.5;
+    pointLight.shadow.camera.far = 50;
+    // pointLight.shadow.bias = -0.01;
+
+    // Init render pass array
+    const renderTargets: THREE.WebGLRenderTarget[] = [];
+
+    // Go through the closest images
+    for (const closest of closestImages) {
+      if (!closest.image.image) {
+        throw new Error(`Image ${closest.image.name} had not texture loaded`);
+      }
+
+      // Set the point light position to the image position
+      pointLight.position.set(closest.image.x, closest.image.y, closest.image.z);
+      // Appply the uniforms to the objects in the scene
+      setUniforms(scene, closest.image);
+
+      // Create a render pass with the point light and the sphere map
+      const target = new THREE.WebGLRenderTarget(width, height);
+      renderer.setRenderTarget(target);
+      renderer.clear();
+      renderer.render(scene, camera);
+
+      renderTargets.push(target);
+    }
+
+    // restore the scene
+    if (ambientLight) {
+      scene.add(ambientLight);
+    }
+    scene.remove(pointLight);
+
+
+    // Combination shader
+    // First, create the postScene
+    const postScene = new THREE.Scene();
+    const postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const quadGeom = new THREE.PlaneGeometry(2, 2);
+    // create composite shader material
+    const postMaterial = createPostMaterial(renderTargets);
+    const quad = new THREE.Mesh(quadGeom, postMaterial);
+    postScene.add(quad);
+
+    // Render it
+    renderer.setRenderTarget(null); // Render to default framebuffer
+    renderer.clear();
+    renderer.render(postScene, postCamera);
+
+    const blob = await offscreen.convertToBlob({ type: 'image/png' });
+    results.push({
+      blob,
+      pose,
+      width,
+      height,
+    });
+  }
+
   const takeOffscreenScreenshots = useCallback(async ({ poses, width, height, use360Shading }: TakeScreenshotProps<Pose>) => {
     if (!project) throw new Error('Model not found');
     if (!project.id) throw new Error('Model id not found');
@@ -75,8 +184,8 @@ const useOffscreenThree = () => {
     });
 
     // build the scene
-    const { offscreen, renderer, scene, camera } =
-      await getOrCreateScene({ width, height, doubleSided: true, use360Shading: true });
+    const { offscreen, renderer, scene, camera, images360 } =
+      await getOrCreateScene({ width, height, doubleSided: true, use360Shading });
 
     // take the pictures.
     // we need to keep track of the progress, and also allow the user to stop the process
@@ -96,19 +205,11 @@ const useOffscreenThree = () => {
       } else {
         toast.update(progressToastId.current, { progress, data: { progress, type: ProgressType.SCREENSHOT } });
       }
-      const pose = poses[i];
-      camera.position.set(...pose.position.toArray());
-      camera.fov = pose.fov;
-      camera.updateProjectionMatrix();
-      camera.lookAt(...pose.target.toArray());
-      renderer.render(scene, camera);
-      const blob = await offscreen.convertToBlob({ type: 'image/png' });
-      results.push({
-        blob,
-        pose,
-        width,
-        height,
-      });
+      if (use360Shading && images360 && images360.length > 0) {
+        await takeShadedScreenshot(poses[i], camera, renderer, results, scene, offscreen, width, height, images360);
+      } else {
+        await takeNormalScreenshot(poses[i], camera, renderer, results, scene, offscreen, width, height);
+      }
     }
 
     if (!stop) {
