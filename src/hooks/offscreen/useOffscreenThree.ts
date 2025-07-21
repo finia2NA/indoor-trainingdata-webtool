@@ -135,7 +135,7 @@ const useOffscreenThree = () => {
     if (!project.id) throw new Error('Model id not found');
 
     try {
-      const { scene, renderer, camera } = await getOrCreateScene(512, 512, true);
+      const { scene, renderer, camera } = await getOrCreateScene({ width: 512, height: 512, doubleSided: true });
 
       // Set up camera to ensure scene is properly initialized
       if (!sceneCache.current.initialized) {

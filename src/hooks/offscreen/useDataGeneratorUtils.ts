@@ -468,7 +468,7 @@ const useDataGeneratorUtils = () => {
     // Load the metadata
     const positions = await get360s(project, false);
 
-    if (positions.length === 0) {
+    if (positions && positions.length === 0) {
       toast.error("No 360° image positions found in metadata");
       return;
     }
@@ -488,97 +488,99 @@ const useDataGeneratorUtils = () => {
     }
 
     let totalPoses = 0;
-    const totalPosesToGenerate = positions.length * numPosttrainingImages;
+    const totalPosesToGenerate = positions ? positions.length * numPosttrainingImages : 0;
 
     // Generate poses for each position
-    for (const position of positions) {
-      if (stop) break;
-
-      // Generate the specified number of poses for this position
-      for (let i = 0; i < numPosttrainingImages; i++) {
+    if (positions) {
+      for (const position of positions) {
         if (stop) break;
-        totalPoses++;
-        const progress = totalPoses / totalPosesToGenerate;
 
-        if (posttrainingProgressToastId.current === null) {
-          throw new Error('Progress toast was not initialized');
-        } else {
-          toast.update(posttrainingProgressToastId.current, { progress, data: { progress, type: ProgressType.POSTTRAINING } });
-        }
+        // Generate the specified number of poses for this position
+        for (let i = 0; i < numPosttrainingImages; i++) {
+          if (stop) break;
+          totalPoses++;
+          const progress = totalPoses / totalPosesToGenerate;
 
-        // Create position vector
-        const pos = new Vector3(position.x, position.y, position.z);
+          if (posttrainingProgressToastId.current === null) {
+            throw new Error('Progress toast was not initialized');
+          } else {
+            toast.update(posttrainingProgressToastId.current, { progress, data: { progress, type: ProgressType.POSTTRAINING } });
+          }
 
-        // Generate random direction in XZ plane
-        const directionXZ = new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1);
-        if (directionXZ.length() > 0) {
-          directionXZ.normalize();
-        } else {
-          directionXZ.set(1, 0);
-        }
+          // Create position vector
+          const pos = new Vector3(position.x, position.y, position.z);
 
-        // Sample pitch angle
-        const anglesDist = createDistribution(anglesConcentration);
-        const angleSample = takeRandomSample({ dist: anglesDist });
-        const angleVal = (anglesRange[0] + anglesRange[1]) / 2 + // midpoint
-          angleSample * (anglesRange[1] - anglesRange[0]) / 2; // random sampled offset
+          // Generate random direction in XZ plane
+          const directionXZ = new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1);
+          if (directionXZ.length() > 0) {
+            directionXZ.normalize();
+          } else {
+            directionXZ.set(1, 0);
+          }
 
-        // Compute the Y component using the pitch angle
-        const y = Math.sin((angleVal / 180.0) * Math.PI); // Upward component
-        const horizontalScale = Math.cos((angleVal / 180.0) * Math.PI); // Scale for XZ to maintain unit length
+          // Sample pitch angle
+          const anglesDist = createDistribution(anglesConcentration);
+          const angleSample = takeRandomSample({ dist: anglesDist });
+          const angleVal = (anglesRange[0] + anglesRange[1]) / 2 + // midpoint
+            angleSample * (anglesRange[1] - anglesRange[0]) / 2; // random sampled offset
 
-        // Final target vector
-        const target = new Vector3(
-          pos.x + directionXZ.x * horizontalScale,
-          pos.y + y,
-          pos.z + directionXZ.y * horizontalScale
-        );
+          // Compute the Y component using the pitch angle
+          const y = Math.sin((angleVal / 180.0) * Math.PI); // Upward component
+          const horizontalScale = Math.cos((angleVal / 180.0) * Math.PI); // Scale for XZ to maintain unit length
 
-        // Check wall avoidance if enabled
-        if (avoidWalls) {
-          const intersections = await doOffscreenRaycast(pos, target, false);
-          if (intersections.length > 0) {
-            const intersection = intersections[0];
-            const distance = pos.distanceTo(intersection.point);
-            if (distance < wallAvoidanceThreshold) {
-              // Skip this pose and try again
-              i--;
-              continue;
+          // Final target vector
+          const target = new Vector3(
+            pos.x + directionXZ.x * horizontalScale,
+            pos.y + y,
+            pos.z + directionXZ.y * horizontalScale
+          );
+
+          // Check wall avoidance if enabled
+          if (avoidWalls) {
+            const intersections = await doOffscreenRaycast(pos, target, false);
+            if (intersections.length > 0) {
+              const intersection = intersections[0];
+              const distance = pos.distanceTo(intersection.point);
+              if (distance < wallAvoidanceThreshold) {
+                // Skip this pose and try again
+                i--;
+                continue;
+              }
             }
           }
-        }
 
-        // Generate random FOV based on settings
-        const fovDist = createDistribution(fovConcentration);
-        const fovSample = takeRandomSample({ dist: fovDist });
-        const fov = (fovRange[0] + fovRange[1]) / 2 + fovSample * (fovRange[1] - fovRange[0]) / 2;
+          // Generate random FOV based on settings
+          const fovDist = createDistribution(fovConcentration);
+          const fovSample = takeRandomSample({ dist: fovDist });
+          const fov = (fovRange[0] + fovRange[1]) / 2 + fovSample * (fovRange[1] - fovRange[0]) / 2;
 
-        // Create the pose
-        const pose: PostTrainingPose = {
-          position: pos,
-          target: target,
-          quaternion: getQuaternionFromTarget(pos, target),
-          fov,
-          type: PoseType.SINGLE,
-          series: totalPoses - 1,
-          imageName: position.name
-        };
-
-        addPosttrainingPose(pose);
-
-        // If we are doing pair generation, add a second pose
-        if (pair) {
-          const pairPose = await getPairPoint(pose, totalPoses - 1);
-          // Add the image name to the pair pose as well
-          const postTrainingPairPose: PostTrainingPose = {
-            ...pairPose,
+          // Create the pose
+          const pose: PostTrainingPose = {
+            position: pos,
+            target: target,
+            quaternion: getQuaternionFromTarget(pos, target),
+            fov,
+            type: PoseType.SINGLE,
+            series: totalPoses - 1,
             imageName: position.name
           };
-          addPosttrainingPose(postTrainingPairPose);
-        }
 
-        // Yield control to avoid blocking the UI
-        await new Promise(resolve => setTimeout(resolve, 0));
+          addPosttrainingPose(pose);
+
+          // If we are doing pair generation, add a second pose
+          if (pair) {
+            const pairPose = await getPairPoint(pose, totalPoses - 1);
+            // Add the image name to the pair pose as well
+            const postTrainingPairPose: PostTrainingPose = {
+              ...pairPose,
+              imageName: position.name
+            };
+            addPosttrainingPose(postTrainingPairPose);
+          }
+
+          // Yield control to avoid blocking the UI
+          await new Promise(resolve => setTimeout(resolve, 0));
+        }
       }
     }
 
