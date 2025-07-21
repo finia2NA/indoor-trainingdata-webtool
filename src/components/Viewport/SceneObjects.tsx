@@ -34,7 +34,7 @@ const SceneObject = ({ model }: SceneObjectProps) => {
   useEffect(() => {
     (async () => {
       try {
-        const obj = await loadModel(model.name, model.content);
+        const obj = await loadModel(model.name, model.content, false);
         setObject3D(obj);
       } catch (err) {
         console.error(err);
