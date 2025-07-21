@@ -74,7 +74,7 @@ const setupScene = async (
   if (images360 && use360Shading) {
     // Apply composite shader if images are available
     loadedObjects.forEach(obj => {
-      setShader(obj, 'composite', doubleSided);
+      setShader(obj, 'standard', doubleSided);
     });
 
     // Force shader compilation with a warm-up render

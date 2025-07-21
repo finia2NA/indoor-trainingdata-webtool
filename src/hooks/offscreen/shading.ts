@@ -11,6 +11,15 @@ export const setShader = (object: THREE.Object3D, shaderName: string, doubleSide
             side: doubleSided ? THREE.DoubleSide : THREE.FrontSide,
           });
           break;
+
+        case 'standard':
+          child.material = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            side: doubleSided ? THREE.DoubleSide : THREE.FrontSide,
+            roughness: 0.5,
+            metalness: 0.5,
+          });
+          break;
         case 'composite':
           const compMat = new THREE.ShadowMaterial({
             color: 0xffffff,
@@ -64,28 +73,34 @@ export const setShader = (object: THREE.Object3D, shaderName: string, doubleSide
             // replace fog fragment to sample sphere map on unshadowed fragments
             shader.fragmentShader = shader.fragmentShader.replace(
               '#include <fog_fragment>',
-              `if ( gl_FragColor.a < 0.1 ) {
-              vec3 lightToFrag = vWorldPosition - lightPos.xyz;
-              float course = lightPos.w; // Extract course from 4th component
-              vec3 direction = normalize(lightToFrag);
-              float x = -direction.x;
-              float y = direction.z;
-              float z = -direction.y;
-              float u = atan(y, x);
-              float v = acos(z);
-              u = (u + 3.14159265) / (2.0 * 3.14159265);
-              v = v / 3.14159265;
-              vec4 sphereColor = texture2D(sphereMap, vec2(u, v));
+              `gl_FragColor = vec4(gl_FragColor.a, gl_FragColor.a, gl_FragColor.a, gl_FragColor.a);
+              `);
 
-              float distanceToLight = length(lightToFrag);
-              float opacity = clamp(1.0 - (distanceToLight - 2.0) / 20.0, 0.0, 1.0);
 
-              gl_FragColor = vec4(sphereColor.rgb, opacity);
-            } else{
-              gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-            }
-            #include <fog_fragment>`
-            );
+            // shader.fragmentShader = shader.fragmentShader.replace(
+            //   '#include <fog_fragment>',
+            //   `if ( gl_FragColor.a < 0.1 ) {
+            //   vec3 lightToFrag = vWorldPosition - lightPos.xyz;
+            //   float course = lightPos.w; // Extract course from 4th component
+            //   vec3 direction = normalize(lightToFrag);
+            //   float x = -direction.x;
+            //   float y = direction.z;
+            //   float z = -direction.y;
+            //   float u = atan(y, x);
+            //   float v = acos(z);
+            //   u = (u + 3.14159265) / (2.0 * 3.14159265);
+            //   v = v / 3.14159265;
+            //   vec4 sphereColor = texture2D(sphereMap, vec2(u, v));
+
+            //   float distanceToLight = length(lightToFrag);
+            //   float opacity = clamp(1.0 - (distanceToLight - 2.0) / 20.0, 0.0, 1.0);
+
+            //   gl_FragColor = vec4(sphereColor.rgb, opacity);
+            // } else{
+            //   gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+            // }
+            // #include <fog_fragment>`
+            // );
           };
           child.material = compMat;
           break;

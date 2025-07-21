@@ -179,10 +179,11 @@ const useOffscreenThree = () => {
     camera.updateProjectionMatrix();
     camera.lookAt(...pose.target.toArray());
 
-    // remove the ambient light from the scene
+    // // remove the ambient light from the scene
     const ambientLight = scene.getObjectByName('ambientLight');
     if (ambientLight) {
       scene.remove(ambientLight);
+      ambientLight.visible = false;
     }
 
     // Turn on casting and receiving shadows on the meshes
@@ -203,13 +204,17 @@ const useOffscreenThree = () => {
       .slice(0, 5);
 
     // Init a point light
-    const pointLight = new THREE.PointLight(0xffffff, 1.5);
+    const pointLight = new THREE.PointLight(0xffffff);
     pointLight.castShadow = true;
+    pointLight.name = 'pointLight';
+    pointLight.intensity = 1000
+    pointLight.distance = 1000;
+    pointLight.decay = 0;
     pointLight.shadow.mapSize.width = 1024;
     pointLight.shadow.mapSize.height = 1024;
-    pointLight.shadow.camera.near = 0.5;
-    pointLight.shadow.camera.far = 50;
-    // pointLight.shadow.bias = -0.01;
+    pointLight.shadow.camera.near = 0.05;
+    pointLight.shadow.camera.far = 500;
+    scene.add(pointLight);
 
     // Init render pass array
     const renderTargets: THREE.WebGLRenderTarget[] = [];
@@ -250,6 +255,7 @@ const useOffscreenThree = () => {
     // restore the scene
     if (ambientLight) {
       scene.add(ambientLight);
+      ambientLight.visible = true;
     }
     scene.remove(pointLight);
 
