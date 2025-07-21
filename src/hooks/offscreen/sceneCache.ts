@@ -74,6 +74,12 @@ const setupScene = async (
       setShader(obj, 'composite', doubleSided);
     });
 
+    // Force shader compilation with a warm-up render
+    camera.position.set(0, 0, 1);
+    camera.lookAt(0, 0, 0);
+    camera.updateProjectionMatrix();
+    renderer.render(scene, camera);
+
     return { offscreen, renderer, scene, camera, images360 };
   } else {
     return { offscreen, renderer, scene, camera, images360 };

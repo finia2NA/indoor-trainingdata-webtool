@@ -18,10 +18,22 @@ export const setShader = (object: THREE.Object3D, shaderName: string, doubleSide
           }) as any; // Type assertion to bypass TypeScript restrictions
 
 
-          // Initialize uniforms with null values - will be set later
+          // Note: we are slightly leaking memory here with the 1x1 texture. Could be fixed.. somehow
+          // Create a dummy 1x1 texture for initialization
+          const dummyCanvas = document.createElement('canvas');
+          dummyCanvas.width = 1;
+          dummyCanvas.height = 1;
+          const dummyCtx = dummyCanvas.getContext('2d');
+          if (dummyCtx) {
+            dummyCtx.fillStyle = '#808080';
+            dummyCtx.fillRect(0, 0, 1, 1);
+          }
+          const dummyTexture = new THREE.CanvasTexture(dummyCanvas);
+
+          // Initialize uniforms with dummy values
           compMat.uniforms = {
-            sphereMap: { value: null },
-            lightPos: { value: null } // x, y, z, course
+            sphereMap: { value: dummyTexture },
+            lightPos: { value: new THREE.Vector4(0, 0, 0, 0) }
           };
 
           compMat.onBeforeCompile = (shader: any) => {
@@ -83,6 +95,16 @@ uniform sampler2D sphereMap;`
   });
 };
 export const setUniforms = (object: THREE.Object3D, image360: Image360) => {
+  if (!image360) {
+    console.error('setUniforms called with null/undefined image360');
+    return;
+  }
+
+  if (typeof image360.x !== 'number' || typeof image360.y !== 'number' || typeof image360.z !== 'number') {
+    console.error('setUniforms called with image360 missing position data:', image360);
+    return;
+  }
+
   object.traverse((child) => {
     if (child instanceof THREE.Mesh &&
       child.name.startsWith('sceneOBJ') &&
@@ -98,7 +120,7 @@ export const setUniforms = (object: THREE.Object3D, image360: Image360) => {
         image360.x,
         image360.y,
         image360.z,
-        image360.course
+        image360.course ?? 0 // Default to 0 if course is not defined
       );
     }
   });

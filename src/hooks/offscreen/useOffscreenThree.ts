@@ -126,7 +126,7 @@ const useOffscreenThree = () => {
 
       // Set the point light position to the image position
       pointLight.position.set(closest.image.x, closest.image.y, closest.image.z);
-      // Appply the uniforms to the objects in the scene
+      // Apply the uniforms to the objects in the scene
       setUniforms(scene, closest.image);
 
       // Create a render pass with the point light and the sphere map
