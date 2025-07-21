@@ -5,6 +5,7 @@ import Transformation from '../../data/Transformation';
 import { useCallback, useEffect, useRef } from 'react';
 import useMultiTransformationStore from '../state/useMultiTransformationStore';
 import { get360s, Image360 } from '../../util/get360s';
+import { setShader, setUniforms } from './shading';
 
 const setupScene = async (
   project: Project,
@@ -26,10 +27,11 @@ const setupScene = async (
   const ambientLight = new THREE.AmbientLight(0xffffff, 1);
   scene.add(ambientLight);
 
-
   // now, add all applicable models to the scene
   const models = project.models;
   if (!models) throw new Error('Models not found');
+  const loadedObjects: THREE.Object3D[] = [];
+
   for (const model of models) {
     if (!getVisibility(project.id, model.id)) continue;
 
@@ -48,8 +50,8 @@ const setupScene = async (
     loadedObject.setRotationFromEuler(new THREE.Euler(transformation.rotation[0], transformation.rotation[1], transformation.rotation[2]));
     loadedObject.scale.set(transformation.scale[0], transformation.scale[1], transformation.scale[2]);
     scene.add(loadedObject);
+    loadedObjects.push(loadedObject);
   }
-
 
   // New code: if images are available, load them and then use them in a shader
   let images360: Image360[] | null = [];
@@ -63,12 +65,21 @@ const setupScene = async (
     console.error('Failed to load 360 images:', error);
   }
 
-  if (!images360)
-    return { offscreen, renderer, scene, camera, images360 };
+  // Apply shaders based on available images
+  if (images360) {
+    // Apply composite shader if images are available
+    loadedObjects.forEach(obj => {
+      setShader(obj, 'composite', doubleSided);
+      setUniforms(obj, images360);
+    });
+  } else {
+    // Apply default lambert shader if no images
+    loadedObjects.forEach(obj => {
+      setShader(obj, 'lambert', doubleSided);
+    });
+  }
 
-  // At this point, we have images360 loaded
   return { offscreen, renderer, scene, camera, images360 };
-
 }
 
 
@@ -143,7 +154,8 @@ const useScene = (project?: Project) => {
       offscreen: sceneData.offscreen,
       scene: sceneData.scene,
       renderer: sceneData.renderer,
-      camera: sceneData.camera
+      camera: sceneData.camera,
+      images360: sceneData.images360 || []
     };
 
     return sceneData;
