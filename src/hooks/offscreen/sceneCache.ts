@@ -23,6 +23,7 @@ const setupScene = async (
   const renderer = new THREE.WebGLRenderer({ canvas: offscreen, preserveDrawingBuffer: true });
   const scene = new THREE.Scene();
   renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   scene.background = new THREE.Color(0x484848);
   const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
   const ambientLight = new THREE.AmbientLight(0xffffff, 1);
@@ -72,16 +73,16 @@ const setupScene = async (
 
   // Apply shaders based on available images
   if (images360 && use360Shading) {
-    // Apply composite shader if images are available
-    loadedObjects.forEach(obj => {
-      setShader(obj, 'standard', doubleSided);
-    });
+    // // Apply composite shader if images are available
+    // loadedObjects.forEach(obj => {
+    //   setShader(obj, 'standard', doubleSided);
+    // });
 
-    // Force shader compilation with a warm-up render
-    camera.position.set(0, 0, 1);
-    camera.lookAt(0, 0, 0);
-    camera.updateProjectionMatrix();
-    renderer.render(scene, camera);
+    // // Force shader compilation with a warm-up render
+    // camera.position.set(0, 0, 1);
+    // camera.lookAt(0, 0, 0);
+    // camera.updateProjectionMatrix();
+    // renderer.render(scene, camera);
 
     return { offscreen, renderer, scene, camera, images360 };
   } else {

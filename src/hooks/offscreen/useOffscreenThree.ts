@@ -10,109 +10,16 @@ import useMultiTransformationStore from '../state/useMultiTransformationStore';
 import { get360s, Image360 } from '../../util/get360s';
 import useScene from './useScene';
 import { createPostMaterial, setUniforms } from './shading';
+import { Vector3 } from 'three';
 
 // Debug flag - set to true to enable render pass debugging
 const DEBUG_RENDER_PASSES = true;
-// Debug method - 'download' for file downloads, 'console' for base64 in console
-const DEBUG_METHOD: 'download' | 'console' = 'download';
 
 type TakeScreenshotProps<T extends Pose> = {
   poses: T[];
   width: number;
   height: number;
   use360Shading?: boolean;
-}
-
-// Debug function to save render targets for inspection
-async function debugSaveRenderTarget(
-  renderer: THREE.WebGLRenderer,
-  renderTarget: THREE.WebGLRenderTarget,
-  name: string,
-  width: number,
-  height: number
-) {
-  // Create a temporary canvas to read the render target data
-  const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = width;
-  tempCanvas.height = height;
-  const ctx = tempCanvas.getContext('2d');
-
-  if (!ctx) {
-    console.warn('Could not get 2D context for debug canvas');
-    return;
-  }
-
-  // Read pixels from the render target
-  const pixels = new Uint8Array(width * height * 4);
-  renderer.readRenderTargetPixels(renderTarget, 0, 0, width, height, pixels);
-
-  // Create ImageData and put it on the canvas
-  const imageData = new ImageData(new Uint8ClampedArray(pixels), width, height);
-
-  // Flip the image vertically (WebGL uses bottom-left origin, canvas uses top-left)
-  const flippedCanvas = document.createElement('canvas');
-  flippedCanvas.width = width;
-  flippedCanvas.height = height;
-  const flippedCtx = flippedCanvas.getContext('2d');
-
-  if (flippedCtx) {
-    flippedCtx.putImageData(imageData, 0, 0);
-    ctx.scale(1, -1);
-    ctx.translate(0, -height);
-    ctx.drawImage(flippedCanvas, 0, 0);
-  }
-
-  // Convert to blob and create download link
-  tempCanvas.toBlob((blob) => {
-    if (blob) {
-      if (DEBUG_METHOD === 'download') {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `debug_${name}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        console.log(`Debug render pass saved: debug_${name}.png`);
-      } else if (DEBUG_METHOD === 'console') {
-        const reader = new FileReader();
-        reader.onload = () => {
-          console.log(`Debug render pass ${name}:`, reader.result);
-        };
-        reader.readAsDataURL(blob);
-      }
-    }
-  }, 'image/png');
-}
-
-// Debug function to save offscreen canvas result
-async function debugSaveCanvasResult(offscreen: OffscreenCanvas, name: string) {
-  try {
-    const blob = await offscreen.convertToBlob({ type: 'image/png' });
-
-    if (DEBUG_METHOD === 'download') {
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `debug_${name}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      console.log(`Debug canvas result saved: debug_${name}.png`);
-    } else if (DEBUG_METHOD === 'console') {
-      const reader = new FileReader();
-      reader.onload = () => {
-        console.log(`Debug canvas result ${name}:`, reader.result);
-      };
-      reader.readAsDataURL(blob);
-    }
-  } catch (error) {
-    console.warn('Could not save debug canvas result:', error);
-  }
 }
 
 
@@ -179,115 +86,55 @@ const useOffscreenThree = () => {
     camera.updateProjectionMatrix();
     camera.lookAt(...pose.target.toArray());
 
-    // // remove the ambient light from the scene
+    // Multiple passes: first deactivate lights and set our own pl per pass
     const ambientLight = scene.getObjectByName('ambientLight');
     if (ambientLight) {
-      scene.remove(ambientLight);
       ambientLight.visible = false;
     }
 
-    // Turn on casting and receiving shadows on the meshes
-    scene.traverse((object) => {
-      if (object instanceof THREE.Mesh) {
-        object.castShadow = true;
-        object.receiveShadow = true;
-      }
-    });
+    const pl = new THREE.PointLight(0xffffff, 1, 1000);
+    pl.castShadow = true;
+    scene.add(pl);
 
-    // Find the 5 closest images360 to the pose
+    // determine the up to 5 closest images360 to the pose
     const closestImages = images360
-      .map(image => ({
-        image,
-        distance: pose.position.distanceTo(new THREE.Vector3(image.x, image.y, image.z))
+      .map(img => ({
+        ...img,
+        distance: new Vector3(img.x, img.y, img.z).distanceTo(pose.position)
       }))
       .sort((a, b) => a.distance - b.distance)
       .slice(0, 5);
 
-    // Init a point light
-    const pointLight = new THREE.PointLight(0xffffff);
-    pointLight.castShadow = true;
-    pointLight.name = 'pointLight';
-    pointLight.intensity = 1000
-    pointLight.distance = 1000;
-    pointLight.decay = 0;
-    pointLight.shadow.mapSize.width = 1024;
-    pointLight.shadow.mapSize.height = 1024;
-    pointLight.shadow.camera.near = 0.05;
-    pointLight.shadow.camera.far = 500;
-    scene.add(pointLight);
+    for (const closest of closestImages) {
+      pl.position.set(closest.x, closest.y, closest.z);
 
-    // Init render pass array
-    const renderTargets: THREE.WebGLRenderTarget[] = [];
-
-    if (DEBUG_RENDER_PASSES) {
-      console.log(`Starting debug render passes for ${closestImages.length} closest images (method: ${DEBUG_METHOD})`);
-    }
-
-    // Go through the closest images
-    for (const [index, closest] of closestImages.entries()) {
-      if (!closest.image.image) {
-        throw new Error(`Image ${closest.image.name} had not texture loaded`);
-      }
-
-      // Set the point light position to the image position
-      pointLight.position.set(closest.image.x, closest.image.y, closest.image.z);
-      // Apply the uniforms to the objects in the scene
-      setUniforms(scene, closest.image);
-
-      // wait for a bit to ensure the uniforms are applied (Three does not tell us when textures are ready so that's annoying)
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      // Create a render pass with the point light and the sphere map
-      const target = new THREE.WebGLRenderTarget(width, height);
-      renderer.setRenderTarget(target);
-      renderer.clear();
+      // render the scene to the offscreen canvas
       renderer.render(scene, camera);
 
-      // DEBUG: Save individual render pass for inspection
+      const blob = await offscreen.convertToBlob({ type: 'image/png' });
+
+      // if debug is set, download the image to debug
       if (DEBUG_RENDER_PASSES) {
-        const lightPos = `${closest.image.x.toFixed(2)}_${closest.image.y.toFixed(2)}_${closest.image.z.toFixed(2)}`;
-        await debugSaveRenderTarget(renderer, target, `pass_${index}_${closest.image.name}_light_${lightPos}`, width, height);
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `debug_screenshot_${pose.series}.png`;
+        link.click();
       }
 
-      renderTargets.push(target);
+      results.push({
+        blob,
+        pose,
+        width,
+        height,
+      });
+
     }
 
-    // restore the scene
+    // After we are done, reactivate the ambient light
     if (ambientLight) {
-      scene.add(ambientLight);
       ambientLight.visible = true;
     }
-    scene.remove(pointLight);
 
-
-    // Combination shader
-    // First, create the postScene
-    const postScene = new THREE.Scene();
-    const postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const quadGeom = new THREE.PlaneGeometry(2, 2);
-    // create composite shader material
-    const postMaterial = createPostMaterial(renderTargets);
-    const quad = new THREE.Mesh(quadGeom, postMaterial);
-    postScene.add(quad);
-
-    // Render it
-    renderer.setRenderTarget(null); // Render to default framebuffer
-    renderer.clear();
-    renderer.render(postScene, postCamera);
-
-    // DEBUG: Save the final combined result for comparison
-    if (DEBUG_RENDER_PASSES) {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      await debugSaveCanvasResult(offscreen, `final_combined_${timestamp}_pos_${pose.position.x.toFixed(2)}_${pose.position.y.toFixed(2)}_${pose.position.z.toFixed(2)}`);
-    }
-
-    const blob = await offscreen.convertToBlob({ type: 'image/png' });
-    results.push({
-      blob,
-      pose,
-      width,
-      height,
-    });
   }
 
   const takeOffscreenScreenshots = useCallback(async ({ poses, width, height, use360Shading }: TakeScreenshotProps<Pose>) => {
