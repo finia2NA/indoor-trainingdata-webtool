@@ -44,46 +44,47 @@ export const setShader = (object: THREE.Object3D, shaderName: string, doubleSide
             shader.vertexShader = shader.vertexShader.replace(
               '#include <common>',
               `#include <common>
-uniform vec4 lightPos;
-varying vec3 vWorldPosition;`
+               uniform vec4 lightPos;
+               varying vec3 vWorldPosition;`
             );
             shader.vertexShader = shader.vertexShader.replace(
               '#include <project_vertex>',
               `#include <project_vertex>
-  vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;`
+               vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;`
             );
             // inject uniforms and varying in fragment shader
             shader.fragmentShader = shader.fragmentShader.replace(
               '#include <common>',
               `#include <common>
-varying vec3 vWorldPosition;
-uniform vec4 lightPos;
-uniform sampler2D sphereMap;`
+                varying vec3 vWorldPosition;
+                uniform vec4 lightPos;
+                uniform sampler2D sphereMap;`
             );
+
             // replace fog fragment to sample sphere map on unshadowed fragments
             shader.fragmentShader = shader.fragmentShader.replace(
               '#include <fog_fragment>',
               `if ( gl_FragColor.a < 0.1 ) {
-  vec3 lightToFrag = vWorldPosition - lightPos.xyz;
-  float course = lightPos.w; // Extract course from 4th component
-  vec3 direction = normalize(lightToFrag);
-  float x = -direction.x;
-  float y = direction.z;
-  float z = -direction.y;
-  float u = atan(y, x);
-  float v = acos(z);
-  u = (u + 3.14159265) / (2.0 * 3.14159265);
-  v = v / 3.14159265;
-  vec4 sphereColor = texture2D(sphereMap, vec2(u, v));
+              vec3 lightToFrag = vWorldPosition - lightPos.xyz;
+              float course = lightPos.w; // Extract course from 4th component
+              vec3 direction = normalize(lightToFrag);
+              float x = -direction.x;
+              float y = direction.z;
+              float z = -direction.y;
+              float u = atan(y, x);
+              float v = acos(z);
+              u = (u + 3.14159265) / (2.0 * 3.14159265);
+              v = v / 3.14159265;
+              vec4 sphereColor = texture2D(sphereMap, vec2(u, v));
 
-  float distanceToLight = length(lightToFrag);
-  float opacity = clamp(1.0 - (distanceToLight - 2.0) / 20.0, 0.0, 1.0);
+              float distanceToLight = length(lightToFrag);
+              float opacity = clamp(1.0 - (distanceToLight - 2.0) / 20.0, 0.0, 1.0);
 
-  gl_FragColor = vec4(sphereColor.rgb, opacity);
-} else{
-  gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-}
-#include <fog_fragment>`
+              gl_FragColor = vec4(sphereColor.rgb, opacity);
+            } else{
+              gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+            }
+            #include <fog_fragment>`
             );
           };
           child.material = compMat;

@@ -22,6 +22,7 @@ const setupScene = async (
   const offscreen = new OffscreenCanvas(width, height);
   const renderer = new THREE.WebGLRenderer({ canvas: offscreen, preserveDrawingBuffer: true });
   const scene = new THREE.Scene();
+  renderer.shadowMap.enabled = true;
   scene.background = new THREE.Color(0x484848);
   const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
   const ambientLight = new THREE.AmbientLight(0xffffff, 1);
@@ -40,13 +41,15 @@ const setupScene = async (
     if (!transformation) throw new Error(`Transformation not found for model${model.name}, ids p-${project.id}, m-${model.id}`);
 
     const loadedObject = await loadModel(model.name, model.content);
-    if (doubleSided) {
-      loadedObject.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
+    loadedObject.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        if (doubleSided) {
           child.material.side = THREE.DoubleSide;
         }
-      });
-    }
+        child.receiveShadow = true;
+        child.castShadow = true;
+      }
+    });
     loadedObject.position.set(transformation.translation[0], transformation.translation[1], transformation.translation[2]);
     loadedObject.setRotationFromEuler(new THREE.Euler(transformation.rotation[0], transformation.rotation[1], transformation.rotation[2]));
     loadedObject.scale.set(transformation.scale[0], transformation.scale[1], transformation.scale[2]);
