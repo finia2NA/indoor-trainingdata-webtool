@@ -9,14 +9,110 @@ import { ProgressToast, ProgressType } from '../../components/UI/Toasts';
 import useMultiTransformationStore from '../state/useMultiTransformationStore';
 import { get360s, Image360 } from '../../util/get360s';
 import useScene from './useScene';
-import Renderer from 'three/examples/jsm/renderers/common/Renderer.js';
 import { createPostMaterial, setUniforms } from './shading';
+
+// Debug flag - set to true to enable render pass debugging
+const DEBUG_RENDER_PASSES = true;
+// Debug method - 'download' for file downloads, 'console' for base64 in console
+const DEBUG_METHOD: 'download' | 'console' = 'download';
 
 type TakeScreenshotProps<T extends Pose> = {
   poses: T[];
   width: number;
   height: number;
   use360Shading?: boolean;
+}
+
+// Debug function to save render targets for inspection
+async function debugSaveRenderTarget(
+  renderer: THREE.WebGLRenderer,
+  renderTarget: THREE.WebGLRenderTarget,
+  name: string,
+  width: number,
+  height: number
+) {
+  // Create a temporary canvas to read the render target data
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = width;
+  tempCanvas.height = height;
+  const ctx = tempCanvas.getContext('2d');
+
+  if (!ctx) {
+    console.warn('Could not get 2D context for debug canvas');
+    return;
+  }
+
+  // Read pixels from the render target
+  const pixels = new Uint8Array(width * height * 4);
+  renderer.readRenderTargetPixels(renderTarget, 0, 0, width, height, pixels);
+
+  // Create ImageData and put it on the canvas
+  const imageData = new ImageData(new Uint8ClampedArray(pixels), width, height);
+
+  // Flip the image vertically (WebGL uses bottom-left origin, canvas uses top-left)
+  const flippedCanvas = document.createElement('canvas');
+  flippedCanvas.width = width;
+  flippedCanvas.height = height;
+  const flippedCtx = flippedCanvas.getContext('2d');
+
+  if (flippedCtx) {
+    flippedCtx.putImageData(imageData, 0, 0);
+    ctx.scale(1, -1);
+    ctx.translate(0, -height);
+    ctx.drawImage(flippedCanvas, 0, 0);
+  }
+
+  // Convert to blob and create download link
+  tempCanvas.toBlob((blob) => {
+    if (blob) {
+      if (DEBUG_METHOD === 'download') {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `debug_${name}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        console.log(`Debug render pass saved: debug_${name}.png`);
+      } else if (DEBUG_METHOD === 'console') {
+        const reader = new FileReader();
+        reader.onload = () => {
+          console.log(`Debug render pass ${name}:`, reader.result);
+        };
+        reader.readAsDataURL(blob);
+      }
+    }
+  }, 'image/png');
+}
+
+// Debug function to save offscreen canvas result
+async function debugSaveCanvasResult(offscreen: OffscreenCanvas, name: string) {
+  try {
+    const blob = await offscreen.convertToBlob({ type: 'image/png' });
+
+    if (DEBUG_METHOD === 'download') {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `debug_${name}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      console.log(`Debug canvas result saved: debug_${name}.png`);
+    } else if (DEBUG_METHOD === 'console') {
+      const reader = new FileReader();
+      reader.onload = () => {
+        console.log(`Debug canvas result ${name}:`, reader.result);
+      };
+      reader.readAsDataURL(blob);
+    }
+  } catch (error) {
+    console.warn('Could not save debug canvas result:', error);
+  }
 }
 
 
@@ -118,8 +214,12 @@ const useOffscreenThree = () => {
     // Init render pass array
     const renderTargets: THREE.WebGLRenderTarget[] = [];
 
+    if (DEBUG_RENDER_PASSES) {
+      console.log(`Starting debug render passes for ${closestImages.length} closest images (method: ${DEBUG_METHOD})`);
+    }
+
     // Go through the closest images
-    for (const closest of closestImages) {
+    for (const [index, closest] of closestImages.entries()) {
       if (!closest.image.image) {
         throw new Error(`Image ${closest.image.name} had not texture loaded`);
       }
@@ -134,6 +234,12 @@ const useOffscreenThree = () => {
       renderer.setRenderTarget(target);
       renderer.clear();
       renderer.render(scene, camera);
+
+      // DEBUG: Save individual render pass for inspection
+      if (DEBUG_RENDER_PASSES) {
+        const lightPos = `${closest.image.x.toFixed(2)}_${closest.image.y.toFixed(2)}_${closest.image.z.toFixed(2)}`;
+        await debugSaveRenderTarget(renderer, target, `pass_${index}_${closest.image.name}_light_${lightPos}`, width, height);
+      }
 
       renderTargets.push(target);
     }
@@ -159,6 +265,12 @@ const useOffscreenThree = () => {
     renderer.setRenderTarget(null); // Render to default framebuffer
     renderer.clear();
     renderer.render(postScene, postCamera);
+
+    // DEBUG: Save the final combined result for comparison
+    if (DEBUG_RENDER_PASSES) {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      await debugSaveCanvasResult(offscreen, `final_combined_${timestamp}_pos_${pose.position.x.toFixed(2)}_${pose.position.y.toFixed(2)}_${pose.position.z.toFixed(2)}`);
+    }
 
     const blob = await offscreen.convertToBlob({ type: 'image/png' });
     results.push({

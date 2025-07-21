@@ -25,7 +25,7 @@ export const setShader = (object: THREE.Object3D, shaderName: string, doubleSide
           dummyCanvas.height = 1;
           const dummyCtx = dummyCanvas.getContext('2d');
           if (dummyCtx) {
-            dummyCtx.fillStyle = '#808080';
+            dummyCtx.fillStyle = '#FF0000';
             dummyCtx.fillRect(0, 0, 1, 1);
           }
           const dummyTexture = new THREE.CanvasTexture(dummyCanvas);
@@ -106,8 +106,8 @@ export const setUniforms = (object: THREE.Object3D, image360: Image360) => {
   }
 
   object.traverse((child) => {
+    // Apply to any mesh material that has uniforms
     if (child instanceof THREE.Mesh &&
-      child.name.startsWith('sceneOBJ') &&
       child.material &&
       (child.material as any).uniforms) {
       const material = child.material as any;
