@@ -292,7 +292,7 @@ const Modal = ({ onClose, children, className }: ModalProps) => {
       onClick={() => onClose(CloseReason.BACKGROUND)}
     >
       <div
-        className={`bg-white p-6 rounded-lg shadow-lg ${className}`}
+        className={`bg-white p-6 rounded-lg shadow-lg max-h-[90vh] overflow-y-auto ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {children}
