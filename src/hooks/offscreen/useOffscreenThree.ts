@@ -92,6 +92,7 @@ const useOffscreenThree = () => {
       ambientLight.visible = false;
     }
 
+
     const pl = new THREE.PointLight(0xffffff, 1, 1000);
     pl.castShadow = true;
     pl.decay = 0;

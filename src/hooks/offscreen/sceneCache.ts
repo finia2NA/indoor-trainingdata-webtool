@@ -3,7 +3,6 @@ import { Project } from "../../data/db";
 import { loadModel } from '../../util/loadModel';
 import Transformation from '../../data/Transformation';
 import { get360s, Image360 } from '../../util/get360s';
-import { setShader } from './shading';
 
 const setupScene = async (
   project: Project,

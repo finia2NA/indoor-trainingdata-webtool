@@ -35,6 +35,14 @@ const SceneObject = ({ model }: SceneObjectProps) => {
     (async () => {
       try {
         const obj = await loadModel(model.name, model.content, false);
+        obj.castShadow = true;
+        obj.receiveShadow = true;
+        obj.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
         setObject3D(obj);
       } catch (err) {
         console.error(err);

@@ -19,7 +19,12 @@ function makeDoubleSided(object: THREE.Object3D) {
   });
 }
 
-export function loadModel(fileName: string, content: Blob, doubleSided: boolean = true): Promise<THREE.Object3D> {
+// loadModel.js
+export function loadModel(
+  fileName: string,
+  content: Blob,
+  doubleSided: boolean = true
+): Promise<THREE.Object3D> {
   return new Promise((resolve, reject) => {
     const fileType = fileName.split('.').pop()?.toLowerCase();
     if (!fileType) {
@@ -27,37 +32,60 @@ export function loadModel(fileName: string, content: Blob, doubleSided: boolean 
       return;
     }
     const url = URL.createObjectURL(content);
+
+    const onLoad = (object: THREE.Object3D) => {
+      // Apply shadows and double-sided materials
+      object.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              child.material.forEach((material) => {
+                if (doubleSided) material.side = THREE.DoubleSide;
+                // Ensure material can receive shadows
+                if (material instanceof THREE.MeshStandardMaterial) {
+                  material.needsUpdate = true;
+                }
+              });
+            } else {
+              if (doubleSided) child.material.side = THREE.DoubleSide;
+              if (child.material instanceof THREE.MeshStandardMaterial) {
+                child.material.needsUpdate = true;
+              }
+            }
+          }
+        }
+      });
+
+      URL.revokeObjectURL(url); // Clean up
+      resolve(object);
+    };
+
     switch (fileType) {
       case 'glb':
       case 'gltf': {
         const loader = new GLTFLoader();
-        loader.load(url, (gltf) => {
-          const model = gltf.scene || gltf;
-          if (doubleSided) {
-            makeDoubleSided(model);
-          }
-          resolve(model);
-        }, undefined, reject);
+        loader.load(
+          url,
+          (gltf) => {
+            const model = gltf.scene;
+            onLoad(model);
+          },
+          undefined,
+          reject
+        );
         break;
       }
       case 'fbx': {
         const loader = new FBXLoader();
-        loader.load(url, (object) => {
-          if (doubleSided) {
-            makeDoubleSided(object);
-          }
-          resolve(object);
-        }, undefined, reject);
+        loader.load(url, onLoad, undefined, reject);
         break;
       }
       case 'obj': {
         const loader = new OBJLoader();
-        loader.load(url, (object) => {
-          if (doubleSided) {
-            makeDoubleSided(object);
-          }
-          resolve(object);
-        }, undefined, reject);
+        loader.load(url, onLoad, undefined, reject);
         break;
       }
       default:
