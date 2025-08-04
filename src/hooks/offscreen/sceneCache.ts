@@ -57,7 +57,7 @@ const setupScene = async (
           // Add custom uniforms
           (compMat as any).uniforms = {
             sphereMap: { value: null },
-            lightPos: { value: new THREE.Vector3() }
+            lightPos: { value: new THREE.Vector4() }
           };
           
           compMat.onBeforeCompile = shader => {
@@ -65,15 +65,31 @@ const setupScene = async (
             shader.uniforms.sphereMap = (compMat as any).uniforms.sphereMap;
             shader.uniforms.lightPos = (compMat as any).uniforms.lightPos;
             
-            // Replace fog fragment to show black in shadow, green otherwise
+            // Add uniform declarations to fragment shader
+            shader.fragmentShader = shader.fragmentShader.replace(
+              '#include <common>',
+              `#include <common>
+uniform vec4 lightPos;
+uniform sampler2D sphereMap;`
+            );
+            
+            // Replace fog fragment to output lightPos for debugging
             shader.fragmentShader = shader.fragmentShader.replace(
               '#include <fog_fragment>',
-              `if ( gl_FragColor.a > 0.1 ) {
+              `// Debug: encode lightPos.xyz as RGB colors (range -5 to 5 maps to 0-1)
+vec3 normalizedPos = (lightPos.xyz + 5.0) / 10.0; // Map -5 to 5 range to 0-1
+normalizedPos = clamp(normalizedPos, 0.0, 1.0);   // Ensure values stay in 0-1 range
+gl_FragColor = vec4(normalizedPos, 1.0); // R=X, G=Y, B=Z
+#include <fog_fragment>
+
+// Original shadow detection code (commented out):
+/*
+if ( gl_FragColor.a > 0.1 ) {
   gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); // Black for shadowed areas
 } else {
   gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); // Green for non-shadowed areas
 }
-#include <fog_fragment>`
+*/`
             );
           };
           

@@ -289,10 +289,29 @@ const useOffscreenThree = () => {
 
       // Fill each render target with the render with the point light
       for (let j = 0; j < lightContainers.length; j++) {
+        const container = lightContainers[j];
+        
         // deactivate all point lights
         lightContainers.forEach(container => container.light.visible = false);
         // activate the current point light
-        lightContainers[j].light.visible = true;
+        container.light.visible = true;
+        
+        // Update uniforms for 360° shading materials
+        scene.traverse((child) => {
+          if (child instanceof THREE.Mesh && (child.material as any).uniforms) {
+            const material = child.material as any;
+            // Set sphere map from the 360° image texture
+            material.uniforms.sphereMap.value = container.image360.image.image;
+            // Set light position as vec4 (x, y, z, course)
+            material.uniforms.lightPos.value.set(
+              container.image360.image.x,
+              container.image360.image.y,
+              container.image360.image.z,
+              container.image360.image.course
+            );
+          }
+        });
+        
         // Render the scene with the current point light
         renderer.setRenderTarget(renderTargets[j]);
         renderer.clear();
