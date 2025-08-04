@@ -76,11 +76,17 @@ uniform sampler2D sphereMap;`
             // Replace fog fragment to output lightPos for debugging
             shader.fragmentShader = shader.fragmentShader.replace(
               '#include <fog_fragment>',
-              `// Debug: encode lightPos.xyz as RGB colors (range -5 to 5 maps to 0-1)
+              `// Debug: sample sphereMap texture using screen coordinates
+vec2 screenUV = gl_FragCoord.xy / vec2(2048.0, 2048.0); // Adjust resolution as needed
+gl_FragColor = texture2D(sphereMap, screenUV);
+#include <fog_fragment>
+
+// Debug color encoding (commented out):
+/*
 vec3 normalizedPos = (lightPos.xyz + 5.0) / 10.0; // Map -5 to 5 range to 0-1
 normalizedPos = clamp(normalizedPos, 0.0, 1.0);   // Ensure values stay in 0-1 range
 gl_FragColor = vec4(normalizedPos, 1.0); // R=X, G=Y, B=Z
-#include <fog_fragment>
+*/
 
 // Original shadow detection code (commented out):
 /*
