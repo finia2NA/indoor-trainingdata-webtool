@@ -48,6 +48,11 @@ const PointLightWithControls = () => {
         distance={pointLightDistance}
         decay={pointLightDecay}
         color="white"
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-radius={10}
+        shadow-bias={-0.0001}
       />
       
       {/* Visual indicator sphere */}

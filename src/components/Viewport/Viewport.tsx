@@ -38,6 +38,7 @@ const Viewport = ({ project }: ViewportProps) => {
     <>
       <Canvas
         gl={{ preserveDrawingBuffer: true }}
+        shadows
         raycaster={{ params: raycasterParams }}
       >
         {useAmbientLight && <ambientLight intensity={ambientLightIntensity} />}
