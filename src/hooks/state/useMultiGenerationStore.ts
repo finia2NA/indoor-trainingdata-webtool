@@ -22,6 +22,8 @@ const defaults = {
   usePosttrainingImages: false,
   numPosttrainingImages: 0,
   use360Shading: false,
+  maxShadingImages: 10,
+  maxShadingDistance: 1.0,
 }
 
 export type MultiGenrationState = {
@@ -82,6 +84,12 @@ export type MultiGenrationState = {
   multiUse360Shading: Record<number, boolean>;
   getUse360Shading: (id: number) => boolean;
   setUse360Shading: (id: number, use360Shading: boolean) => void;
+  multiMaxShadingImages: Record<number, number>;
+  getMaxShadingImages: (id: number) => number;
+  setMaxShadingImages: (id: number, maxImages: number) => void;
+  multiMaxShadingDistance: Record<number, number>;
+  getMaxShadingDistance: (id: number) => number;
+  setMaxShadingDistance: (id: number, maxDistance: number) => void;
 
   reset(id: number): void;
 }
@@ -226,6 +234,22 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
           [id]: use360Shading,
         },
       })),
+      multiMaxShadingImages: {},
+      getMaxShadingImages: (id) => get().multiMaxShadingImages[id] ?? defaults.maxShadingImages,
+      setMaxShadingImages: (id, maxImages) => set((state) => ({
+        multiMaxShadingImages: {
+          ...state.multiMaxShadingImages,
+          [id]: maxImages,
+        },
+      })),
+      multiMaxShadingDistance: {},
+      getMaxShadingDistance: (id) => get().multiMaxShadingDistance[id] ?? defaults.maxShadingDistance,
+      setMaxShadingDistance: (id, maxDistance) => set((state) => ({
+        multiMaxShadingDistance: {
+          ...state.multiMaxShadingDistance,
+          [id]: maxDistance,
+        },
+      })),
 
       reset: (id) => {
         get().setHeightOffset(id, defaults.heightOffset);
@@ -248,6 +272,8 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
         get().setNumPosttrainingImages(id, defaults.numPosttrainingImages);
 
         get().setUse360Shading(id, defaults.use360Shading);
+        get().setMaxShadingImages(id, defaults.maxShadingImages);
+        get().setMaxShadingDistance(id, defaults.maxShadingDistance);
       }
     }),
     {

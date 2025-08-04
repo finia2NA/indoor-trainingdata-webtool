@@ -19,8 +19,8 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
   const { poses, posttrainingPoses } = usePrecomputedPoses();
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
-  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize, usePosttraining, numPosttrainingImages, use360Shading;
-  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, setUsePosttraining, setNumPosttrainingImages, setUse360Shading, reset;
+  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize, usePosttraining, numPosttrainingImages, use360Shading, maxShadingImages, maxShadingDistance;
+  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, setUsePosttraining, setNumPosttrainingImages, setUse360Shading, setMaxShadingImages, setMaxShadingDistance, reset;
   {
     // getting values from store
     const {
@@ -56,6 +56,10 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
       setNumPosttrainingImages: storeSetNumPosttrainingImages,
       getUse360Shading,
       setUse360Shading: storeSetUse360Shading,
+      getMaxShadingImages,
+      setMaxShadingImages: storeSetMaxShadingImages,
+      getMaxShadingDistance,
+      setMaxShadingDistance: storeSetMaxShadingDistance,
       reset: storeReset
     } = useMultiGenerationStore();
     offset = getHeightOffset(id);
@@ -74,6 +78,8 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
     usePosttraining = getUsePosttrainingImages(id);
     numPosttrainingImages = getNumPosttrainingImages(id);
     use360Shading = getUse360Shading(id);
+    maxShadingImages = getMaxShadingImages(id);
+    maxShadingDistance = getMaxShadingDistance(id);
 
     setHeightOffset = (offset: number) => storeSetHeightOffset(id, offset);
     setAnglesRange = (angles: GenPair) => storeSetAnglesRange(id, angles);
@@ -91,6 +97,8 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
     setUsePosttraining = (usePosttraining: boolean) => storeSetUsePosttrainingImages(id, usePosttraining);
     setNumPosttrainingImages = (numImages: number) => storeSetNumPosttrainingImages(id, numImages);
     setUse360Shading = (use360Shading: boolean) => storeSetUse360Shading(id, use360Shading);
+    setMaxShadingImages = (maxImages: number) => storeSetMaxShadingImages(id, maxImages);
+    setMaxShadingDistance = (maxDistance: number) => storeSetMaxShadingDistance(id, maxDistance);
     reset = () => storeReset(id);
   }
 
@@ -334,16 +342,46 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
       {img360Available &&
         <SidebarSection title="360° Images" level={3}>
           <SidebarSection title="360° Shading" level={4} className="mb-2">
-            <div className="flex items-center mb-2">
-              <label htmlFor="360shading" className="mr-2 w-400">Use 360° Shading</label>
-              <input
-                id="360shading"
-                type="checkbox"
-                checked={use360Shading}
-                onChange={(e) => setUse360Shading(e.target.checked)}
-              />
+            <div className="flex flex-col mb-2">
+              <div>
+                <label htmlFor="360shading" className="mr-2 w-400">Use 360° Shading</label>
+                <input
+                  id="360shading"
+                  type="checkbox"
+                  checked={use360Shading}
+                  onChange={(e) => setUse360Shading(e.target.checked)}
+                />
+              </div>
+              <p className="text-gray-400">If checked, 360° images will be projected out to shade the 3D object</p>
+              {use360Shading && (
+                <>
+                  <div className="flex items-center mb-2">
+                    <label htmlFor="maxShadingImages" className="mr-2 w-20">Max Images</label>
+                    <InteractiveInput
+                      id="maxShadingImages"
+                      className='w-32 text-center bg-inactive basis-1/3'
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={maxShadingImages}
+                      onChange={(e) => setMaxShadingImages(parseInt(e.target.value))}
+                    />
+                  </div>
+                  <div className="flex items-center mb-2">
+                    <label htmlFor="maxShadingDistance" className="mr-2 w-20">Max Distance</label>
+                    <InteractiveInput
+                      id="maxShadingDistance"
+                      className='w-32 text-center bg-inactive basis-1/3'
+                      type="number"
+                      min={0}
+                      step={0.1}
+                      value={maxShadingDistance}
+                      onChange={(e) => setMaxShadingDistance(parseFloat(e.target.value))}
+                    />
+                  </div>
+                </>
+              )}
             </div>
-            <p className="text-gray-400">If checked, 360° images will be projected out to shade the 3D object</p>
           </SidebarSection>
           <SidebarSection title="Posttraining" level={4} className="mb-2">
             <div className="flex items-center mb-2">
