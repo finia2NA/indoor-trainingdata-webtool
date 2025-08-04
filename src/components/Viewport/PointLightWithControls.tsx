@@ -7,7 +7,7 @@ import useTransformingSync from '../../hooks/sync/useTransformingSync';
 const PointLightWithControls = () => {
   const { setIsTransforming } = useTransformingSync();
   const meshRef = useRef<THREE.Mesh>(null);
-  
+
   const {
     pointLightActive,
     pointLightX,
@@ -30,7 +30,7 @@ const PointLightWithControls = () => {
   // Handle transform changes from controls
   const onTransform = () => {
     if (!meshRef.current) return;
-    
+
     const pos = meshRef.current.position;
     setPointLightX(pos.x);
     setPointLightY(pos.y);
@@ -42,8 +42,8 @@ const PointLightWithControls = () => {
   return (
     <>
       {/* Point Light */}
-      <pointLight 
-        position={[pointLightX, pointLightY, pointLightZ]} 
+      <pointLight
+        position={[pointLightX, pointLightY, pointLightZ]}
         intensity={pointLightIntensity}
         distance={pointLightDistance}
         decay={pointLightDecay}
@@ -54,18 +54,19 @@ const PointLightWithControls = () => {
         shadow-radius={10}
         shadow-bias={-0.0001}
       />
-      
+
       {/* Visual indicator sphere */}
-      <mesh 
+      <mesh
         ref={meshRef}
         position={[pointLightX, pointLightY, pointLightZ]}
       >
         <sphereGeometry args={[0.2, 16, 12]} />
         <meshBasicMaterial color="violet" transparent opacity={0.8} />
       </mesh>
-      
+
       {/* Transform Controls - always visible and in translate mode */}
       <TransformControls
+        // @ts-expect-error FIXME: This works, but technically the ref might not exist yet
         object={meshRef}
         mode="translate"
         onMouseDown={() => setIsTransforming(true)}

@@ -19,8 +19,8 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
   const { poses, posttrainingPoses } = usePrecomputedPoses();
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
-  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize, usePosttraining, numPosttrainingImages;
-  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, setUsePosttraining, setNumPosttrainingImages, reset;
+  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize, usePosttraining, numPosttrainingImages, use360Shading;
+  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, setUsePosttraining, setNumPosttrainingImages, setUse360Shading, reset;
   {
     // getting values from store
     const {
@@ -54,6 +54,8 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
       setUsePosttrainingImages: storeSetUsePosttrainingImages,
       getNumPosttrainingImages,
       setNumPosttrainingImages: storeSetNumPosttrainingImages,
+      getUse360Shading,
+      setUse360Shading: storeSetUse360Shading,
       reset: storeReset
     } = useMultiGenerationStore();
     offset = getHeightOffset(id);
@@ -71,6 +73,7 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
     imageSize = getImageDimensions(id);
     usePosttraining = getUsePosttrainingImages(id);
     numPosttrainingImages = getNumPosttrainingImages(id);
+    use360Shading = getUse360Shading(id);
 
     setHeightOffset = (offset: number) => storeSetHeightOffset(id, offset);
     setAnglesRange = (angles: GenPair) => storeSetAnglesRange(id, angles);
@@ -87,6 +90,7 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
     setImageSize = (size: [number, number]) => storeSetImageDimensions(id, size);
     setUsePosttraining = (usePosttraining: boolean) => storeSetUsePosttrainingImages(id, usePosttraining);
     setNumPosttrainingImages = (numImages: number) => storeSetNumPosttrainingImages(id, numImages);
+    setUse360Shading = (use360Shading: boolean) => storeSetUse360Shading(id, use360Shading);
     reset = () => storeReset(id);
   }
 
@@ -328,22 +332,35 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
       </SidebarSection>
 
       {img360Available &&
-        <SidebarSection title="Posttraining Images" level={3}>
-          <div className="flex items-center mb-2">
-            <label htmlFor="posttraining" className="mr-2 w-400">Generate Posttraining Images</label>
-            <input
-              id="posttraining"
-              type="checkbox"
-              checked={usePosttraining}
-              onChange={(e) => setUsePosttraining(e.target.checked)}
-            />
-          </div>
-          {usePosttraining && (
+        <SidebarSection title="360° Images" level={3}>
+          <SidebarSection title="360° Shading" level={4} className="mb-2">
+            <div className="flex items-center mb-2">
+              <label htmlFor="360shading" className="mr-2 w-400">Use 360° Shading</label>
+              <input
+                id="360shading"
+                type="checkbox"
+                checked={use360Shading}
+                onChange={(e) => setUse360Shading(e.target.checked)}
+              />
+            </div>
+            <p className="text-gray-400">If checked, 360° images will be projected out to shade the 3D object</p>
+          </SidebarSection>
+          <SidebarSection title="Posttraining" level={4} className="mb-2">
+            <div className="flex items-center mb-2">
+              <label htmlFor="posttraining" className="mr-2 w-400">Generate Posttraining Images</label>
+              <input
+                id="posttraining"
+                type="checkbox"
+                checked={usePosttraining}
+                onChange={(e) => setUsePosttraining(e.target.checked)}
+              />
+            </div>
             <div className="flex items-center mb-2">
               <label htmlFor="imagesPerSphere" className="mr-2 w-20">Images per Sphere</label>
               <InteractiveInput
                 id="imagesPerSphere"
                 className='w-32 text-center bg-inactive basis-1/3'
+                disabled={!usePosttraining}
                 type="number"
                 min={1}
                 step={1}
@@ -351,7 +368,7 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
                 onChange={(e) => setNumPosttrainingImages(parseInt(e.target.value))}
               />
             </div>
-          )}
+          </SidebarSection>
         </SidebarSection>
 
       }
