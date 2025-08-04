@@ -48,20 +48,26 @@ const setupScene = async (
     loadedObject.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         if (use360Shading) {
-          // Create custom green shader material for 360° shading
-          child.material = new THREE.ShaderMaterial({
-            vertexShader: `
-              void main() {
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-              }
-            `,
-            fragmentShader: `
-              void main() {
-                gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); // Green color
-              }
-            `,
+          // Create custom shadow material for 360° shading
+          const compMat = new THREE.ShadowMaterial({ 
+            color: 0xffffff, 
             side: doubleSided ? THREE.DoubleSide : THREE.FrontSide
           });
+          
+          compMat.onBeforeCompile = shader => {
+            // Replace fog fragment to show black in shadow, green otherwise
+            shader.fragmentShader = shader.fragmentShader.replace(
+              '#include <fog_fragment>',
+              `if ( gl_FragColor.a > 0.1 ) {
+  gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); // Black for shadowed areas
+} else {
+  gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); // Green for non-shadowed areas
+}
+#include <fog_fragment>`
+            );
+          };
+          
+          child.material = compMat;
         } else {
           if (doubleSided) {
             child.material.side = THREE.DoubleSide;
