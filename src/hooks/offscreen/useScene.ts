@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { Project } from "../../data/db";
 import { sceneCache, SceneData } from './sceneCache';
 import useMultiTransformationStore from '../state/useMultiTransformationStore';
@@ -20,13 +20,8 @@ const useScene = (project?: Project) => {
 
   console.log('useScene hook initialized with projectId:', projectId);
 
-  // Clear cache when project changes or when transformation/visibility functions change
-  useEffect(() => {
-    if (projectId) {
-      sceneCache.invalidateProject(projectId);
-    }
-    console.log('Scene Cache invalidated for project:', projectId);
-  }, [projectId, getTransformation, getVisibility]);
+  // Note: Cache invalidation is handled by the sceneCache itself through cache keys
+  // Manual invalidation here would be redundant and could cause over-invalidation
 
   // Get or create scene - now just forwards everything to the cache
   const getOrCreateScene = useCallback(async (props: GetOrCreateSceneProps): Promise<SceneData> => {

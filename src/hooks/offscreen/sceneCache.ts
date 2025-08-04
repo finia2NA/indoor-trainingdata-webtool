@@ -6,8 +6,8 @@ import { get360s, Image360 } from '../../util/get360s';
 
 const setupScene = async (
   project: Project,
-  getVisibility: (projectId: number, modelId: number) => boolean,
-  getTransformation: (projectId: number, modelId: number) => Transformation | null,
+  transformations: Record<number, Transformation>,
+  visibilities: Record<number, boolean>,
   width: number,
   height: number,
   doubleSided: boolean,
@@ -38,9 +38,10 @@ const setupScene = async (
   const loadedObjects: THREE.Object3D[] = [];
 
   for (const model of models) {
-    if (!getVisibility(project.id, model.id)) continue;
+    const isVisible = visibilities[model.id] ?? true;
+    if (!isVisible) continue;
 
-    const transformation = getTransformation(project.id, model.id);
+    const transformation = transformations[model.id];
     if (!transformation) throw new Error(`Transformation not found for model${model.name}, ids p-${project.id}, m-${model.id}`);
 
     const loadedObject = await loadModel(model.name, model.content);
@@ -90,13 +91,32 @@ type SceneCacheKey = {
   height: number;
   doubleSided: boolean;
   use360Shading: boolean;
-  // We'll use function references as part of the cache key
-  getVisibilityRef: Function;
-  getTransformationRef: Function;
+  // Use serialized transformation and visibility data instead of function references
+  transformationsHash: string;
+  visibilitiesHash: string;
 };
 
 class SceneCache {
   private cache: Map<string, SceneData> = new Map();
+
+  private createTransformationHash(transformations: Record<number, Transformation>): string {
+    const sorted = Object.keys(transformations)
+      .sort()
+      .map(key => {
+        const t = transformations[parseInt(key)];
+        return `${key}:${t.translation.join(',')},${t.rotation.join(',')},${t.scale.join(',')}`;
+      })
+      .join('|');
+    return sorted;
+  }
+
+  private createVisibilityHash(visibilities: Record<number, boolean>): string {
+    const sorted = Object.keys(visibilities)
+      .sort()
+      .map(key => `${key}:${visibilities[parseInt(key)]}`)
+      .join('|');
+    return sorted;
+  }
 
   private createCacheKey(
     projectId: number,
@@ -104,30 +124,24 @@ class SceneCache {
     height: number,
     doubleSided: boolean,
     use360Shading: boolean,
-    getVisibility: Function,
-    getTransformation: Function
+    transformations: Record<number, Transformation>,
+    visibilities: Record<number, boolean>
   ): { key: SceneCacheKey; keyString: string } {
+    const transformationsHash = this.createTransformationHash(transformations);
+    const visibilitiesHash = this.createVisibilityHash(visibilities);
+
     const key: SceneCacheKey = {
       projectId,
       width,
       height,
       doubleSided,
       use360Shading,
-      getVisibilityRef: getVisibility,
-      getTransformationRef: getTransformation,
+      transformationsHash,
+      visibilitiesHash,
     };
 
     // Create a string representation for the Map key
-    const keyString = JSON.stringify({
-      projectId,
-      width,
-      height,
-      doubleSided,
-      use360Shading,
-      // Use function toString() or a unique identifier if available
-      getVisibilityId: getVisibility.toString(),
-      getTransformationId: getTransformation.toString(),
-    });
+    const keyString = JSON.stringify(key);
 
     return { key, keyString };
   }
@@ -145,14 +159,31 @@ class SceneCache {
       throw new Error('Project or project ID is missing');
     }
 
+    // Extract actual transformation and visibility data for cache key
+    const transformations: Record<number, Transformation> = {};
+    const visibilities: Record<number, boolean> = {};
+
+    // Collect all relevant transformations and visibilities for this project
+    if (project.models) {
+      for (const model of project.models) {
+        const transformation = getTransformation(project.id, model.id);
+        const visibility = getVisibility(project.id, model.id);
+        
+        if (transformation) {
+          transformations[model.id] = transformation;
+        }
+        visibilities[model.id] = visibility;
+      }
+    }
+
     const { keyString } = this.createCacheKey(
       project.id,
       width,
       height,
       doubleSided,
       use360Shading,
-      getVisibility,
-      getTransformation
+      transformations,
+      visibilities
     );
 
     // Check if we have a cached scene for this exact configuration
@@ -167,8 +198,8 @@ class SceneCache {
     // Create new scene
     const sceneData = await setupScene(
       project,
-      getVisibility,
-      getTransformation,
+      transformations,
+      visibilities,
       width,
       height,
       doubleSided,
