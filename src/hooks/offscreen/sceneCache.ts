@@ -24,7 +24,7 @@ const setupScene = async (
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   scene.background = new THREE.Color(0x484848);
   const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-  
+
   // Only add ambient light when NOT using 360° shading
   if (!use360Shading) {
     const ambientLight = new THREE.AmbientLight(0xffffff, 1);
@@ -47,8 +47,25 @@ const setupScene = async (
     const loadedObject = await loadModel(model.name, model.content);
     loadedObject.traverse((child) => {
       if (child instanceof THREE.Mesh) {
-        if (doubleSided) {
-          child.material.side = THREE.DoubleSide;
+        if (use360Shading) {
+          // Create custom green shader material for 360° shading
+          child.material = new THREE.ShaderMaterial({
+            vertexShader: `
+              void main() {
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+              }
+            `,
+            fragmentShader: `
+              void main() {
+                gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); // Green color
+              }
+            `,
+            side: doubleSided ? THREE.DoubleSide : THREE.FrontSide
+          });
+        } else {
+          if (doubleSided) {
+            child.material.side = THREE.DoubleSide;
+          }
         }
         child.receiveShadow = true;
         child.castShadow = true;
@@ -168,7 +185,7 @@ class SceneCache {
       for (const model of project.models) {
         const transformation = getTransformation(project.id, model.id);
         const visibility = getVisibility(project.id, model.id);
-        
+
         if (transformation) {
           transformations[model.id] = transformation;
         }
@@ -194,7 +211,7 @@ class SceneCache {
     }
 
     console.log('Creating new scene (not from cache)');
-    
+
     // Create new scene
     const sceneData = await setupScene(
       project,

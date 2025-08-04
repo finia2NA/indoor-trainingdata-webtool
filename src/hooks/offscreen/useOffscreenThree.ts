@@ -250,6 +250,7 @@ const useOffscreenThree = () => {
         light.intensity = 5;
         light.decay = 0;
         light.distance = 0;
+        light.castShadow = true;
         light.position.set(item.image.x, item.image.y, item.image.z);
         scene.add(light);
         return light;
