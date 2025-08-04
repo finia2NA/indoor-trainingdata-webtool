@@ -65,16 +65,13 @@ const PointLightWithControls = () => {
       </mesh>
       
       {/* Transform Controls - always visible and in translate mode */}
-      {meshRef.current && (
-        <TransformControls
-          object={meshRef.current}
-          position={new THREE.Vector3(pointLightX, pointLightY, pointLightZ)}
-          mode="translate"
-          onMouseDown={() => setIsTransforming(true)}
-          onMouseUp={() => setIsTransforming(false)}
-          onObjectChange={onTransform}
-        />
-      )}
+      <TransformControls
+        object={meshRef}
+        mode="translate"
+        onMouseDown={() => setIsTransforming(true)}
+        onMouseUp={() => setIsTransforming(false)}
+        onObjectChange={onTransform}
+      />
     </>
   );
 };
