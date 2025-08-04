@@ -4,11 +4,9 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useParams } from 'react-router-dom';
 import db, { Project } from "../../data/db";
 import { Pose, ScreenShotResult, PostTrainingPose } from './useDataGeneratorUtils';
-import { loadModel } from '../../util/loadModel';
 import { Id, toast } from 'react-toastify';
 import { ProgressToast, ProgressType } from '../../components/UI/Toasts';
 import useMultiTransformationStore from '../state/useMultiTransformationStore';
-import Transformation from '../../data/Transformation';
 import { get360s } from '../../util/get360s';
 import useScene from './useScene';
 
@@ -77,7 +75,7 @@ const useOffscreenThree = () => {
 
     // build the scene
     const { offscreen, renderer, scene, camera } =
-      await getOrCreateScene({ width, height, doubleSided: true });
+      await getOrCreateScene({ width, height, doubleSided: false });
 
     // take the pictures.
     // we need to keep track of the progress, and also allow the user to stop the process
