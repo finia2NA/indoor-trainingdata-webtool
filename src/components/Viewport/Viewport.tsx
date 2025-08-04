@@ -2,12 +2,14 @@ import { Canvas } from '@react-three/fiber';
 import { Project } from '../../data/db';
 import WrappedOrbitControls, { OrbitUsecase } from './WrappedOrbitControls';
 import useEditorStore, { EditorMode, EditorState } from '../../hooks/state/useEditorStore';
+import useDebugStore from '../../hooks/state/useDebugStore';
 import SwitchableCamera from './SwitchableCamera';
 import SceneObjects from './SceneObjects';
 import PolygonCreator from './PolygonCreator/PolygonCreator';
 import LabeledAxesHelper from './LabeledAxesHelper';
 import CameraPosLogging from './CameraPoseLogging';
 import Image360Markers from './Image360Markers';
+import PointLightWithControls from './PointLightWithControls';
 
 type ViewportProps = {
   project: Project;
@@ -26,6 +28,10 @@ const raycasterParams = {
 
 const Viewport = ({ project }: ViewportProps) => {
   const { showGrid, editorMode, showImages } = useEditorStore((state) => (state as EditorState));
+  const { 
+    useAmbientLight, 
+    ambientLightIntensity
+  } = useDebugStore();
 
 
   return (
@@ -34,8 +40,9 @@ const Viewport = ({ project }: ViewportProps) => {
         gl={{ preserveDrawingBuffer: true }}
         raycaster={{ params: raycasterParams }}
       >
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 5]} intensity={1} />
+        {useAmbientLight && <ambientLight intensity={ambientLightIntensity} />}
+        
+        <PointLightWithControls />
 
         <SceneObjects project={project} />
         {showImages &&

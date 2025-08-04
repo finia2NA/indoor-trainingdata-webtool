@@ -19,6 +19,12 @@ const DebugSidebar = ({ project }: { project: Project }) => {
     setPointLightY,
     pointLightZ,
     setPointLightZ,
+    pointLightIntensity,
+    setPointLightIntensity,
+    pointLightDistance,
+    setPointLightDistance,
+    pointLightDecay,
+    setPointLightDecay,
   } = useDebugStore();
 
   return (
@@ -91,6 +97,45 @@ const DebugSidebar = ({ project }: { project: Project }) => {
               step={0.1}
               value={pointLightZ}
               onChange={(e) => setPointLightZ(Number(e.target.value))}
+            />
+          </div>
+          <div className="flex items-center">
+            <label htmlFor="pointLightIntensity" className="w-40">Intensity</label>
+            <InteractiveInput
+              id="pointLightIntensity"
+              className="w-24 ml-2 text-center bg-inactive"
+              type="number"
+              min={0}
+              max={10}
+              step={0.1}
+              value={pointLightIntensity}
+              onChange={(e) => setPointLightIntensity(Number(e.target.value))}
+            />
+          </div>
+          <div className="flex items-center">
+            <label htmlFor="pointLightDistance" className="w-40">Distance</label>
+            <InteractiveInput
+              id="pointLightDistance"
+              className="w-24 ml-2 text-center bg-inactive"
+              type="number"
+              min={0}
+              max={100}
+              step={1}
+              value={pointLightDistance}
+              onChange={(e) => setPointLightDistance(Number(e.target.value))}
+            />
+          </div>
+          <div className="flex items-center">
+            <label htmlFor="pointLightDecay" className="w-40">Decay</label>
+            <InteractiveInput
+              id="pointLightDecay"
+              className="w-24 ml-2 text-center bg-inactive"
+              type="number"
+              min={0}
+              max={5}
+              step={0.1}
+              value={pointLightDecay}
+              onChange={(e) => setPointLightDecay(Number(e.target.value))}
             />
           </div>
         </div>

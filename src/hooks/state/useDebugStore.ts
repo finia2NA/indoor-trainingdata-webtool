@@ -27,6 +27,15 @@ export type DebugState = {
   pointLightZ: number;
   setPointLightZ: (z: number) => void;
   
+  pointLightIntensity: number;
+  setPointLightIntensity: (intensity: number) => void;
+  
+  pointLightDistance: number;
+  setPointLightDistance: (distance: number) => void;
+  
+  pointLightDecay: number;
+  setPointLightDecay: (decay: number) => void;
+  
   // Reset function for project switches
   resetDebugConfig: () => void;
 };
@@ -37,7 +46,7 @@ const useDebugStore = create<DebugState>((set) => ({
   useAmbientLight: true,
   setUseAmbientLight: (use: boolean) => set({ useAmbientLight: use }),
   
-  ambientLightIntensity: 0.5,
+  ambientLightIntensity: 1,
   setAmbientLightIntensity: (intensity: number) => set({ ambientLightIntensity: intensity }),
   
   // Point Light defaults
@@ -53,13 +62,25 @@ const useDebugStore = create<DebugState>((set) => ({
   pointLightZ: 0,
   setPointLightZ: (z: number) => set({ pointLightZ: z }),
   
+  pointLightIntensity: 1,
+  setPointLightIntensity: (intensity: number) => set({ pointLightIntensity: intensity }),
+  
+  pointLightDistance: 0,
+  setPointLightDistance: (distance: number) => set({ pointLightDistance: distance }),
+  
+  pointLightDecay: 2,
+  setPointLightDecay: (decay: number) => set({ pointLightDecay: decay }),
+  
   resetDebugConfig: () => set({
     useAmbientLight: true,
-    ambientLightIntensity: 0.5,
+    ambientLightIntensity: 1,
     pointLightActive: false,
     pointLightX: 0,
     pointLightY: 5,
     pointLightZ: 0,
+    pointLightIntensity: 1,
+    pointLightDistance: 0,
+    pointLightDecay: 2,
   }),
 }));
 
