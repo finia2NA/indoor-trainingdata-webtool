@@ -19,7 +19,7 @@ const PolygonSidebar: React.FC = () => {
 
   const surfaceElements = [
     { name: "Height", value: polygonHeight, min: -3, max: 3, step: 0.01, onChange: setHeight },
-    { name: "Size", value: polygonSize, min: 1, max: 50, step: 1, onChange: setSize },
+    { name: "Size", value: polygonSize, min: 1, max: 200, step: 1, onChange: setSize },
   ];
 
   return (

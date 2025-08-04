@@ -361,7 +361,7 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
                       id="maxShadingImages"
                       className='w-32 text-center bg-inactive basis-1/3'
                       type="number"
-                      min={1}
+                      min={0}
                       step={1}
                       value={maxShadingImages}
                       onChange={(e) => setMaxShadingImages(parseInt(e.target.value))}

@@ -25,6 +25,8 @@ const DebugSidebar = ({ project }: { project: Project }) => {
     setPointLightDistance,
     pointLightDecay,
     setPointLightDecay,
+    renderScreenshotsFromAbove,
+    setRenderScreenshotsFromAbove,
   } = useDebugStore();
 
   return (
@@ -136,6 +138,19 @@ const DebugSidebar = ({ project }: { project: Project }) => {
               step={0.1}
               value={pointLightDecay}
               onChange={(e) => setPointLightDecay(Number(e.target.value))}
+            />
+          </div>
+        </div>
+      </SidebarSection>
+      <SidebarSection title="Screenshots" level={2}>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center">
+            <label className="w-40">Render from above</label>
+            <input
+              type="checkbox"
+              className="ml-2"
+              checked={renderScreenshotsFromAbove}
+              onChange={(e) => setRenderScreenshotsFromAbove(e.target.checked)}
             />
           </div>
         </div>

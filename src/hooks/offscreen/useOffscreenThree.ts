@@ -8,6 +8,7 @@ import { Id, toast } from 'react-toastify';
 import { ProgressToast, ProgressType } from '../../components/UI/Toasts';
 import useMultiTransformationStore from '../state/useMultiTransformationStore';
 import useMultiGenerationStore from '../state/useMultiGenerationStore';
+import useDebugStore from '../state/useDebugStore';
 import { get360s } from '../../util/get360s';
 import useScene from './useScene';
 
@@ -23,6 +24,7 @@ const useOffscreenThree = () => {
   const progressToastId = useRef<null | Id>(null);
   const { getTransformation, getVisibility } = useMultiTransformationStore();
   const { getUse360Shading, getMaxShadingImages, getMaxShadingDistance } = useMultiGenerationStore();
+  const { renderScreenshotsFromAbove } = useDebugStore();
 
   // Scene cache to avoid rebuilding for each raycast
   const sceneCache = useRef<{
@@ -135,7 +137,7 @@ const useOffscreenThree = () => {
     return results;
   }, [getTransformation, getVisibility, project]);
 
-  const takeOffscreenScreenshots360 = useCallback(async ({ poses, width, height }: TakeScreenshotProps<Pose>) => {
+  const takeShadedScreenshots = useCallback(async ({ poses, width, height }: TakeScreenshotProps<Pose>) => {
     if (!project) throw new Error('Model not found');
     if (!project.id) throw new Error('Model id not found');
     if (!poses || poses.length === 0) throw new Error('Poses not given');
@@ -203,10 +205,19 @@ const useOffscreenThree = () => {
       });
 
       // Set up camera and render
-      camera.position.set(...pose.position.toArray());
-      camera.fov = pose.fov;
-      camera.updateProjectionMatrix();
-      camera.lookAt(...pose.target.toArray());
+      if (renderScreenshotsFromAbove) {
+        // Debug mode: render from above with fixed position and rotation
+        camera.position.set(0, 70, 0);
+        camera.rotation.set(-Math.PI / 2, 0, 0); // -90 degrees in X axis
+        camera.fov = pose.fov;
+        camera.updateProjectionMatrix();
+      } else {
+        // Normal mode: use pose position and target
+        camera.position.set(...pose.position.toArray());
+        camera.fov = pose.fov;
+        camera.updateProjectionMatrix();
+        camera.lookAt(...pose.target.toArray());
+      }
       renderer.render(scene, camera);
 
       // Remove point lights after rendering this pose
@@ -236,7 +247,7 @@ const useOffscreenThree = () => {
     }
 
     return results;
-  }, [getTransformation, getVisibility, project, projectId, getMaxShadingImages, getMaxShadingDistance]);
+  }, [getTransformation, getVisibility, project, projectId, getMaxShadingImages, getMaxShadingDistance, renderScreenshotsFromAbove]);
 
   // Wrapper function that routes to the appropriate implementation
   const takeOffscreenScreenshots = useCallback(async (props: TakeScreenshotProps<Pose>) => {
@@ -244,11 +255,11 @@ const useOffscreenThree = () => {
     const use360Shading = getUse360Shading(projectIdNum);
     
     if (use360Shading) {
-      return takeOffscreenScreenshots360(props);
+      return takeShadedScreenshots(props);
     } else {
       return takeOffscreenScreenshotsAmbient(props);
     }
-  }, [projectId, getUse360Shading, takeOffscreenScreenshots360, takeOffscreenScreenshotsAmbient]);
+  }, [projectId, getUse360Shading, takeShadedScreenshots, takeOffscreenScreenshotsAmbient]);
 
   const doOffscreenRaycast = useCallback(async (start: THREE.Vector3, target: THREE.Vector3, limitDistance = true) => {
     if (!project) throw new Error('Model not found');

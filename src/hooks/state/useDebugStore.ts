@@ -36,6 +36,10 @@ export type DebugState = {
   pointLightDecay: number;
   setPointLightDecay: (decay: number) => void;
   
+  // Screenshot debug options
+  renderScreenshotsFromAbove: boolean;
+  setRenderScreenshotsFromAbove: (fromAbove: boolean) => void;
+  
   // Reset function for project switches
   resetDebugConfig: () => void;
 };
@@ -71,6 +75,10 @@ const useDebugStore = create<DebugState>((set) => ({
   pointLightDecay: 2,
   setPointLightDecay: (decay: number) => set({ pointLightDecay: decay }),
   
+  // Screenshot debug options defaults
+  renderScreenshotsFromAbove: false,
+  setRenderScreenshotsFromAbove: (fromAbove: boolean) => set({ renderScreenshotsFromAbove: fromAbove }),
+  
   resetDebugConfig: () => set({
     useAmbientLight: true,
     ambientLightIntensity: 1,
@@ -81,6 +89,7 @@ const useDebugStore = create<DebugState>((set) => ({
     pointLightIntensity: 1,
     pointLightDistance: 0,
     pointLightDecay: 2,
+    renderScreenshotsFromAbove: false,
   }),
 }));
 
