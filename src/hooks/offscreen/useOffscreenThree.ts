@@ -77,7 +77,7 @@ const useOffscreenThree = () => {
 
     // build the scene
     const { offscreen, renderer, scene, camera } =
-      await getOrCreateScene(width, height, true);
+      await getOrCreateScene({ width, height, doubleSided: true });
 
     // take the pictures.
     // we need to keep track of the progress, and also allow the user to stop the process
@@ -125,6 +125,12 @@ const useOffscreenThree = () => {
       toast.dismiss(progressToastId.current);
       progressToastId.current = null;
     }
+
+    // NOTE: If using point lights for shading, ensure proper cleanup:
+    // scene.remove(pointLight);
+    // if (ambientLight) {
+    //   ambientLight.visible = true;
+    // }
 
     return results;
   }, [getTransformation, getVisibility, project]);
@@ -177,7 +183,7 @@ const useOffscreenThree = () => {
     if (!project || raycastRequests.length === 0) return [];
 
     try {
-      const { scene } = await getOrCreateScene(512, 512, true);
+      const { scene } = await getOrCreateScene({ width: 512, height: 512, doubleSided: true });
 
       const raycaster = new THREE.Raycaster();
       return raycastRequests.map(req => {
