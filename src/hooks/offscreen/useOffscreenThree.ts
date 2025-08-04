@@ -137,7 +137,7 @@ const useOffscreenThree = () => {
     return results;
   }, [getTransformation, getVisibility, project]);
 
-  const takeShadedScreenshots = useCallback(async ({ poses, width, height }: TakeScreenshotProps<Pose>) => {
+  const takeOffscreenScreenshotsShaded = useCallback(async ({ poses, width, height }: TakeScreenshotProps<Pose>) => {
     if (!project) throw new Error('Model not found');
     if (!project.id) throw new Error('Model id not found');
     if (!poses || poses.length === 0) throw new Error('Poses not given');
@@ -255,11 +255,11 @@ const useOffscreenThree = () => {
     const use360Shading = getUse360Shading(projectIdNum);
     
     if (use360Shading) {
-      return takeShadedScreenshots(props);
+      return takeOffscreenScreenshotsShaded(props);
     } else {
       return takeOffscreenScreenshotsAmbient(props);
     }
-  }, [projectId, getUse360Shading, takeShadedScreenshots, takeOffscreenScreenshotsAmbient]);
+  }, [projectId, getUse360Shading, takeOffscreenScreenshotsShaded, takeOffscreenScreenshotsAmbient]);
 
   const doOffscreenRaycast = useCallback(async (start: THREE.Vector3, target: THREE.Vector3, limitDistance = true) => {
     if (!project) throw new Error('Model not found');
