@@ -18,6 +18,7 @@ export enum EditorMode {
   LAYOUT = 'layout',
   MAP = 'map',
   GENERATE = 'generate',
+  DEBUG = 'debug',
 }
 
 export enum TransformMode {

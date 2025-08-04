@@ -42,6 +42,7 @@ const Progress = () => {
         <ProgressArrow text='Layout' />
         <ProgressArrow text='Map' />
         <ProgressArrow text='Generate' />
+        <ProgressArrow text='Debug' />
       </div>
     </div>
   );

@@ -1,22 +1,25 @@
 import { useNavigate, useParams } from "react-router-dom";
-import db, { Model3D } from "../data/db";
+import db from "../data/db";
 import { useLiveQuery } from "dexie-react-hooks";
 import { isNumeric } from "../util/validation";
 import Sidebar from "../components/UI/Sidebar/Sidebar";
 import Editor from "../components/Viewport/Editor";
 import { useEffect } from "react";
 import useEditorStore, { EditorMode } from "../hooks/state/useEditorStore";
+import useDebugStore from "../hooks/state/useDebugStore";
 
 const ViewPage = () => {
   const { id, editorMode } = useParams();
   const navigate = useNavigate();
   const { setEditorMode, resetEditorConfig } = useEditorStore();
+  const { resetDebugConfig } = useDebugStore();
 
-  // When id changes, reset the editor
+  // When id changes, reset the editor and debug state
   // FIXME: does the 2nd useEffect always run 2nd? it needs to to keep the editormode in sync with the url. Investigate this.
   useEffect(() => {
     resetEditorConfig();
-  }, [resetEditorConfig, id]);
+    resetDebugConfig();
+  }, [id]);
 
   const project = useLiveQuery(() => db.projects.get(Number(id)), [id]);
   useEffect(() => {
