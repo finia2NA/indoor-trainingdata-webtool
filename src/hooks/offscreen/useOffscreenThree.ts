@@ -25,7 +25,7 @@ const downloadRenderTarget = (renderer: THREE.WebGLRenderer, renderTarget: THREE
   canvas.width = renderTarget.width;
   canvas.height = renderTarget.height;
   const ctx = canvas.getContext('2d');
-  
+
   if (!ctx) {
     console.error('Could not get canvas context for render target download');
     return;
@@ -35,21 +35,21 @@ const downloadRenderTarget = (renderer: THREE.WebGLRenderer, renderTarget: THREE
   const pixels = new Uint8Array(renderTarget.width * renderTarget.height * 4);
   renderer.setRenderTarget(renderTarget);
   renderer.readRenderTargetPixels(renderTarget, 0, 0, renderTarget.width, renderTarget.height, pixels);
-  
+
   // Create ImageData and put it on canvas
   const imageData = new ImageData(new Uint8ClampedArray(pixels), renderTarget.width, renderTarget.height);
-  
+
   // Flip the image vertically (WebGL renders upside down)
   const flippedCanvas = document.createElement('canvas');
   flippedCanvas.width = canvas.width;
   flippedCanvas.height = canvas.height;
   const flippedCtx = flippedCanvas.getContext('2d');
-  
+
   if (!flippedCtx) {
     console.error('Could not get flipped canvas context');
     return;
   }
-  
+
   ctx.putImageData(imageData, 0, 0);
   flippedCtx.scale(1, -1);
   flippedCtx.translate(0, -flippedCanvas.height);
@@ -68,7 +68,7 @@ const downloadRenderTarget = (renderer: THREE.WebGLRenderer, renderTarget: THREE
       URL.revokeObjectURL(url);
     }
   }, 'image/png');
-  
+
   // Reset render target
   renderer.setRenderTarget(null);
 };
@@ -195,7 +195,7 @@ const useOffscreenThree = () => {
     const maxShadingDistance = getMaxShadingDistance(projectIdNum);
 
     // Load 360° images with positions
-    const images360 = await get360s(project, false);
+    const images360 = await get360s(project, true);
     if (!images360 || images360.length === 0) {
       throw new Error('No 360° images found for shading');
     }
@@ -245,15 +245,15 @@ const useOffscreenThree = () => {
         .slice(0, maxShadingImages);
 
       // Create point lights at selected 360° image positions
-      const posePointLights = nearbyImages.map(item => {
+      const lightContainers = nearbyImages.map(image360 => {
         const light = new THREE.PointLight(0xffffff, 1, 0);
         light.intensity = 5;
         light.decay = 0;
         light.distance = 0;
         light.castShadow = true;
-        light.position.set(item.image.x, item.image.y, item.image.z);
+        light.position.set(image360.image.x, image360.image.y, image360.image.z);
         scene.add(light);
-        return light;
+        return { light, image360 };
       });
 
       // Set up camera and render
@@ -277,7 +277,7 @@ const useOffscreenThree = () => {
 
       // Set up n render targets for the pose
       const renderTargets = [];
-      for (let j = 0; j < posePointLights.length; j++) {
+      for (let j = 0; j < lightContainers.length; j++) {
         const renderTarget = new THREE.WebGLRenderTarget(width, height, {
           format: THREE.RGBAFormat,
           type: THREE.UnsignedByteType,
@@ -288,16 +288,16 @@ const useOffscreenThree = () => {
       }
 
       // Fill each render target with the render with the point light
-      for (let j = 0; j < posePointLights.length; j++) {
+      for (let j = 0; j < lightContainers.length; j++) {
         // deactivate all point lights
-        posePointLights.forEach(light => light.visible = false);
+        lightContainers.forEach(container => container.light.visible = false);
         // activate the current point light
-        posePointLights[j].visible = true;
+        lightContainers[j].light.visible = true;
         // Render the scene with the current point light
         renderer.setRenderTarget(renderTargets[j]);
         renderer.clear();
         renderer.render(scene, camera);
-        
+
         // Download the render target for debugging
         downloadRenderTarget(renderer, renderTargets[j], `pose_${i}_light_${j}.png`);
       }
@@ -307,12 +307,12 @@ const useOffscreenThree = () => {
       // ----------------------------------------
 
       // reactivate all point lights
-      posePointLights.forEach(light => light.visible = true);
+      lightContainers.forEach(container => container.light.visible = true);
       // legacy render: we will get to you later
       renderer.render(scene, camera);
 
       // Remove point lights after rendering this pose
-      posePointLights.forEach(light => scene.remove(light));
+      lightContainers.forEach(container => scene.remove(container.light));
 
       const blob = await offscreen.convertToBlob({ type: 'image/png' });
       results.push({

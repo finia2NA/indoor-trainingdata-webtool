@@ -54,7 +54,17 @@ const setupScene = async (
             side: doubleSided ? THREE.DoubleSide : THREE.FrontSide
           });
           
+          // Add custom uniforms
+          (compMat as any).uniforms = {
+            sphereMap: { value: null },
+            lightPos: { value: new THREE.Vector3() }
+          };
+          
           compMat.onBeforeCompile = shader => {
+            // Link custom uniforms
+            shader.uniforms.sphereMap = (compMat as any).uniforms.sphereMap;
+            shader.uniforms.lightPos = (compMat as any).uniforms.lightPos;
+            
             // Replace fog fragment to show black in shadow, green otherwise
             shader.fragmentShader = shader.fragmentShader.replace(
               '#include <fog_fragment>',
