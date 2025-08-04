@@ -55,7 +55,7 @@ const PointLightWithControls = () => {
         ref={meshRef}
         position={[pointLightX, pointLightY, pointLightZ]}
       >
-        <circleGeometry args={[0.2, 16]} />
+        <sphereGeometry args={[0.2, 16, 12]} />
         <meshBasicMaterial color="violet" transparent opacity={0.8} />
       </mesh>
       
