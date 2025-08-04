@@ -24,9 +24,13 @@ const setupScene = async (
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   scene.background = new THREE.Color(0x484848);
   const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-  const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-  ambientLight.name = 'ambientLight';
-  scene.add(ambientLight);
+  
+  // Only add ambient light when NOT using 360° shading
+  if (!use360Shading) {
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+    ambientLight.name = 'ambientLight';
+    scene.add(ambientLight);
+  }
 
   // now, add all applicable models to the scene
   const models = project.models;

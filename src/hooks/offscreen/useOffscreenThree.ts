@@ -7,6 +7,7 @@ import { Pose, ScreenShotResult, PostTrainingPose } from './useDataGeneratorUtil
 import { Id, toast } from 'react-toastify';
 import { ProgressToast, ProgressType } from '../../components/UI/Toasts';
 import useMultiTransformationStore from '../state/useMultiTransformationStore';
+import useMultiGenerationStore from '../state/useMultiGenerationStore';
 import { get360s } from '../../util/get360s';
 import useScene from './useScene';
 
@@ -21,6 +22,7 @@ const useOffscreenThree = () => {
   const { id: projectId } = useParams();
   const progressToastId = useRef<null | Id>(null);
   const { getTransformation, getVisibility } = useMultiTransformationStore();
+  const { getUse360Shading, getMaxShadingImages, getMaxShadingDistance } = useMultiGenerationStore();
 
   // Scene cache to avoid rebuilding for each raycast
   const sceneCache = useRef<{
@@ -59,7 +61,7 @@ const useOffscreenThree = () => {
 
   const { getOrCreateScene } = useScene(project ?? undefined);
 
-  const takeOffscreenScreenshots = useCallback(async ({ poses, width, height }: TakeScreenshotProps<Pose>) => {
+  const takeOffscreenScreenshotsAmbient = useCallback(async ({ poses, width, height }: TakeScreenshotProps<Pose>) => {
     if (!project) throw new Error('Model not found');
     if (!project.id) throw new Error('Model id not found');
     if (!poses || poses.length === 0) throw new Error('Poses not given');
@@ -133,7 +135,120 @@ const useOffscreenThree = () => {
     return results;
   }, [getTransformation, getVisibility, project]);
 
+  const takeOffscreenScreenshots360 = useCallback(async ({ poses, width, height }: TakeScreenshotProps<Pose>) => {
+    if (!project) throw new Error('Model not found');
+    if (!project.id) throw new Error('Model id not found');
+    if (!poses || poses.length === 0) throw new Error('Poses not given');
 
+    const projectIdNum = Number(projectId);
+    const maxShadingImages = getMaxShadingImages(projectIdNum);
+    const maxShadingDistance = getMaxShadingDistance(projectIdNum);
+
+    // Load 360° images with positions
+    const images360 = await get360s(project, false);
+    if (!images360 || images360.length === 0) {
+      throw new Error('No 360° images found for shading');
+    }
+
+    // Init the toast ASAP so the user knows what's going on
+    progressToastId.current = toast(ProgressToast, {
+      progress: 0.00001, data: { progress: 0.00001, type: ProgressType.SCREENSHOT }, type: "info", onClose(reason) {
+        if (reason === "stop") {
+          doStop();
+        }
+      },
+    });
+
+    // build the scene with 360° shading enabled
+    const { offscreen, renderer, scene, camera } =
+      await getOrCreateScene({ width, height, doubleSided: false, use360Shading: true });
+
+    // take the pictures.
+    let stop = false;
+    const doStop = () => {
+      stop = true;
+    }
+
+    const results: ScreenShotResult<Pose>[] = [];
+    for (let i = 0; i < poses.length; i++) {
+      if (stop) break;
+      const progress = (i + 1) / poses.length;
+
+      if (progressToastId.current === null) {
+        throw new Error('Screenshot toast was not initialized');
+      } else {
+        toast.update(progressToastId.current, { progress, data: { progress, type: ProgressType.SCREENSHOT } });
+      }
+
+      const pose = poses[i];
+
+      // Find closest 360° images for this pose
+      const imageDistances = images360.map(img => ({
+        image: img,
+        distance: pose.position.distanceTo(new THREE.Vector3(img.x, img.y, img.z))
+      }));
+
+      // Filter by max distance and sort by distance
+      const nearbyImages = imageDistances
+        .filter(item => item.distance <= maxShadingDistance)
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, maxShadingImages);
+
+      // Create point lights at selected 360° image positions
+      const posePointLights = nearbyImages.map(item => {
+        const light = new THREE.PointLight(0xffffff, 1, 0);
+        light.position.set(item.image.x, item.image.y, item.image.z);
+        scene.add(light);
+        return light;
+      });
+
+      // Set up camera and render
+      camera.position.set(...pose.position.toArray());
+      camera.fov = pose.fov;
+      camera.updateProjectionMatrix();
+      camera.lookAt(...pose.target.toArray());
+      renderer.render(scene, camera);
+
+      // Remove point lights after rendering this pose
+      posePointLights.forEach(light => scene.remove(light));
+
+      const blob = await offscreen.convertToBlob({ type: 'image/png' });
+      results.push({
+        blob,
+        pose,
+        width,
+        height,
+      });
+    }
+
+    if (!stop) {
+      console.log('Screenshots complete');
+      toast("Screenshots complete", { type: "success" });
+    }
+    else {
+      console.log('Screenshots stopped prematurely');
+      toast("Screenshots stopped", { type: "warning" });
+    }
+
+    if (progressToastId.current !== null) {
+      toast.dismiss(progressToastId.current);
+      progressToastId.current = null;
+    }
+
+    return results;
+  }, [getTransformation, getVisibility, project, projectId, getMaxShadingImages, getMaxShadingDistance]);
+
+  // Wrapper function that routes to the appropriate implementation
+  const takeOffscreenScreenshots = useCallback(async (props: TakeScreenshotProps<Pose>) => {
+    const projectIdNum = Number(projectId);
+    const use360Shading = getUse360Shading(projectIdNum);
+    
+    if (use360Shading) {
+      return takeOffscreenScreenshots360(props);
+    } else {
+      return takeOffscreenScreenshotsAmbient(props);
+    }
+  }, [projectId, getUse360Shading, takeOffscreenScreenshots360, takeOffscreenScreenshotsAmbient]);
 
   const doOffscreenRaycast = useCallback(async (start: THREE.Vector3, target: THREE.Vector3, limitDistance = true) => {
     if (!project) throw new Error('Model not found');
