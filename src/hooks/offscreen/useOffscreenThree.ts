@@ -12,6 +12,52 @@ import useDebugStore from '../state/useDebugStore';
 import { get360s } from '../../util/get360s';
 import useScene from './useScene';
 
+// Post-processing material for combining multiple render targets
+function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
+  // Build the fragment shader with dynamic texture sampling
+  const fragmentShader = `
+    varying vec2 vUv;
+    ${renderTargets.map((_, i) => `uniform sampler2D uTexture${i};`).join('\n    ')}
+    
+    void main() {
+      vec3 sum = vec3(0.0);
+      float totalAlpha = 0.0;
+      
+      ${renderTargets.map((_, i) => `
+      vec4 sample${i} = texture2D(uTexture${i}, vUv);
+      sum += sample${i}.rgb;
+      totalAlpha += sample${i}.a;`).join('')}
+      
+      vec3 finalColor = totalAlpha > 0.0 ? sum / totalAlpha : vec3(0.0);
+      float finalAlpha = totalAlpha > 0.0 ? 1.0 : 0.0;
+      
+      gl_FragColor = vec4(finalColor, finalAlpha);
+    }
+  `;
+
+  const vertexShader = `
+    varying vec2 vUv;
+    
+    void main() {
+      vUv = uv;
+      gl_Position = vec4(position, 1.0);
+    }
+  `;
+
+  // Create uniforms for each texture
+  const uniforms: Record<string, { value: THREE.Texture }> = {};
+  renderTargets.forEach((rt, i) => {
+    uniforms[`uTexture${i}`] = { value: rt.texture };
+  });
+
+  return new THREE.ShaderMaterial({
+    uniforms,
+    vertexShader,
+    fragmentShader,
+    transparent: true
+  });
+}
+
 type TakeScreenshotProps<T extends Pose> = {
   poses: T[];
   width: number;
@@ -212,6 +258,29 @@ const useOffscreenThree = () => {
     // build the scene with 360° shading enabled
     const { offscreen, renderer, scene, camera } =
       await getOrCreateScene({ width, height, doubleSided: false, use360Shading: true });
+      
+      // Create render targets array (we'll reuse these)
+      const renderTargets: THREE.WebGLRenderTarget[] = [];
+      for (let j = 0; j < maxShadingImages; j++) {
+        const renderTarget = new THREE.WebGLRenderTarget(width, height, {
+          format: THREE.RGBAFormat,
+          type: THREE.UnsignedByteType,
+          depthBuffer: true,
+          stencilBuffer: false,
+        });
+        renderTargets.push(renderTarget);
+      }
+
+    // Set up post-processing scene outside the loop
+    const postScene = new THREE.Scene();
+    const postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const quadGeom = new THREE.PlaneGeometry(2, 2);
+    
+    
+    // Create composite shader material once
+    const postMaterial = createPostMaterial(renderTargets);
+    const quad = new THREE.Mesh(quadGeom, postMaterial);
+    postScene.add(quad);
 
     // take the pictures.
     let stop = false;
@@ -323,14 +392,17 @@ const useOffscreenThree = () => {
         downloadRenderTarget(renderer, renderTargets[j], `pose_${i}_light_${j}.png`);
       }
 
-      // Reset render target to default
-      renderer.setRenderTarget(null);
-      // ----------------------------------------
+      // Update post-processing material uniforms with current render targets
+      for (let j = 0; j < lightContainers.length; j++) {
+        const uniformName = `uTexture${j}`;
+        (postMaterial as any).uniforms[uniformName].value = renderTargets[j].texture;
+      }
 
-      // reactivate all point lights
-      lightContainers.forEach(container => container.light.visible = true);
-      // legacy render: we will get to you later
-      renderer.render(scene, camera);
+      // Composite output via fullscreen quad
+      renderer.setRenderTarget(null);
+      renderer.clear();
+      renderer.render(postScene, postCamera);
+      // ----------------------------------------
 
       // Remove point lights after rendering this pose
       lightContainers.forEach(container => scene.remove(container.light));
