@@ -65,37 +65,70 @@ const setupScene = async (
             shader.uniforms.sphereMap = (compMat as any).uniforms.sphereMap;
             shader.uniforms.lightPos = (compMat as any).uniforms.lightPos;
             
-            // Add uniform declarations to fragment shader
+            // Inject world position varying for sphere mapping
+            shader.vertexShader = shader.vertexShader.replace(
+              '#include <common>',
+              `#include <common>
+uniform vec4 lightPos;
+varying vec3 vWorldPosition;`
+            );
+            shader.vertexShader = shader.vertexShader.replace(
+              '#include <project_vertex>',
+              `#include <project_vertex>
+  vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;`
+            );
+            
+            // Inject uniforms and varying in fragment shader
             shader.fragmentShader = shader.fragmentShader.replace(
               '#include <common>',
               `#include <common>
+varying vec3 vWorldPosition;
 uniform vec4 lightPos;
 uniform sampler2D sphereMap;`
             );
             
-            // Replace fog fragment to output lightPos for debugging
+            // Replace fog fragment
             shader.fragmentShader = shader.fragmentShader.replace(
               '#include <fog_fragment>',
-              `// Debug: sample sphereMap texture using screen coordinates
-vec2 screenUV = gl_FragCoord.xy / vec2(2048.0, 2048.0); // Adjust resolution as needed
+              `/* DEBUG CODE (commented out):
+// Debug: sample sphereMap texture using screen coordinates
+vec2 screenUV = gl_FragCoord.xy / vec2(2048.0, 2048.0);
 gl_FragColor = texture2D(sphereMap, screenUV);
-#include <fog_fragment>
 
-// Debug color encoding (commented out):
-/*
-vec3 normalizedPos = (lightPos.xyz + 5.0) / 10.0; // Map -5 to 5 range to 0-1
-normalizedPos = clamp(normalizedPos, 0.0, 1.0);   // Ensure values stay in 0-1 range
-gl_FragColor = vec4(normalizedPos, 1.0); // R=X, G=Y, B=Z
+// Debug color encoding:
+vec3 normalizedPos = (lightPos.xyz + 5.0) / 10.0;
+normalizedPos = clamp(normalizedPos, 0.0, 1.0);
+gl_FragColor = vec4(normalizedPos, 1.0);
+
+// Original shadow detection code:
+if ( gl_FragColor.a > 0.1 ) {
+  gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+} else {
+  gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+}
 */
 
-// Original shadow detection code (commented out):
-/*
-if ( gl_FragColor.a > 0.1 ) {
-  gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); // Black for shadowed areas
+// -------------------------- SPHERE MAPPING CODE --------------------------
+if ( gl_FragColor.a == 0.0 ) {
+  vec3 lightToFrag = vWorldPosition - lightPos.xyz;
+  vec3 direction = normalize(lightToFrag);
+  float x = -direction.x;
+  float y = direction.z;
+  float z = -direction.y;
+  float u = atan(y, x);
+  float v = acos(z);
+  u = (u + 3.14159265) / (2.0 * 3.14159265);
+  v = v / 3.14159265;
+  vec4 sphereColor = texture2D(sphereMap, vec2(u, v));
+
+  float distanceToLight = length(lightToFrag);
+  float opacity = clamp(1.0 - (distanceToLight - 2.0) / 20.0, 0.0, 1.0);
+
+  gl_FragColor = vec4(sphereColor.rgb, opacity);
 } else {
-  gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); // Green for non-shadowed areas
+  gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 }
-*/`
+#include <fog_fragment>`
             );
           };
           

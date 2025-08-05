@@ -252,6 +252,8 @@ const useOffscreenThree = () => {
         light.distance = 0;
         light.castShadow = true;
         light.position.set(image360.image.x, image360.image.y, image360.image.z);
+        light.shadow.mapSize.width = 2048;
+        light.shadow.mapSize.height = 2048;
         scene.add(light);
         return { light, image360 };
       });
