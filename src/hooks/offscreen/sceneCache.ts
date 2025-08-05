@@ -119,6 +119,12 @@ if ( gl_FragColor.a == 0.0 ) {
   float v = acos(z);
   u = (u + 3.14159265) / (2.0 * 3.14159265);
   v = v / 3.14159265;
+  
+  // Apply course rotation (lightPos.w is in degrees)
+  float courseRadians = lightPos.w * 3.14159265 / 180.0;
+  u = u + courseRadians / (2.0 * 3.14159265);
+  u = mod(u, 1.0); // Wrap around if u goes beyond 1.0
+  
   vec4 sphereColor = texture2D(sphereMap, vec2(u, v));
 
   float distanceToLight = length(lightToFrag);
