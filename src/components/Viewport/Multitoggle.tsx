@@ -229,7 +229,7 @@ export const ViewmodeToggles = () => {
     )
   }
 
-  if (editorMode === EditorMode.GENERATE) {
+  if (editorMode === EditorMode.GENERATE || editorMode === EditorMode.DEBUG) {
     items.push(
       {
         id: 'poses',

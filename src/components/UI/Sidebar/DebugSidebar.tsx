@@ -3,6 +3,7 @@ import { InteractiveInput } from "@designbyadrian/react-interactive-input";
 import { Project } from "../../../data/db";
 import SidebarSection from "./SidebarSection";
 import useDebugStore from "../../../hooks/state/useDebugStore";
+import PoseList from "./PoseList";
 
 
 const DebugSidebar = ({ project }: { project: Project }) => {
@@ -155,6 +156,7 @@ const DebugSidebar = ({ project }: { project: Project }) => {
           </div>
         </div>
       </SidebarSection>
+      <PoseList />
     </SidebarSection>
   );
 }

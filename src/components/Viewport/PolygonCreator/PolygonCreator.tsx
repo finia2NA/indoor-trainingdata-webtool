@@ -188,7 +188,7 @@ const PolygonCreator: React.FC = () => {
       {editorMode === EditorMode.GENERATE && <HeightDisplay />}
 
       {/* Poses */}
-      {editorMode === EditorMode.GENERATE && showPoses && (
+      {(editorMode === EditorMode.GENERATE || editorMode === EditorMode.DEBUG) && showPoses && (
         <PosesPreview />
       )}
 

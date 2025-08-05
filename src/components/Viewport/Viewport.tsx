@@ -50,7 +50,7 @@ const Viewport = ({ project }: ViewportProps) => {
           <Image360Markers project={project} />
         }
 
-        {[EditorMode.MAP, EditorMode.GENERATE].includes(editorMode) && <PolygonCreator />}
+        {[EditorMode.MAP, EditorMode.GENERATE, EditorMode.DEBUG].includes(editorMode) && <PolygonCreator />}
 
         <WrappedOrbitControls
           useCase={OrbitUsecase.VIEWPORT}
