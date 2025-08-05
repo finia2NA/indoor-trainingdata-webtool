@@ -138,7 +138,7 @@ const ModelChannel = ({ model, modelId, projectId }: ModelChannelProps) => {
         values={myTransformation.translation} onChange={translateSetter} />
       <SingleChannel name="Rotate" min={-Math.PI} max={Math.PI} step={0.05}
         values={myTransformation.rotation} onChange={rotateSetter} />
-      <SingleChannel name="Scale" min={0.1} max={3} step={0.1}
+      <SingleChannel name="Scale" min={-3} max={3} step={0.1}
         values={myTransformation.scale} onChange={scaleSetter} />
     </SidebarSection>
   )

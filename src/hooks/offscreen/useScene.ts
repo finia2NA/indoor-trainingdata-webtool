@@ -13,12 +13,13 @@ type GetOrCreateSceneProps = {
 
 const useScene = (project?: Project) => {
   // Get the data we need
-  const projectId = project?.id ?? null;
+  // const projectId = project?.id ?? null;
 
   // Functions from other hooks
   const { getTransformation, getVisibility } = useMultiTransformationStore();
 
-  console.log('useScene hook initialized with projectId:', projectId);
+  // TODO: this is printed a lot, see if this is fine or not
+  // console.log('useScene hook initialized with projectId:', projectId);
 
   // Note: Cache invalidation is handled by the sceneCache itself through cache keys
   // Manual invalidation here would be redundant and could cause over-invalidation

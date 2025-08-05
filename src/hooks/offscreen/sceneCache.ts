@@ -4,6 +4,15 @@ import { loadModel } from '../../util/loadModel';
 import Transformation from '../../data/Transformation';
 import { get360s, Image360 } from '../../util/get360s';
 
+const OPACITYDISTANCE = 10.0;
+const MAXOPAT = 2.0;
+
+// Helper function to ensure numbers have at least one decimal place for GLSL compatibility
+const ensureFloatFormat = (value: number): string => {
+  const str = value.toString();
+  return str.includes('.') ? str : str + '.0';
+};
+
 const setupScene = async (
   project: Project,
   transformations: Record<number, Transformation>,
@@ -128,7 +137,7 @@ if ( gl_FragColor.a == 0.0 ) {
   vec4 sphereColor = texture2D(sphereMap, vec2(u, v));
 
   float distanceToLight = length(lightToFrag);
-  float opacity = clamp(1.0 - (distanceToLight - 2.0) / 20.0, 0.0, 1.0);
+  float opacity = clamp(1.0 - (distanceToLight - ${ensureFloatFormat(MAXOPAT)}) / ${ensureFloatFormat(OPACITYDISTANCE)}, 0.0, 1.0);
 
   gl_FragColor = vec4(sphereColor.rgb, opacity);
 } else {
