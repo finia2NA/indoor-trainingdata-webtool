@@ -11,6 +11,12 @@ type CameraPoseState = {
 
   reactiveTarget: [number, number, number];
   setReactiveTarget: (target: [number, number, number]) => void;
+
+  // Programmatic camera movement
+  targetCameraPosition: [number, number, number] | null;
+  targetCameraTarget: [number, number, number] | null;
+  moveCameraTo: (position: [number, number, number], target: [number, number, number]) => void;
+  clearCameraTarget: () => void;
 };
 
 const useCameraPoseStore = create<CameraPoseState>((set) => ({
@@ -22,6 +28,12 @@ const useCameraPoseStore = create<CameraPoseState>((set) => ({
 
   reactiveTarget: [0, 0, 0],
   setReactiveTarget: (target) => set({ reactiveTarget: target }),
+
+  // Programmatic camera movement
+  targetCameraPosition: null,
+  targetCameraTarget: null,
+  moveCameraTo: (position, target) => set({ targetCameraPosition: position, targetCameraTarget: target }),
+  clearCameraTarget: () => set({ targetCameraPosition: null, targetCameraTarget: null }),
 }));
 
 export default useCameraPoseStore;

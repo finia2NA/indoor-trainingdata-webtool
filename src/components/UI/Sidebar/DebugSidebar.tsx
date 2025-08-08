@@ -3,10 +3,12 @@ import { InteractiveInput } from "@designbyadrian/react-interactive-input";
 import { Project } from "../../../data/db";
 import SidebarSection from "./SidebarSection";
 import useDebugStore from "../../../hooks/state/useDebugStore";
+import useCameraPoseStore from "../../../hooks/sync/useCameraPoseStore";
 import PoseList from "./PoseList";
 
 
 const DebugSidebar = ({ project }: { project: Project }) => {
+  const { moveCameraTo } = useCameraPoseStore();
   const {
     useAmbientLight,
     setUseAmbientLight,
@@ -29,6 +31,22 @@ const DebugSidebar = ({ project }: { project: Project }) => {
     renderScreenshotsFromAbove,
     setRenderScreenshotsFromAbove,
   } = useDebugStore();
+
+  const handleTestCameraMovement = () => {
+    // Generate random position
+    const randomPosition: [number, number, number] = [
+      (Math.random() - 0.5) * 10, // Random x between -5 and 5
+      Math.random() * 8 + 2,      // Random y between 2 and 10
+      (Math.random() - 0.5) * 10  // Random z between -5 and 5
+    ];
+    // Set target near the position
+    const target: [number, number, number] = [
+      randomPosition[0] + (Math.random() - 0.5) * 2,
+      randomPosition[1] - 1,
+      randomPosition[2] + (Math.random() - 0.5) * 2
+    ];
+    moveCameraTo(randomPosition, target);
+  };
 
   return (
     <SidebarSection title="Debug">
@@ -154,6 +172,16 @@ const DebugSidebar = ({ project }: { project: Project }) => {
               onChange={(e) => setRenderScreenshotsFromAbove(e.target.checked)}
             />
           </div>
+        </div>
+      </SidebarSection>
+      <SidebarSection title="Camera Movement" level={2}>
+        <div className="flex flex-col gap-4">
+          <button
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+            onClick={handleTestCameraMovement}
+          >
+            Move Camera to Random Position
+          </button>
         </div>
       </SidebarSection>
       <PoseList />

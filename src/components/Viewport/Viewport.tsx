@@ -10,7 +10,8 @@ import LabeledAxesHelper from './LabeledAxesHelper';
 import CameraPosLogging from './CameraPoseLogging';
 import Image360Markers from './Image360Markers';
 import PointLightWithControls from './PointLightWithControls';
-import { FirstPersonControls, OrbitControls } from '@react-three/drei';
+import CameraController from './CameraController';
+import { OrbitControls } from '@react-three/drei';
 
 type ViewportProps = {
   project: Project;
@@ -53,11 +54,9 @@ const Viewport = ({ project }: ViewportProps) => {
 
         {[EditorMode.MAP, EditorMode.GENERATE, EditorMode.DEBUG].includes(editorMode) && <PolygonCreator />}
 
-        {/* <WrappedOrbitControls
+        <WrappedOrbitControls
           useCase={OrbitUsecase.VIEWPORT}
-        /> */}
-        {/* <FirstPersonControls /> */}
-        <OrbitControls />
+        />
         {showGrid &&
           <>
             <gridHelper args={[10, 10]} />
@@ -68,6 +67,7 @@ const Viewport = ({ project }: ViewportProps) => {
 
         <SwitchableCamera />
         <CameraPosLogging />
+        <CameraController />
       </Canvas>
     </>
   );
