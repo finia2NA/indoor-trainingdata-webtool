@@ -5,7 +5,7 @@ import useTransformingSync from "../../hooks/sync/useTransformingSync";
 // @ts-expect-error No types, no idea where they are
 import { OrbitControls as ThreeOrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import useCameraPoseStore from "../../hooks/sync/useCameraPoseStore";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 
 export enum OrbitUsecase {
   CUBE = 'cube',
@@ -17,6 +17,7 @@ type WrappedOrbitControlsProps = OrbitControlsProps & {
 };
 
 const WrappedOrbitControls = React.memo((props: WrappedOrbitControlsProps) => {
+  const { gl } = useThree();
 
   // get shared orbit state
   const { orbitAngles, updateOrbitAngles } = useOrbitAngleSync((state) => state);
@@ -51,6 +52,13 @@ const WrappedOrbitControls = React.memo((props: WrappedOrbitControlsProps) => {
     }
   }, [updateOrbitAngles]);
   const controlsRef = useRef<ThreeOrbitControls>(null);
+
+  // Store reference to controls in the DOM element for CameraController to access
+  useEffect(() => {
+    if (controlsRef.current && gl.domElement) {
+      (gl.domElement as any).__orbitControls = controlsRef.current;
+    }
+  }, [controlsRef.current, gl.domElement]);
 
   useEffect(() => {
     if (controlsRef.current) {

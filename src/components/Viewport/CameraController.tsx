@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import useCameraPoseStore from '../../hooks/sync/useCameraPoseStore';
 
 const CameraController = () => {
-  const { camera, controls } = useThree();
+  const { camera, gl } = useThree();
   const { 
     targetCameraPosition, 
     targetCameraTarget, 
@@ -21,16 +21,34 @@ const CameraController = () => {
     startTime: number;
     duration: number;
   } | null>(null);
+  
+  const controlsRef = useRef<any>(null);
 
-  // Update reactive camera pose
+  // Find the orbit controls in the scene
   useFrame(() => {
+    if (!controlsRef.current) {
+      // Try multiple ways to find the controls
+      const canvas = gl.domElement;
+      const scene = camera.parent;
+      
+      // Look for controls attached to the camera or scene
+      const controls = (canvas as any).__orbitControls ||
+                      (camera as any).__orbitControls ||
+                      (scene as any).__orbitControls;
+      
+      if (controls) {
+        controlsRef.current = controls;
+      }
+    }
+    
+    // Update reactive camera pose
     setReactiveCameraPosition([camera.position.x, camera.position.y, camera.position.z]);
     setReactiveCameraRotation([camera.rotation.x, camera.rotation.y, camera.rotation.z]);
   });
 
   useEffect(() => {
     if (targetCameraPosition && targetCameraTarget) {
-      const currentTarget = (controls as any)?.target || new THREE.Vector3(0, 0, 0);
+      const currentTarget = controlsRef.current?.target || new THREE.Vector3(0, 0, 0);
       
       animationRef.current = {
         startPosition: camera.position.clone(),
@@ -41,7 +59,7 @@ const CameraController = () => {
         duration: 1500, // 1.5 second animation
       };
     }
-  }, [targetCameraPosition, targetCameraTarget, camera, controls]);
+  }, [targetCameraPosition, targetCameraTarget, camera]);
 
   useFrame(() => {
     if (!animationRef.current) return;
@@ -59,10 +77,10 @@ const CameraController = () => {
     camera.position.copy(currentPosition);
 
     // Update orbit controls target if they exist
-    if (controls && (controls as any).target) {
+    if (controlsRef.current && controlsRef.current.target) {
       const currentTarget = new THREE.Vector3().lerpVectors(startTarget, endTarget, easedProgress);
-      (controls as any).target.copy(currentTarget);
-      (controls as any).update();
+      controlsRef.current.target.copy(currentTarget);
+      controlsRef.current.update();
     }
 
     // Complete animation
