@@ -40,6 +40,13 @@ export type DebugState = {
   renderScreenshotsFromAbove: boolean;
   setRenderScreenshotsFromAbove: (fromAbove: boolean) => void;
   
+  // Measuring
+  measuringActive: boolean;
+  setMeasuringActive: (active: boolean) => void;
+  measuredPoint: [number, number, number] | null;
+  setMeasuredPoint: (pt: [number, number, number]) => void;
+  clearMeasuredPoint: () => void;
+  
   // Reset function for project switches
   resetDebugConfig: () => void;
 };
@@ -79,6 +86,13 @@ const useDebugStore = create<DebugState>((set) => ({
   renderScreenshotsFromAbove: false,
   setRenderScreenshotsFromAbove: (fromAbove: boolean) => set({ renderScreenshotsFromAbove: fromAbove }),
   
+  // Measuring defaults
+  measuringActive: false,
+  setMeasuringActive: (active: boolean) => set({ measuringActive: active }),
+  measuredPoint: null,
+  setMeasuredPoint: (pt: [number, number, number]) => set({ measuredPoint: pt }),
+  clearMeasuredPoint: () => set({ measuredPoint: null }),
+  
   resetDebugConfig: () => set({
     useAmbientLight: true,
     ambientLightIntensity: 1,
@@ -90,6 +104,8 @@ const useDebugStore = create<DebugState>((set) => ({
     pointLightDistance: 0,
     pointLightDecay: 2,
     renderScreenshotsFromAbove: false,
+    measuringActive: false,
+    measuredPoint: null,
   }),
 }));
 

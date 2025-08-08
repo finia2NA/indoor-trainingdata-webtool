@@ -1,4 +1,5 @@
 import { Canvas } from '@react-three/fiber';
+import { Html } from '@react-three/drei';
 import { Project } from '../../data/db';
 import WrappedOrbitControls, { OrbitUsecase } from './WrappedOrbitControls';
 import useEditorStore, { EditorMode } from '../../hooks/state/useEditorStore';
@@ -33,7 +34,9 @@ const Viewport = ({ project, setSelectedImage }: ViewportProps) => {
   const { showGrid, editorMode, showImages } = useEditorStore();
   const {
     useAmbientLight,
-    ambientLightIntensity
+    ambientLightIntensity,
+    measuringActive,
+    measuredPoint
   } = useDebugStore();
 
 
@@ -70,6 +73,14 @@ const Viewport = ({ project, setSelectedImage }: ViewportProps) => {
         <SwitchableCamera />
         <CameraPosLogging />
         <CameraController />
+
+        {measuringActive && measuredPoint && (
+          <Html position={measuredPoint} center style={{ pointerEvents: 'none' }}>
+            <div className="px-2 py-1 rounded bg-black/70 text-white text-xs whitespace-nowrap">
+              [{measuredPoint.map((v) => v.toFixed(3)).join(', ')}]
+            </div>
+          </Html>
+        )}
       </Canvas>
     </>
   );

@@ -9,6 +9,8 @@ import useTransformingSync from '../../hooks/sync/useTransformingSync';
 import Transformation from '../../data/Transformation';
 import { loadModel } from '../../util/loadModel';
 import { useParams } from 'react-router-dom';
+import useDebugStore from '../../hooks/state/useDebugStore';
+import type { ThreeEvent } from '@react-three/fiber';
 
 type SceneObjectProps = {
   model: Model3D;
@@ -20,6 +22,7 @@ const SceneObject = ({ model }: SceneObjectProps) => {
   const modelId = model.id;
   const { transformMode } = useEditorStore();
   const { setIsTransforming } = useTransformingSync();
+  const { measuringActive, setMeasuredPoint } = useDebugStore();
 
   // Transformations
   const { getTransformation, setTransformation, getVisibility } = useMultiTransformationStore();
@@ -74,9 +77,22 @@ const SceneObject = ({ model }: SceneObjectProps) => {
   return (
     iAmVisible &&
     <>
-      {object3D &&
-        <primitive object={object3D} />
-      }
+      {object3D && (
+        <primitive
+          object={object3D}
+          onPointerDown={(e: ThreeEvent<PointerEvent>) => {
+            if (!measuringActive) return;
+            e.stopPropagation();
+          }}
+          onClick={(e: ThreeEvent<MouseEvent>) => {
+            if (!measuringActive) return;
+            // Prevent orbit controls
+            e.stopPropagation();
+            const p = e.point;
+            setMeasuredPoint([p.x, p.y, p.z]);
+          }}
+        />
+      )}
       {transformMode !== 'none' && object3D &&
         <TransformControls
           object={object3D}

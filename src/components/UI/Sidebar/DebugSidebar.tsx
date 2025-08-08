@@ -7,7 +7,7 @@ import useCameraPoseStore from "../../../hooks/sync/useCameraPoseStore";
 import PoseList from "./PoseList";
 
 
-const DebugSidebar = ({ project }: { project: Project }) => {
+const DebugSidebar = ({ project: _project }: { project: Project }) => {
   const { moveCameraTo } = useCameraPoseStore();
   const {
     useAmbientLight,
@@ -30,6 +30,10 @@ const DebugSidebar = ({ project }: { project: Project }) => {
     setPointLightDecay,
     renderScreenshotsFromAbove,
     setRenderScreenshotsFromAbove,
+  measuringActive,
+  setMeasuringActive,
+  measuredPoint,
+  clearMeasuredPoint,
   } = useDebugStore();
 
   const handleTestCameraMovement = () => {
@@ -68,7 +72,7 @@ const DebugSidebar = ({ project }: { project: Project }) => {
               className="w-24 ml-2 text-center bg-inactive"
               type="number"
               min={0}
-              max={1}
+              max={5}
               step={0.01}
               value={ambientLightIntensity}
               onChange={(e) => setAmbientLightIntensity(Number(e.target.value))}
@@ -171,6 +175,37 @@ const DebugSidebar = ({ project }: { project: Project }) => {
               checked={renderScreenshotsFromAbove}
               onChange={(e) => setRenderScreenshotsFromAbove(e.target.checked)}
             />
+          </div>
+        </div>
+      </SidebarSection>
+      <SidebarSection title="Measuring" level={2}>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center">
+            <label className="w-40">Measure mode</label>
+            <input
+              type="checkbox"
+              className="ml-2"
+              checked={measuringActive}
+              onChange={(e) => setMeasuringActive(e.target.checked)}
+            />
+          </div>
+          <div className="text-xs text-gray-300">
+            {measuredPoint ? (
+              <div className="flex items-center gap-2">
+                <span>Last:</span>
+                <span>
+                  [{measuredPoint.map((v) => v.toFixed(3)).join(', ')}]
+                </span>
+                <button
+                  className="ml-auto px-2 py-1 bg-neutral-700 rounded hover:bg-neutral-600"
+                  onClick={clearMeasuredPoint}
+                >
+                  Clear
+                </button>
+              </div>
+            ) : (
+              <span>Click a mesh to record position</span>
+            )}
           </div>
         </div>
       </SidebarSection>
