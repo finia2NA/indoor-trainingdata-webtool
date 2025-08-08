@@ -1,5 +1,6 @@
 import useCameraPoseStore from '../../hooks/sync/useCameraPoseStore';
 import { Image360 } from '../../util/get360s';
+import { Slider } from "@mui/material";
 
 type View360OverlayProps = {
   selectedImage?: Image360 | null;
@@ -22,7 +23,7 @@ const View360Overlay = ({ selectedImage, onExit }: View360OverlayProps) => {
   if (!is360ViewActive) return null;
 
   return (
-    <div className="bg-black bg-opacity-50 rounded-lg p-4 space-y-3 pointer-events-auto">
+    <div className="bg-bg bg-opacity-70 px-2 py-3 space-y-3 pointer-events-auto">
       <div className="flex flex-col gap-2">
         <button
           onClick={handleExit}
@@ -55,16 +56,28 @@ const View360Overlay = ({ selectedImage, onExit }: View360OverlayProps) => {
         <label htmlFor="opacity-slider" className="text-sm font-medium">
           Sphere Opacity
         </label>
-        <div className="flex items-center gap-2">
-          <input
-            id="opacity-slider"
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
+        <div className="flex items-center gap-4">
+          <Slider
+            color="secondary"
+            getAriaLabel={() => 'Sphere Opacity'}
             value={sphereOpacity}
-            onChange={(e) => setSphereOpacity(Number(e.target.value))}
+            onChange={(_, value) => setSphereOpacity(value as number)}
+            valueLabelDisplay="off"
+            getAriaValueText={(value) => `${Math.round(value * 100)}%`}
+            min={0}
+            max={1}
+            step={0.01}
             className="flex-grow"
+            sx={{
+              '& .MuiSlider-thumb': {
+                width: 16,
+                height: 16,
+                color: 'primary.main',
+                '&:hover, &:focus-visible': {
+                  boxShadow: '0px 0px 0px 6px rgba(0, 0, 0, 0.3)',
+                },
+              },
+            }}
           />
           <span className="text-xs min-w-[2rem]">{Math.round(sphereOpacity * 100)}%</span>
         </div>
