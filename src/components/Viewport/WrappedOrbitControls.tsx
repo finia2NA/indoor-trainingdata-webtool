@@ -94,10 +94,11 @@ const WrappedOrbitControls = React.memo((props: WrappedOrbitControlsProps) => {
     }
   });
 
-  return (isTransforming ? null :
+  return (
     <OrbitControls
       ref={controlsRef}
       enableZoom={!(props.useCase === 'cube')}
+      enabled={!isTransforming}
       onChange={() => {
         if (controlsRef.current) {
           updateAzimuthAngle(controlsRef.current.getAzimuthalAngle());
