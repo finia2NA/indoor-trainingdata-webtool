@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Project } from '../../data/db';
 import WrappedOrbitControls, { OrbitUsecase } from './WrappedOrbitControls';
@@ -12,6 +13,7 @@ import Image360Markers from './Image360Markers';
 import PointLightWithControls from './PointLightWithControls';
 import CameraController from './CameraController';
 import View360Overlay from './View360Overlay';
+import { Image360 } from '../../util/get360s';
 import { OrbitControls } from '@react-three/drei';
 
 type ViewportProps = {
@@ -35,11 +37,13 @@ const Viewport = ({ project }: ViewportProps) => {
     useAmbientLight,
     ambientLightIntensity
   } = useDebugStore();
+  
+  const [selectedImage, setSelectedImage] = useState<Image360 | null>(null);
 
 
   return (
     <>
-      <View360Overlay />
+      <View360Overlay selectedImage={selectedImage} />
       <Canvas
         gl={{ preserveDrawingBuffer: true }}
         shadows
@@ -51,7 +55,7 @@ const Viewport = ({ project }: ViewportProps) => {
 
         <SceneObjects project={project} />
         {showImages &&
-          <Image360Markers project={project} />
+          <Image360Markers project={project} onImageSelected={setSelectedImage} />
         }
 
         {[EditorMode.MAP, EditorMode.GENERATE, EditorMode.DEBUG].includes(editorMode) && <PolygonCreator />}

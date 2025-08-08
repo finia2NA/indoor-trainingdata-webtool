@@ -1,10 +1,12 @@
 import useCameraPoseStore from '../../hooks/sync/useCameraPoseStore';
+import { Image360 } from '../../util/get360s';
 
 type View360OverlayProps = {
+  selectedImage?: Image360 | null;
   onExit?: () => void;
 };
 
-const View360Overlay = ({ onExit }: View360OverlayProps) => {
+const View360Overlay = ({ selectedImage, onExit }: View360OverlayProps) => {
   const { is360ViewActive, exit360View, sphereOpacity, setSphereOpacity } = useCameraPoseStore();
   
   const handleExit = () => {
@@ -23,6 +25,17 @@ const View360Overlay = ({ onExit }: View360OverlayProps) => {
         <span>←</span>
         Exit 360° View
       </button>
+      
+      {selectedImage && (
+        <div className="text-white space-y-2">
+          <h3 className="text-sm font-medium border-b border-gray-400 pb-1">Image Properties</h3>
+          <div className="text-xs space-y-1">
+            <div><span className="text-gray-300">Name:</span> {selectedImage.name}</div>
+            <div><span className="text-gray-300">Position:</span> ({selectedImage.x.toFixed(3)}, {selectedImage.y.toFixed(3)}, {selectedImage.z.toFixed(3)})</div>
+            <div><span className="text-gray-300">Course:</span> {selectedImage.course.toFixed(1)}°</div>
+          </div>
+        </div>
+      )}
       
       <div className="flex flex-col gap-2 text-white">
         <label htmlFor="opacity-slider" className="text-sm font-medium">

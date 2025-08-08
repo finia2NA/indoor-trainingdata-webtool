@@ -9,9 +9,10 @@ import View360Sphere from './View360Sphere';
 
 type Image360MarkersProps = {
   project: Project;
+  onImageSelected?: (image: Image360 | null) => void;
 };
 
-const Image360Markers = ({ project }: Image360MarkersProps) => {
+const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => {
   const [positions, setPositions] = useState<Image360[]>([]);
   const [selectedImage, setSelectedImage] = useState<Image360 | null>(null);
   const { moveCameraTo, enter360View, reactiveCameraPosition, reactiveTarget, is360ViewActive } = useCameraPoseStore();
@@ -37,8 +38,9 @@ const Image360Markers = ({ project }: Image360MarkersProps) => {
   useEffect(() => {
     if (!is360ViewActive) {
       setSelectedImage(null);
+      if (onImageSelected) onImageSelected(null);
     }
-  }, [is360ViewActive]);
+  }, [is360ViewActive, onImageSelected]);
 
   const handleSphereClick = (pos: Image360) => {
     // Store current camera position before entering 360° view
@@ -46,10 +48,19 @@ const Image360Markers = ({ project }: Image360MarkersProps) => {
     
     // Set the selected image for texture display
     setSelectedImage(pos);
+    if (onImageSelected) onImageSelected(pos);
     
-    // Move camera to 0.5 units (50cm) away from the sphere position
+    // Calculate camera position based on negative course direction (camera looks back towards sphere)
     const offset = 0.005;
-    const cameraPosition: [number, number, number] = [pos.x, pos.y + offset, pos.z];
+    const courseRadians = THREE.MathUtils.degToRad(pos.course);
+    const courseVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), courseRadians);
+    courseVector.multiplyScalar(-offset); // Negative to position camera opposite to course direction
+    
+    const cameraPosition: [number, number, number] = [
+      pos.x + courseVector.x, 
+      pos.y + courseVector.y, 
+      pos.z + courseVector.z
+    ];
     const target: [number, number, number] = [pos.x, pos.y, pos.z];
     moveCameraTo(cameraPosition, target);
   };
