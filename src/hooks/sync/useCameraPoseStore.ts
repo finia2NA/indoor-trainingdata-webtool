@@ -17,9 +17,18 @@ type CameraPoseState = {
   targetCameraTarget: [number, number, number] | null;
   moveCameraTo: (position: [number, number, number], target: [number, number, number]) => void;
   clearCameraTarget: () => void;
+
+  // 360° view state
+  is360ViewActive: boolean;
+  originalCameraPosition: [number, number, number] | null;
+  originalCameraTarget: [number, number, number] | null;
+  sphereOpacity: number;
+  setSphereOpacity: (opacity: number) => void;
+  enter360View: (originalPosition: [number, number, number], originalTarget: [number, number, number]) => void;
+  exit360View: () => void;
 };
 
-const useCameraPoseStore = create<CameraPoseState>((set) => ({
+const useCameraPoseStore = create<CameraPoseState>((set, get) => ({
   reactiveCameraPosition: [0, 0, 0],
   setReactiveCameraPosition: (position) => set({ reactiveCameraPosition: position }),
 
@@ -34,6 +43,30 @@ const useCameraPoseStore = create<CameraPoseState>((set) => ({
   targetCameraTarget: null,
   moveCameraTo: (position, target) => set({ targetCameraPosition: position, targetCameraTarget: target }),
   clearCameraTarget: () => set({ targetCameraPosition: null, targetCameraTarget: null }),
+
+  // 360° view state
+  is360ViewActive: false,
+  originalCameraPosition: null,
+  originalCameraTarget: null,
+  sphereOpacity: 0.5,
+  setSphereOpacity: (opacity) => set({ sphereOpacity: opacity }),
+  enter360View: (originalPosition, originalTarget) => set({ 
+    is360ViewActive: true, 
+    originalCameraPosition: originalPosition, 
+    originalCameraTarget: originalTarget 
+  }),
+  exit360View: () => {
+    const state = get();
+    if (state.originalCameraPosition && state.originalCameraTarget) {
+      set({ 
+        targetCameraPosition: state.originalCameraPosition,
+        targetCameraTarget: state.originalCameraTarget,
+        is360ViewActive: false,
+        originalCameraPosition: null,
+        originalCameraTarget: null
+      });
+    }
+  },
 }));
 
 export default useCameraPoseStore;

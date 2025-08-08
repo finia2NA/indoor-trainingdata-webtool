@@ -11,6 +11,7 @@ import CameraPosLogging from './CameraPoseLogging';
 import Image360Markers from './Image360Markers';
 import PointLightWithControls from './PointLightWithControls';
 import CameraController from './CameraController';
+import View360Overlay from './View360Overlay';
 import { OrbitControls } from '@react-three/drei';
 
 type ViewportProps = {
@@ -38,6 +39,7 @@ const Viewport = ({ project }: ViewportProps) => {
 
   return (
     <>
+      <View360Overlay />
       <Canvas
         gl={{ preserveDrawingBuffer: true }}
         shadows
