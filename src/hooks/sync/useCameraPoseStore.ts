@@ -26,6 +26,7 @@ type CameraPoseState = {
   setSphereOpacity: (opacity: number) => void;
   enter360View: (originalPosition: [number, number, number], originalTarget: [number, number, number]) => void;
   exit360View: () => void;
+  exit360ViewWithoutReset: () => void;
 };
 
 const useCameraPoseStore = create<CameraPoseState>((set, get) => ({
@@ -66,6 +67,13 @@ const useCameraPoseStore = create<CameraPoseState>((set, get) => ({
         originalCameraTarget: null
       });
     }
+  },
+  exit360ViewWithoutReset: () => {
+    set({ 
+      is360ViewActive: false,
+      originalCameraPosition: null,
+      originalCameraTarget: null
+    });
   },
 }));
 

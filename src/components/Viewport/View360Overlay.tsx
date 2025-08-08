@@ -7,10 +7,15 @@ type View360OverlayProps = {
 };
 
 const View360Overlay = ({ selectedImage, onExit }: View360OverlayProps) => {
-  const { is360ViewActive, exit360View, sphereOpacity, setSphereOpacity } = useCameraPoseStore();
+  const { is360ViewActive, exit360View, exit360ViewWithoutReset, sphereOpacity, setSphereOpacity } = useCameraPoseStore();
   
   const handleExit = () => {
     exit360View();
+    if (onExit) onExit();
+  };
+
+  const handleExitWithoutReset = () => {
+    exit360ViewWithoutReset();
     if (onExit) onExit();
   };
 
@@ -18,13 +23,22 @@ const View360Overlay = ({ selectedImage, onExit }: View360OverlayProps) => {
 
   return (
     <div className="fixed top-20 left-4 z-50 bg-black bg-opacity-50 rounded-lg p-4 space-y-3">
-      <button
-        onClick={handleExit}
-        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow-lg flex items-center gap-2 w-full"
-      >
-        <span>←</span>
-        Exit 360° View
-      </button>
+      <div className="flex flex-col gap-2">
+        <button
+          onClick={handleExit}
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow-lg flex items-center gap-2 w-full"
+        >
+          <span>←</span>
+          Exit & Return to Position
+        </button>
+        <button
+          onClick={handleExitWithoutReset}
+          className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow-lg flex items-center gap-2 w-full"
+        >
+          <span>×</span>
+          Exit & Stay Here
+        </button>
+      </div>
       
       {selectedImage && (
         <div className="text-white space-y-2">
@@ -47,7 +61,7 @@ const View360Overlay = ({ selectedImage, onExit }: View360OverlayProps) => {
             type="range"
             min="0"
             max="1"
-            step="0.1"
+            step="0.01"
             value={sphereOpacity}
             onChange={(e) => setSphereOpacity(Number(e.target.value))}
             className="flex-grow"
