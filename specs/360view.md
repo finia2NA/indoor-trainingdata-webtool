@@ -11,6 +11,7 @@ The functionality is as follows:
 The goal in general is to have a functionality that allows us to check if the 360° images are aligned correctly with the model.
 
 For this, we will need to:
-1. Add functionality to move the camera to the position of the sphere, and a global state to store the return position and orbiting point of the camera.
-2. Do this when clicking on a sphere. Implement the UI to go back to the original position.
-3. Load the correct texture, and display it as a sphere map when in the 360° view.
+1. Add functionality to move the camera to a position in space. Add a button to the debug panel to move it to a random location to confirm this works.
+2. When clicking a sphere, move the camera there.
+3. Implement the UI to go back to the original position.
+4. Load the correct texture, and display it as a sphere map when in the 360° view.

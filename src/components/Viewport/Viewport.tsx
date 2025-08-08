@@ -10,6 +10,7 @@ import LabeledAxesHelper from './LabeledAxesHelper';
 import CameraPosLogging from './CameraPoseLogging';
 import Image360Markers from './Image360Markers';
 import PointLightWithControls from './PointLightWithControls';
+import { FirstPersonControls, OrbitControls } from '@react-three/drei';
 
 type ViewportProps = {
   project: Project;
@@ -28,8 +29,8 @@ const raycasterParams = {
 
 const Viewport = ({ project }: ViewportProps) => {
   const { showGrid, editorMode, showImages } = useEditorStore((state) => (state as EditorState));
-  const { 
-    useAmbientLight, 
+  const {
+    useAmbientLight,
     ambientLightIntensity
   } = useDebugStore();
 
@@ -42,7 +43,7 @@ const Viewport = ({ project }: ViewportProps) => {
         raycaster={{ params: raycasterParams }}
       >
         {useAmbientLight && <ambientLight intensity={ambientLightIntensity} />}
-        
+
         <PointLightWithControls />
 
         <SceneObjects project={project} />
@@ -52,9 +53,11 @@ const Viewport = ({ project }: ViewportProps) => {
 
         {[EditorMode.MAP, EditorMode.GENERATE, EditorMode.DEBUG].includes(editorMode) && <PolygonCreator />}
 
-        <WrappedOrbitControls
+        {/* <WrappedOrbitControls
           useCase={OrbitUsecase.VIEWPORT}
-        />
+        /> */}
+        {/* <FirstPersonControls /> */}
+        <OrbitControls />
         {showGrid &&
           <>
             <gridHelper args={[10, 10]} />
