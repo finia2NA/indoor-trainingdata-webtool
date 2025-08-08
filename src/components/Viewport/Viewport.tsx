@@ -1,8 +1,7 @@
-import { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Project } from '../../data/db';
 import WrappedOrbitControls, { OrbitUsecase } from './WrappedOrbitControls';
-import useEditorStore, { EditorMode, EditorState } from '../../hooks/state/useEditorStore';
+import useEditorStore, { EditorMode } from '../../hooks/state/useEditorStore';
 import useDebugStore from '../../hooks/state/useDebugStore';
 import SwitchableCamera from './SwitchableCamera';
 import SceneObjects from './SceneObjects';
@@ -12,12 +11,11 @@ import CameraPosLogging from './CameraPoseLogging';
 import Image360Markers from './Image360Markers';
 import PointLightWithControls from './PointLightWithControls';
 import CameraController from './CameraController';
-import View360Overlay from './View360Overlay';
 import { Image360 } from '../../util/get360s';
-import { OrbitControls } from '@react-three/drei';
 
 type ViewportProps = {
   project: Project;
+  setSelectedImage: (image: Image360 | null) => void;
 }
 
 // Make it a bit easier to click on lines
@@ -31,19 +29,17 @@ const raycasterParams = {
   Sprite: undefined
 }
 
-const Viewport = ({ project }: ViewportProps) => {
-  const { showGrid, editorMode, showImages } = useEditorStore((state) => (state as EditorState));
+const Viewport = ({ project, setSelectedImage }: ViewportProps) => {
+  const { showGrid, editorMode, showImages } = useEditorStore();
   const {
     useAmbientLight,
     ambientLightIntensity
   } = useDebugStore();
-  
-  const [selectedImage, setSelectedImage] = useState<Image360 | null>(null);
+
 
 
   return (
     <>
-      <View360Overlay selectedImage={selectedImage} />
       <Canvas
         gl={{ preserveDrawingBuffer: true }}
         shadows

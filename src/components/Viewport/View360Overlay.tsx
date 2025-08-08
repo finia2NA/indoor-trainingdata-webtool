@@ -8,7 +8,7 @@ type View360OverlayProps = {
 
 const View360Overlay = ({ selectedImage, onExit }: View360OverlayProps) => {
   const { is360ViewActive, exit360View, exit360ViewWithoutReset, sphereOpacity, setSphereOpacity } = useCameraPoseStore();
-  
+
   const handleExit = () => {
     exit360View();
     if (onExit) onExit();
@@ -22,7 +22,7 @@ const View360Overlay = ({ selectedImage, onExit }: View360OverlayProps) => {
   if (!is360ViewActive) return null;
 
   return (
-    <div className="fixed top-20 left-4 z-50 bg-black bg-opacity-50 rounded-lg p-4 space-y-3">
+    <div className="bg-black bg-opacity-50 rounded-lg p-4 space-y-3 pointer-events-auto">
       <div className="flex flex-col gap-2">
         <button
           onClick={handleExit}
@@ -39,7 +39,7 @@ const View360Overlay = ({ selectedImage, onExit }: View360OverlayProps) => {
           Exit & Stay Here
         </button>
       </div>
-      
+
       {selectedImage && (
         <div className="text-white space-y-2">
           <h3 className="text-sm font-medium border-b border-gray-400 pb-1">Image Properties</h3>
@@ -50,7 +50,7 @@ const View360Overlay = ({ selectedImage, onExit }: View360OverlayProps) => {
           </div>
         </div>
       )}
-      
+
       <div className="flex flex-col gap-2 text-white">
         <label htmlFor="opacity-slider" className="text-sm font-medium">
           Sphere Opacity
