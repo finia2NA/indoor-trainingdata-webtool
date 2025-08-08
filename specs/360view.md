@@ -12,6 +12,6 @@ The goal in general is to have a functionality that allows us to check if the 36
 
 For this, we will need to:
 1. Add functionality to move the camera to a position in space. Add a button to the debug panel to move it to a random location to confirm this works.
-2. When clicking a sphere, move the camera there.
-3. Implement the UI to go back to the original position.
+2. When clicking a sphere, move the target there, and the camera 0.5cm from the target.
+3. Implement the UI and store to go back to the original position.
 4. Load the correct texture, and display it as a sphere map when in the 360° view.
