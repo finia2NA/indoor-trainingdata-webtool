@@ -8,7 +8,7 @@ export type Image360 = {
   y: number;
   z: number;
   course: number;
-  image?: THREE.Texture;
+  texture?: THREE.Texture;
 };
 
 export async function get360s(project: Project, withImages: boolean = false): Promise<Image360[] | null> {
@@ -61,7 +61,7 @@ export async function get360s(project: Project, withImages: boolean = false): Pr
           }
         );
 
-        imageData.image = texture;
+        imageData.texture = texture;
       }
     }
   }

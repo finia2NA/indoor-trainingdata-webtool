@@ -286,29 +286,29 @@ const useOffscreenThree = () => {
       const pose = poses[i];
 
       // Find closest 360° images for this pose
-      const imageDistances = images360.map(img => ({
+      const imagesWithDistances = images360.map(img => ({
         image: img,
         distance: pose.position.distanceTo(new THREE.Vector3(img.x, img.y, img.z))
       }));
 
       // Filter by max distance and sort by distance
-      const nearbyImages = imageDistances
+      const nearbyImages = imagesWithDistances
         .filter(item => item.distance <= maxShadingDistance)
         .sort((a, b) => a.distance - b.distance)
         .slice(0, maxShadingImages);
 
       // Create point lights at selected 360° image positions
-      const lightContainers = nearbyImages.map(image360 => {
+      const lightContainers = nearbyImages.map(imageAndDistance => {
         const light = new THREE.PointLight(0xffffff, 1, 0);
         light.intensity = 5;
         light.decay = 0;
         light.distance = 0;
         light.castShadow = true;
-        light.position.set(image360.image.x, image360.image.y, image360.image.z);
+        light.position.set(imageAndDistance.image.x, imageAndDistance.image.y, imageAndDistance.image.z);
         light.shadow.mapSize.width = 2048;
         light.shadow.mapSize.height = 2048;
         scene.add(light);
-        return { light, image360 };
+        return { light, imgWithDistance: imageAndDistance };
       });
 
       // Set up camera and render
@@ -361,13 +361,13 @@ const useOffscreenThree = () => {
           if (child instanceof THREE.Mesh && (child.material as any).uniforms) {
             const material = child.material as any;
             // Set sphere map from the 360° image texture
-            material.uniforms.sphereMap.value = container.image360.image.image;
+            material.uniforms.sphereMap.value = container.imgWithDistance.image.texture;
             // Set light position as vec4 (x, y, z, course)
             material.uniforms.lightPos.value.set(
-              container.image360.image.x,
-              container.image360.image.y,
-              container.image360.image.z,
-              container.image360.image.course
+              container.imgWithDistance.image.x,
+              container.imgWithDistance.image.y,
+              container.imgWithDistance.image.z,
+              container.imgWithDistance.image.course
             );
           }
         });
@@ -568,7 +568,7 @@ const useOffscreenThree = () => {
         throw new Error(`Image ${pose.imageName} not found in images360`);
       }
 
-      if (!imageData.image) {
+      if (!imageData.texture) {
         throw new Error(`Texture for image ${pose.imageName} not loaded`);
       }
     }
@@ -597,12 +597,12 @@ const useOffscreenThree = () => {
 
       // Get the image data (texture and position are already loaded)
       const imageData = images360Map.get(pose.imageName);
-      if (!imageData || !imageData.image) {
+      if (!imageData || !imageData.texture) {
         throw new Error(`Image data or texture for ${pose.imageName} not found`);
       }
 
       // Set the texture on the sphere
-      sphere.material.map = imageData.image;
+      sphere.material.map = imageData.texture;
       sphere.material.needsUpdate = true;
 
       // Rotate the sphere based on course value
@@ -654,8 +654,8 @@ const useOffscreenThree = () => {
     sphere.material.dispose();
 
     for (const imageData of images360) {
-      if (imageData.image) {
-        imageData.image.dispose();
+      if (imageData.texture) {
+        imageData.texture.dispose();
       }
     }
 
