@@ -11,6 +11,7 @@ import { loadModel } from '../../util/loadModel';
 import { useParams } from 'react-router-dom';
 import useDebugStore from '../../hooks/state/useDebugStore';
 import type { ThreeEvent } from '@react-three/fiber';
+import { VertexNormalsHelper } from 'three/examples/jsm/helpers/VertexNormalsHelper.js';
 
 type SceneObjectProps = {
   model: Model3D;
@@ -20,7 +21,7 @@ const SceneObject = ({ model }: SceneObjectProps) => {
   // IDs, editor state
   const projectId = Number(useParams<{ id: string }>().id);
   const modelId = model.id;
-  const { transformMode } = useEditorStore();
+  const { transformMode, wireframeMode, showNormals } = useEditorStore();
   const { setIsTransforming } = useTransformingSync();
   const { measuringActive, setMeasuredPoint } = useDebugStore();
 
@@ -32,11 +33,18 @@ const SceneObject = ({ model }: SceneObjectProps) => {
 
   // Storing the object, both the three object and the ref to it
   const [object3D, setObject3D] = useState<THREE.Object3D<Object3DEventMap> | null>(null);
+  const [normalHelpers, setNormalHelpers] = useState<VertexNormalsHelper[]>([]);
 
   // Load scene into object3D
   useEffect(() => {
     (async () => {
       try {
+        // Clean up existing normal helpers when loading new model
+        normalHelpers.forEach(helper => {
+          helper.dispose();
+        });
+        setNormalHelpers([]);
+        
         const obj = await loadModel(model.name, model.content, false);
         setObject3D(obj);
       } catch (err) {
@@ -53,6 +61,59 @@ const SceneObject = ({ model }: SceneObjectProps) => {
     object3D.scale.set(transformation.scale[0], transformation.scale[1], transformation.scale[2]);
   }, [object3D, transformation.translation, transformation.rotation, transformation.scale]);
 
+  // Apply wireframe mode
+  useEffect(() => {
+    if (!object3D) return;
+    
+    object3D.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach(material => {
+              material.wireframe = wireframeMode;
+            });
+          } else {
+            child.material.wireframe = wireframeMode;
+          }
+        }
+      }
+    });
+  }, [object3D, wireframeMode]);
+
+  // Manage normal helpers
+  useEffect(() => {
+    // Clean up existing normal helpers
+    normalHelpers.forEach(helper => {
+      if (object3D && helper.parent === object3D) {
+        object3D.remove(helper);
+      }
+      helper.dispose();
+    });
+    setNormalHelpers([]);
+
+    if (!object3D || !showNormals) return;
+
+    // Create new normal helpers
+    const newHelpers: VertexNormalsHelper[] = [];
+    object3D.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        const helper = new VertexNormalsHelper(child, 0.2, 0x00ff00);
+        newHelpers.push(helper);
+        object3D.add(helper);
+      }
+    });
+    
+    setNormalHelpers(newHelpers);
+  }, [object3D, showNormals]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      normalHelpers.forEach(helper => {
+        helper.dispose();
+      });
+    };
+  }, []);
 
   // When transforming using handles, apply it to the zustand store
   const onTransform = () => {

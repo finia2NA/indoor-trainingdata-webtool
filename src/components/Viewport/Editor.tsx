@@ -17,7 +17,7 @@ type EditorProps = {
 
 const Editor = ({ project }: EditorProps) => {
 
-  const { editorMode } = useEditorStore(state => state as EditorState)
+  const { editorMode, controlsExpanded } = useEditorStore(state => state as EditorState)
   const [selectedImage, setSelectedImage] = useState<Image360 | null>(null);
 
 
@@ -47,9 +47,11 @@ const Editor = ({ project }: EditorProps) => {
         </div>
         <div className="flex flex-col items-start justify-end p-2 gap-1">
           {/* Bottom Left Corner Content */}
-          <ViewmodeToggles />
-          <div className="h-28 w-28">
-            <ViewcubeViz />
+          <div className={`flex flex-col gap-1  ${controlsExpanded ? "w-48" : "w-28"}`}>
+            <ViewmodeToggles />
+            <div className={`${controlsExpanded ? "h-48" : "h-28"}`}>
+              <ViewcubeViz />
+            </div>
           </div>
         </div>
         <div className="flex items-end justify-end p-2">

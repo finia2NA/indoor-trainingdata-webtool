@@ -39,6 +39,9 @@ export type EditorState = {
   perspectiveMode: Perspective;
   setPerspectiveMode: (mode: Perspective) => void;
 
+  wireframeMode: boolean;
+  setWireframeMode: (wireframe: boolean) => void;
+
   editorMode: EditorMode;
   setEditorMode: (mode: EditorMode) => void;
 
@@ -63,6 +66,9 @@ export type EditorState = {
   showPoses: boolean;
   setShowPoses: (show: boolean) => void;
 
+  showNormals: boolean;
+  setShowNormals: (show: boolean) => void;
+
   // TODO: rename this and below to surface_, to distinguish from drawn polygon offset etc.
   polygonHeight: number;
   setPolygonHeight: (newHeight: number) => void;
@@ -70,62 +76,56 @@ export type EditorState = {
   polygonSize: number;
   setPolygonSize: (newSize: number) => void;
 
+  controlsExpanded: boolean;
+  setControlsExpanded: (expanded: boolean) => void;
+
   resetEditorConfig: () => void;
 };
 
 // --------------------------------------------
 
+// Default editor configuration
+const defaults = {
+  perspectiveMode: Perspective.PERSPECTIVE,
+  wireframeMode: false,
+  editorMode: EditorMode.LAYOUT,
+  transformMode: TransformMode.NONE,
+  polygonToolMode: PolygonToolMode.NONE,
+  showGrid: true,
+  showLabels: false,
+  showTriangulation: false,
+  showImages: true,
+  showPoses: false,
+  showNormals: false,
+  // TODO: rename this and below to surface_, to distinguish from drawn polygon offset etc.
+  polygonHeight: 0,
+  polygonSize: 5,
+  controlsExpanded: false,
+};
+
 // Store creation
 const useEditorStore = create<EditorState>((set) => ({
-  perspectiveMode: Perspective.PERSPECTIVE,
-  setPerspectiveMode: (mode: Perspective) => set({ perspectiveMode: mode }),
+  ...defaults,
 
-  editorMode: EditorMode.LAYOUT,
+  setPerspectiveMode: (mode: Perspective) => set({ perspectiveMode: mode }),
+  setWireframeMode: (wireframe: boolean) => set({ wireframeMode: wireframe }),
   setEditorMode: (mode: EditorMode) => set((state: EditorState) => ({
     editorMode: mode,
     transformMode: mode !== EditorMode.LAYOUT ? TransformMode.NONE : state.transformMode,
   })),
-
-  transformMode: TransformMode.NONE,
   setTransformMode: (mode: TransformMode) => set({ transformMode: mode }),
-
-  showGrid: true,
   setShowGrid: (showGrid: boolean) => set({ showGrid }),
-
-  showLabels: false,
   setShowLabel: (showLabels: boolean) => set({ showLabels }),
-
-  showTriangulation: false,
   setShowTriangulation: (show: boolean) => set({ showTriangulation: show }),
-
-  showImages: true,
   setShowImages: (show: boolean) => set({ showImages: show }),
-
-  showPoses: false,
   setShowPoses: (show: boolean) => set({ showPoses: show }),
-
-  polygonHeight: 0,
+  setShowNormals: (show: boolean) => set({ showNormals: show }),
   setPolygonHeight: (newHeight: number) => set({ polygonHeight: newHeight }),
-
-  polygonSize: 5,
   setPolygonSize: (newSize: number) => set({ polygonSize: newSize }),
-
-  polygonToolMode: PolygonToolMode.NONE,
   setPolygonToolMode: (mode: PolygonToolMode) => set({ polygonToolMode: mode }),
+  setControlsExpanded: (expanded: boolean) => set({ controlsExpanded: expanded }),
 
-  resetEditorConfig: () => set({
-    perspectiveMode: Perspective.PERSPECTIVE,
-    editorMode: EditorMode.LAYOUT,
-    transformMode: TransformMode.NONE,
-    showGrid: true,
-    showLabels: false,
-    showTriangulation: false,
-    showImages: true,
-    showPoses: false,
-    polygonHeight: 0,
-    polygonSize: 5,
-    polygonToolMode: PolygonToolMode.NONE,
-  }),
+  resetEditorConfig: () => set({ ...defaults }),
 }));
 
 export default useEditorStore;
