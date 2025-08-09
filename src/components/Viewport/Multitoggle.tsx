@@ -49,7 +49,7 @@ const ToggleHelper = ({ item, verbose, direction }: ToggleHelperProps) => {
           flex flex-col gap-2
           ${direction === 'row' ? 'w-full' : ''}
         `}>
-          <div className="text-xs text-secondary font-medium uppercase tracking-wide">
+          <div className="text-xs text-white font-medium uppercase tracking-wide">
             {item.title}
           </div>
           <div className={`
@@ -85,7 +85,7 @@ const ToggleHelper = ({ item, verbose, direction }: ToggleHelperProps) => {
           >
             <item.icon className="text-white" />
           </button>
-          <span className="text-[0.7rem] text-white font-medium break-all">
+          <span className="text-[0.7rem] text-secondary font-medium break-all">
             {item.title}
           </span>
         </div>

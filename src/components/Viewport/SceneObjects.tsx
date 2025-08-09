@@ -97,7 +97,7 @@ const SceneObject = ({ model }: SceneObjectProps) => {
     const newHelpers: VertexNormalsHelper[] = [];
     object3D.traverse((child) => {
       if (child instanceof THREE.Mesh) {
-        const helper = new VertexNormalsHelper(child, 0.2, 0x00ff00);
+        const helper = new VertexNormalsHelper(child, 0.05, 0x00ff00);
         newHelpers.push(helper);
         object3D.add(helper);
       }
