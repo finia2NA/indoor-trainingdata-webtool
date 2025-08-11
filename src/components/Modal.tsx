@@ -129,8 +129,6 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
     });
   }
 
-  const h1 = (isNew ? "Creating Project" : "Editing Project") + " " + projectId;
-
   return (
     <Modal
       className="
@@ -138,8 +136,23 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
       "
       onClose={onClose}>
       <div className="flex flex-col gap-3">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-semibold text-bg">{h1}</h1>
+        <div className="flex justify-between items-start mb-6">
+          <div className="flex-1 mr-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-3xl font-medium text-bg border-b-2 border-transparent">
+                {isNew ? "Creating" : "Editing"}
+              </span>
+              <input
+                type="text"
+                className="text-3xl font-semibold text-bg bg-transparent border-0 border-b-2 border-solid border-bg focus:outline-none focus:border-bg-700 min-w-0"
+                placeholder="Project Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                size={Math.max(name.length, 12)}
+              />
+            </div>
+            <div className="text-sm text-gray-500">ID: {projectId}</div>
+          </div>
           <button
             className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition-colors duration-200"
             title="Delete project"
@@ -149,93 +162,90 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
           </button>
         </div>
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Project Details</h2>
-          <div className="flex flex-col gap-2">
-            <label htmlFor="name" className="text-sm font-medium text-gray-700">Project Name</label>
-            <input
-              id="name"
-              type="text"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bg focus:border-transparent"
-              placeholder="Enter project name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="mb-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Project Files</h2>
-          {models.length > 0 && (
-            <div className="mb-4">
-              {models.map((model, i) => (
-                <ProjectFile
-                  key={i}
-                  index={i}
-                  name={model.name}
-                  size={model.size}
-                  onDelete={() => { db.deleteModelFromProject(projectId, model.id) }}
-                />
-              ))}
-            </div>
-          )}
-          <div>
-            <h3 className="font-medium text-gray-700 mb-2">Upload files</h3>
-            <UnifiedUpload projectId={projectId} />
-          </div>
+          <UnifiedUpload projectId={projectId} />
         </div>
         <div className="mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">360° Images</h2>
-            {images360.length > 0 && (
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors duration-200"
-                onClick={async () => {
-                  try {
-                    await db.deleteAllImagesFromProject(projectId);
-                  } catch (error) {
-                    console.error('Failed to delete all images:', error);
-                  }
-                }}
-              >
-                Delete All Images
-              </button>
+          <div className="mb-4">
+            <h3 className="font-medium text-gray-700 mb-2">3D Objects</h3>
+            {models.length > 0 ? (
+              <div>
+                {models.map((model, i) => (
+                  <ProjectFile
+                    key={i}
+                    index={i}
+                    name={model.name}
+                    size={model.size}
+                    onDelete={() => { db.deleteModelFromProject(projectId, model.id) }}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm">No 3D models uploaded yet</p>
             )}
           </div>
-          {images360.length > 0 && (
-            <div className="mb-4 max-h-96 overflow-y-auto">
-              {images360.map((image, i) => (
-                <ProjectFile
-                  key={`image-${i}`}
-                  index={i}
-                  name={image.name}
-                  size={image.size}
-                  onDelete={async () => { 
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-medium text-gray-700">360° Images</h3>
+              {images360.length > 0 && (
+                <button
+                  className="bg-red-500 text-white px-3 py-1 rounded text-xs font-medium hover:bg-red-600 transition-colors duration-200"
+                  onClick={async () => {
                     try {
-                      await db.deleteImageFromProject(projectId, image.id);
+                      await db.deleteAllImagesFromProject(projectId);
                     } catch (error) {
-                      console.error('Failed to delete image:', error);
+                      console.error('Failed to delete all images:', error);
                     }
                   }}
-                />
-              ))}
-            </div>
-          )}
-          {metadataFile && (
-            <div className="mb-4">
-              <h3 className="font-medium text-gray-700 mb-2">JSON Metadata</h3>
-              <div className="bg-green-50 p-3 rounded-lg border border-green-200 flex justify-between items-center">
-                <div>
-                  <div className="font-medium text-gray-800">{metadataFile.name}</div>
-                  <div className="text-sm text-gray-600">{byteSize(metadataFile.size, { units: 'iec', precision: 1 }).toString()}</div>
-                </div>
-                <button 
-                  onClick={async () => await db.setMetadataFile(projectId, undefined)}
-                  className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors duration-200"
                 >
-                  <FiTrash2 size={16} />
+                  Delete All
                 </button>
-              </div>
+              )}
             </div>
-          )}
+            <div className="mb-3">
+              <h4 className="text-sm font-medium text-gray-600 mb-2">Image Files</h4>
+              {images360.length > 0 ? (
+                <div className="max-h-96 overflow-y-auto border-2 border-dashed border-gray-300 rounded-lg p-4">
+                  {images360.map((image, i) => (
+                    <ProjectFile
+                      key={`image-${i}`}
+                      index={i}
+                      name={image.name}
+                      size={image.size}
+                      onDelete={async () => { 
+                        try {
+                          await db.deleteImageFromProject(projectId, image.id);
+                        } catch (error) {
+                          console.error('Failed to delete image:', error);
+                        }
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm">No 360° images uploaded yet</p>
+              )}
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-gray-600 mb-2">Metadata</h4>
+              {metadataFile ? (
+                <div className="bg-green-50 p-3 rounded-lg border border-green-200 flex justify-between items-center">
+                  <div>
+                    <div className="font-medium text-gray-800">{metadataFile.name}</div>
+                    <div className="text-sm text-gray-600">{byteSize(metadataFile.size, { units: 'iec', precision: 1 }).toString()}</div>
+                  </div>
+                  <button 
+                    onClick={async () => await db.setMetadataFile(projectId, undefined)}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors duration-200"
+                  >
+                    <FiTrash2 size={16} />
+                  </button>
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm">No metadata uploaded yet</p>
+              )}
+            </div>
+          </div>
         </div>
         <div className="flex justify-end pt-4 border-t border-gray-200">
           <button
