@@ -63,8 +63,8 @@ const UnifiedUpload: React.FC<UnifiedUploadProps> = ({ projectId }) => {
     <div
       {...getRootProps()}
       className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors duration-200 ${isDragActive
-          ? 'border-primary bg-primary-50 text-primary-700'
-          : 'border-gray-300 bg-gray-50 hover:border-primary hover:bg-primary-50 text-gray-600'
+        ? 'border-primary bg-primary-50 text-primary-700'
+        : 'border-gray-300 bg-gray-50 hover:border-primary hover:bg-primary-50 text-gray-600'
         }`}
     >
       <input {...getInputProps()} />
@@ -246,7 +246,13 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
             </div>
           </div>
         </div>
-        <div className="flex justify-end pt-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <button
+            className="bg-secondary text-gray-800 px-6 py-3 rounded-lg font-medium hover:bg-secondary-bg-600 transition-colors duration-200"
+            onClick={() => onClose(CloseReason.CANCEL)}
+          >
+            Cancel
+          </button>
           <button
             className="bg-confirm text-white px-6 py-3 rounded-lg font-medium hover:bg-confirm-600 transition-colors duration-200"
             onClick={onConfirm}
