@@ -24,7 +24,7 @@ const ProjectFile: React.FC<ProjectFileProps> = ({ name, size, index, onDelete }
         <div className="font-medium text-gray-800 truncate">{name}</div>
         <div className="text-sm text-gray-600">{sizeInMb}</div>
       </div>
-      <button 
+      <button
         onClick={onDelete}
         className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors duration-200"
       >
@@ -60,13 +60,12 @@ const UnifiedUpload: React.FC<UnifiedUploadProps> = ({ projectId }) => {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   return (
-    <div 
-      {...getRootProps()} 
-      className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors duration-200 ${
-        isDragActive 
-          ? 'border-primary bg-primary-50 text-primary-700' 
+    <div
+      {...getRootProps()}
+      className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors duration-200 ${isDragActive
+          ? 'border-primary bg-primary-50 text-primary-700'
           : 'border-gray-300 bg-gray-50 hover:border-primary hover:bg-primary-50 text-gray-600'
-      }`}
+        }`}
     >
       <input {...getInputProps()} />
       <div className="space-y-2">
@@ -167,7 +166,7 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
         </div>
         <div className="mb-6">
           <div className="mb-4">
-            <h3 className="font-medium text-gray-700 mb-2">3D Objects</h3>
+            <h3 className="font-medium text-bg mb-2">3D Objects</h3>
             {models.length > 0 ? (
               <div>
                 {models.map((model, i) => (
@@ -181,12 +180,12 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">No 3D models uploaded yet</p>
+              <p className="text-inactive text-sm">No 3D models uploaded yet</p>
             )}
           </div>
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="font-medium text-gray-700">360° Images</h3>
+              <h3 className="font-medium text-bg">360° Images</h3>
               {images360.length > 0 && (
                 <button
                   className="bg-red-500 text-white px-3 py-1 rounded text-xs font-medium hover:bg-red-600 transition-colors duration-200"
@@ -203,16 +202,16 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
               )}
             </div>
             <div className="mb-3">
-              <h4 className="text-sm font-medium text-gray-600 mb-2">Image Files</h4>
+              <h4 className="text-sm font-medium text-secondary-bg mb-2">Image Files</h4>
               {images360.length > 0 ? (
-                <div className="max-h-96 overflow-y-auto border-2 border-dashed border-gray-300 rounded-lg p-4">
+                <div className="max-h-96 overflow-y-auto border-2 border-dashed border-bg bg-slate-300 rounded-lg p-4">
                   {images360.map((image, i) => (
                     <ProjectFile
                       key={`image-${i}`}
                       index={i}
                       name={image.name}
                       size={image.size}
-                      onDelete={async () => { 
+                      onDelete={async () => {
                         try {
                           await db.deleteImageFromProject(projectId, image.id);
                         } catch (error) {
@@ -223,18 +222,18 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm">No 360° images uploaded yet</p>
+                <p className="text-inactive text-sm">No 360° images uploaded yet</p>
               )}
             </div>
             <div>
-              <h4 className="text-sm font-medium text-gray-600 mb-2">Metadata</h4>
+              <h4 className="text-sm font-medium text-secondary-bg mb-2">Metadata</h4>
               {metadataFile ? (
-                <div className="bg-green-50 p-3 rounded-lg border border-green-200 flex justify-between items-center">
+                <div className="bg-secondary-50 p-3 rounded-lg border border-secondary-200 flex justify-between items-center">
                   <div>
                     <div className="font-medium text-gray-800">{metadataFile.name}</div>
                     <div className="text-sm text-gray-600">{byteSize(metadataFile.size, { units: 'iec', precision: 1 }).toString()}</div>
                   </div>
-                  <button 
+                  <button
                     onClick={async () => await db.setMetadataFile(projectId, undefined)}
                     className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors duration-200"
                   >
@@ -242,7 +241,7 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
                   </button>
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm">No metadata uploaded yet</p>
+                <p className="text-inactive text-sm">No metadata uploaded yet</p>
               )}
             </div>
           </div>
