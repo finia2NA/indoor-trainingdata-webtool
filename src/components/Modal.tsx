@@ -17,22 +17,18 @@ type ProjectFileProps = {
 };
 
 const ProjectFile: React.FC<ProjectFileProps> = ({ name, size, index, onDelete }) => {
-  const bgColor = index !== undefined && index % 2 === 0 ?
-    "bg-blue-100" : "bg-white";
-
   const sizeInMb = byteSize(size, { units: 'iec', precision: 1 }).toString()
   return (
-    <div className={`${bgColor} flex flex-row gap-2 items-center`}>
-      <div className="w-32 overflow-x-auto whitespace-nowrap">
-        {name}
+    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 flex justify-between items-center mb-2">
+      <div className="flex-1 mr-4">
+        <div className="font-medium text-gray-800 truncate">{name}</div>
+        <div className="text-sm text-gray-600">{sizeInMb}</div>
       </div>
-      <span className="text-gray-400">|</span>
-      <div className="w-20 overflow-x-auto whitespace-nowrap">
-        {sizeInMb}
-      </div>
-      <span className="text-gray-400">|</span>
-      <button>
-        <FiTrash2 className="text-danger" onClick={onDelete} />
+      <button 
+        onClick={onDelete}
+        className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors duration-200"
+      >
+        <FiTrash2 size={16} />
       </button>
     </div>
   );
@@ -57,7 +53,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ projectId }) => {
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="cursor-pointer bg-blue-500 text-white p-2 rounded-md text-center hover:bg-blue-600">
+      <label className="cursor-pointer bg-bg text-white p-3 rounded-lg text-center hover:bg-bg-700 transition-colors duration-200 font-medium">
         Upload 360° Images
         <input
           type="file"
@@ -94,14 +90,20 @@ const MetadataUpload: React.FC<MetadataUploadProps> = ({ projectId, metadataFile
   return (
     <div className="flex flex-col gap-2">
       {metadataFile ? (
-        <div className="bg-green-100 p-2 rounded-md flex justify-between items-center">
-          <span>{metadataFile.name} ({byteSize(metadataFile.size, { units: 'iec', precision: 1 }).toString()})</span>
-          <button onClick={handleMetadataDelete}>
-            <FiTrash2 className="text-danger" />
+        <div className="bg-green-50 p-3 rounded-lg border border-green-200 flex justify-between items-center">
+          <div>
+            <div className="font-medium text-gray-800">{metadataFile.name}</div>
+            <div className="text-sm text-gray-600">{byteSize(metadataFile.size, { units: 'iec', precision: 1 }).toString()}</div>
+          </div>
+          <button 
+            onClick={handleMetadataDelete}
+            className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors duration-200"
+          >
+            <FiTrash2 size={16} />
           </button>
         </div>
       ) : (
-        <label className="cursor-pointer bg-green-500 text-white p-2 rounded-md text-center hover:bg-green-600">
+        <label className="cursor-pointer bg-secondary text-white p-3 rounded-lg text-center hover:bg-secondary-600 transition-colors duration-200 font-medium">
           Upload JSON Metadata
           <input
             type="file"
@@ -172,35 +174,34 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
       "
       onClose={onClose}>
       <div className="flex flex-col gap-3">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-medium">{h1}</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-semibold text-bg">{h1}</h1>
           <button
-            className="bg-gray-200 p-2 rounded-md"
+            className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 transition-colors duration-200"
             title="Delete project"
             onClick={onDelete}
           >
-            <FiTrash2 className="text-danger" />
+            <FiTrash2 size={18} />
           </button>
         </div>
-        <div className="flex flex-col gap-1">
-          <h2 className="text-xl font-medium">Project Details</h2>
-          <div className="flex flex-row gap-2 items-center">
-            <label htmlFor="name">Project Name</label>
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Project Details</h2>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="name" className="text-sm font-medium text-gray-700">Project Name</label>
             <input
-              id="Project "
+              id="name"
               type="text"
-              className="border-b-2 pl-1 pr-1"
-              placeholder="Insert Project Name"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-bg focus:border-transparent"
+              placeholder="Enter project name"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
-          <hr className="mt-2" />
         </div>
-        <div className="flex flex-col gap-1">
-          <h2 className="text-xl font-medium">Project Files</h2>
-          {models.length > 0 &&
-            <div className="border-bg border-2 border-dashed p-2 rounded-md">
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Project Files</h2>
+          {models.length > 0 && (
+            <div className="mb-4">
               {models.map((model, i) => (
                 <ProjectFile
                   key={i}
@@ -211,20 +212,18 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
                 />
               ))}
             </div>
-          }
-          <div className="flex flex-col pt-2">
-            <h3 className="font-medium">Upload a new model</h3>
-
+          )}
+          <div>
+            <h3 className="font-medium text-gray-700 mb-2">Upload a new model</h3>
             <UploadComponent projectId={projectId} />
           </div>
-          <hr className="mt-2" />
         </div>
-        <div className="flex flex-col gap-1">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-medium">360° Images</h2>
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-800">360° Images</h2>
             {images360.length > 0 && (
               <button
-                className="bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600"
+                className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors duration-200"
                 onClick={async () => {
                   try {
                     await db.deleteAllImagesFromProject(projectId);
@@ -237,8 +236,8 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
               </button>
             )}
           </div>
-          {images360.length > 0 &&
-            <div className="border-bg border-2 border-dashed p-2 rounded-md">
+          {images360.length > 0 && (
+            <div className="mb-4">
               {images360.map((image, i) => (
                 <ProjectFile
                   key={`image-${i}`}
@@ -255,23 +254,22 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
                 />
               ))}
             </div>
-          }
-          <div className="flex flex-col pt-2">
-            <h3 className="font-medium">Upload 360° images</h3>
+          )}
+          <div className="mb-4">
+            <h3 className="font-medium text-gray-700 mb-2">Upload 360° images</h3>
             <ImageUpload projectId={projectId} />
           </div>
-          <div className="flex flex-col pt-2">
-            <h3 className="font-medium">Upload JSON metadata</h3>
+          <div>
+            <h3 className="font-medium text-gray-700 mb-2">Upload JSON metadata</h3>
             <MetadataUpload projectId={projectId} metadataFile={metadataFile} />
           </div>
-          <hr className="mt-2" />
         </div>
-        <div className=" flex justify-end gap-2 pr-2">
+        <div className="flex justify-end pt-4 border-t border-gray-200">
           <button
-            className="bg-confirm text-white p-2 rounded-md"
+            className="bg-confirm text-white px-6 py-3 rounded-lg font-medium hover:bg-confirm-600 transition-colors duration-200"
             onClick={onConfirm}
           >
-            Confirm
+            Save Changes
           </button>
         </div>
       </div>
@@ -292,7 +290,7 @@ const Modal = ({ onClose, children, className }: ModalProps) => {
       onClick={() => onClose(CloseReason.BACKGROUND)}
     >
       <div
-        className={`bg-white p-6 rounded-lg shadow-lg max-h-[90vh] overflow-y-auto ${className}`}
+        className={`bg-white p-8 rounded-xl shadow-xl max-h-[90vh] overflow-y-auto ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {children}
