@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { ProjectModal } from './Modal';
 import { toast } from "react-toastify";
 import { ProjectDeletionToast } from './UI/Toasts';
+import { FiEdit3 } from 'react-icons/fi';
 
 
 const ProjectOverview = () => {
@@ -39,42 +40,47 @@ const ProjectOverview = () => {
     setEditingProject(id);
   };
 
-  const onDelete = async (id?: number) => {
-    if (id === undefined) return;
-    toast.warn(ProjectDeletionToast, {
-      onClose: async (reason) => {
-        if (reason === "delete") {
-          await db.deleteProject(id);
-        };
-      },
-    });
-  };
-
   return (
     <>
-      <div>
-        <table className='border-2'>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Size</th>
-              <th>360° Content</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {projects && projects.map((project, idx) => (
-              <tr key={idx} className='border-2'>
-                <td className='border-2'>{project.name}</td>
-                <td className='border-2'>{byteSize(sizes![idx], { units: 'iec', precision: 1 }).toString()}</td>
-                <td className='border-2'>{getImageInfo(project)}</td>
-                <td onClick={() => onView(project.id)} className='border-2 cursor-pointer'>View</td>
-                <td onClick={() => onEdit(project.id)} className='border-2 cursor-pointer'>Edit</td>
-                <td onClick={() => onDelete(project.id)} className='border-2 cursor-pointer'>Delete</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+          {projects && projects.map((project, idx) => (
+            <div key={idx} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200 relative max-w-sm">
+              <button
+                onClick={() => onEdit(project.id)}
+                className="absolute top-4 right-4 p-2 text-white bg-bg hover:bg-bg-700 rounded transition-colors duration-200"
+              >
+                <FiEdit3 size={16} />
+              </button>
+              <div className="p-6">
+                <div className="mb-4">
+                  <h3
+                    onClick={() => onView(project.id)}
+                    className="text-xl font-semibold text-bg mb-2 cursor-pointer hover:text-bg-700 transition-colors duration-200 pr-12"
+                  >
+                    {project.name}
+                  </h3>
+                  <div className="flex items-center text-sm text-gray-600 mb-1">
+                    <span className="font-medium mr-2">Size:</span>
+                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">
+                      {byteSize(sizes![idx], { units: 'iec', precision: 1 }).toString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <span className="font-medium mr-2">Content:</span>
+                    <span className="text-xs">{getImageInfo(project)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        {(!projects || projects.length === 0) && (
+          <div className="text-center py-12">
+            <div className="text-gray-500 text-lg mb-2">No projects found</div>
+            <div className="text-gray-400 text-sm">Create your first project to get started</div>
+          </div>
+        )}
       </div>
       {editingProject !== null && (
         <ProjectModal

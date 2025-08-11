@@ -16,14 +16,14 @@ const StartPage = () => {
     <>
       <div className="m-4 flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <h1 className="text-4xl">Your projects</h1>
+          <div className="flex justify-between items-center">
+            <h1 className="text-4xl">Your projects</h1>
+            <button
+              className="bg-confirm p-2 rounded-md text-white"
+              onClick={onNewProject}
+            >Add new Project</button>
+          </div>
           <ModelOverview />
-        </div>
-        <div>
-          <button
-            className="bg-confirm p-2 rounded-md text-white"
-            onClick={onNewProject}
-          >Add new Project</button>
         </div>
       </div>
 
