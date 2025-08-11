@@ -3,8 +3,8 @@ import React, { useEffect, useState } from "react";
 import { FiTrash2 } from "react-icons/fi";
 import { toast } from "react-toastify";
 import { ProjectDeletionToast } from "./UI/Toasts";
-import UploadComponent from "./UploadComponent";
-import db, { Image360, MetadataFile } from "../data/db";
+import { useDropzone } from 'react-dropzone';
+import db, { Image360, MetadataFile, Model3D } from "../data/db";
 import { useLiveQuery } from "dexie-react-hooks";
 import byteSize from "byte-size";
 
@@ -34,85 +34,49 @@ const ProjectFile: React.FC<ProjectFileProps> = ({ name, size, index, onDelete }
   );
 }
 
-type ImageUploadProps = {
+type UnifiedUploadProps = {
   projectId: number;
 };
 
-const ImageUpload: React.FC<ImageUploadProps> = ({ projectId }) => {
-  const handleImageUpload = async (files: FileList | null) => {
-    if (!files) return;
-    
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+const UnifiedUpload: React.FC<UnifiedUploadProps> = ({ projectId }) => {
+  const onDrop = async (acceptedFiles: File[]) => {
+    for (const file of acceptedFiles) {
       if (file.type.startsWith('image/')) {
         const image360 = new Image360(file);
         await db.addImageToProject(projectId, image360);
+        console.log(`Image ${image360.name} added to the database`);
+      } else if (file.name.endsWith('.json')) {
+        const metadata = new MetadataFile(file);
+        await db.setMetadataFile(projectId, metadata);
+        console.log(`Metadata ${metadata.name} added to the database`);
+      } else {
+        const model3D = new Model3D(file);
+        await db.addModelToProject(projectId, model3D);
+        console.log(`Model ${model3D.name} added to the database`);
       }
     }
   };
 
-  return (
-    <div className="flex flex-col gap-2">
-      <label className="cursor-pointer bg-bg text-white p-3 rounded-lg text-center hover:bg-bg-700 transition-colors duration-200 font-medium">
-        Upload 360° Images
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => handleImageUpload(e.target.files)}
-        />
-      </label>
-    </div>
-  );
-};
-
-type MetadataUploadProps = {
-  projectId: number;
-  metadataFile?: MetadataFile;
-};
-
-const MetadataUpload: React.FC<MetadataUploadProps> = ({ projectId, metadataFile }) => {
-  const handleMetadataUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    
-    const file = files[0];
-    if (file.name.endsWith('.json')) {
-      const metadata = new MetadataFile(file);
-      await db.setMetadataFile(projectId, metadata);
-    }
-  };
-
-  const handleMetadataDelete = async () => {
-    await db.setMetadataFile(projectId, undefined);
-  };
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   return (
-    <div className="flex flex-col gap-2">
-      {metadataFile ? (
-        <div className="bg-green-50 p-3 rounded-lg border border-green-200 flex justify-between items-center">
-          <div>
-            <div className="font-medium text-gray-800">{metadataFile.name}</div>
-            <div className="text-sm text-gray-600">{byteSize(metadataFile.size, { units: 'iec', precision: 1 }).toString()}</div>
-          </div>
-          <button 
-            onClick={handleMetadataDelete}
-            className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors duration-200"
-          >
-            <FiTrash2 size={16} />
-          </button>
-        </div>
-      ) : (
-        <label className="cursor-pointer bg-secondary text-white p-3 rounded-lg text-center hover:bg-secondary-600 transition-colors duration-200 font-medium">
-          Upload JSON Metadata
-          <input
-            type="file"
-            accept=".json"
-            className="hidden"
-            onChange={(e) => handleMetadataUpload(e.target.files)}
-          />
-        </label>
-      )}
+    <div 
+      {...getRootProps()} 
+      className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors duration-200 ${
+        isDragActive 
+          ? 'border-primary bg-primary-50 text-primary-700' 
+          : 'border-gray-300 bg-gray-50 hover:border-primary hover:bg-primary-50 text-gray-600'
+      }`}
+    >
+      <input {...getInputProps()} />
+      <div className="space-y-2">
+        <p className="text-lg font-medium">
+          {isDragActive ? 'Drop files here...' : 'Drag & drop files here, or click to select'}
+        </p>
+        <p className="text-sm text-gray-500">
+          Supports 3D models, 360° images, and JSON metadata
+        </p>
+      </div>
     </div>
   );
 };
@@ -214,8 +178,8 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
             </div>
           )}
           <div>
-            <h3 className="font-medium text-gray-700 mb-2">Upload a new model</h3>
-            <UploadComponent projectId={projectId} />
+            <h3 className="font-medium text-gray-700 mb-2">Upload files</h3>
+            <UnifiedUpload projectId={projectId} />
           </div>
         </div>
         <div className="mb-6">
@@ -237,7 +201,7 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
             )}
           </div>
           {images360.length > 0 && (
-            <div className="mb-4">
+            <div className="mb-4 max-h-96 overflow-y-auto">
               {images360.map((image, i) => (
                 <ProjectFile
                   key={`image-${i}`}
@@ -255,14 +219,23 @@ export const ProjectModal = ({ onClose, projectId, isNew }: ProjectModalProps) =
               ))}
             </div>
           )}
-          <div className="mb-4">
-            <h3 className="font-medium text-gray-700 mb-2">Upload 360° images</h3>
-            <ImageUpload projectId={projectId} />
-          </div>
-          <div>
-            <h3 className="font-medium text-gray-700 mb-2">Upload JSON metadata</h3>
-            <MetadataUpload projectId={projectId} metadataFile={metadataFile} />
-          </div>
+          {metadataFile && (
+            <div className="mb-4">
+              <h3 className="font-medium text-gray-700 mb-2">JSON Metadata</h3>
+              <div className="bg-green-50 p-3 rounded-lg border border-green-200 flex justify-between items-center">
+                <div>
+                  <div className="font-medium text-gray-800">{metadataFile.name}</div>
+                  <div className="text-sm text-gray-600">{byteSize(metadataFile.size, { units: 'iec', precision: 1 }).toString()}</div>
+                </div>
+                <button 
+                  onClick={async () => await db.setMetadataFile(projectId, undefined)}
+                  className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors duration-200"
+                >
+                  <FiTrash2 size={16} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         <div className="flex justify-end pt-4 border-t border-gray-200">
           <button
