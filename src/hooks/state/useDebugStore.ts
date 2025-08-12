@@ -18,14 +18,8 @@ export type DebugState = {
   pointLightActive: boolean;
   setPointLightActive: (active: boolean) => void;
   
-  pointLightX: number;
-  setPointLightX: (x: number) => void;
-  
-  pointLightY: number;
-  setPointLightY: (y: number) => void;
-  
-  pointLightZ: number;
-  setPointLightZ: (z: number) => void;
+  pointLightPosition: [number, number, number];
+  setPointLightPosition: (position: [number, number, number]) => void;
   
   pointLightIntensity: number;
   setPointLightIntensity: (intensity: number) => void;
@@ -64,14 +58,8 @@ const useDebugStore = create<DebugState>((set) => ({
   pointLightActive: false,
   setPointLightActive: (active: boolean) => set({ pointLightActive: active }),
   
-  pointLightX: 0,
-  setPointLightX: (x: number) => set({ pointLightX: x }),
-  
-  pointLightY: 5,
-  setPointLightY: (y: number) => set({ pointLightY: y }),
-  
-  pointLightZ: 0,
-  setPointLightZ: (z: number) => set({ pointLightZ: z }),
+  pointLightPosition: [0, 5, 0],
+  setPointLightPosition: (position: [number, number, number]) => set({ pointLightPosition: position }),
   
   pointLightIntensity: 1,
   setPointLightIntensity: (intensity: number) => set({ pointLightIntensity: intensity }),
@@ -97,9 +85,7 @@ const useDebugStore = create<DebugState>((set) => ({
     ambientLightActive: true,
     ambientLightIntensity: 1,
     pointLightActive: false,
-    pointLightX: 0,
-    pointLightY: 5,
-    pointLightZ: 0,
+    pointLightPosition: [0, 5, 0],
     pointLightIntensity: 1,
     pointLightDistance: 0,
     pointLightDecay: 2,

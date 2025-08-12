@@ -10,31 +10,25 @@ const PointLightWithControls = () => {
 
   const {
     pointLightActive,
-    pointLightX,
-    pointLightY,
-    pointLightZ,
+    pointLightPosition,
     pointLightIntensity,
     pointLightDistance,
     pointLightDecay,
-    setPointLightX,
-    setPointLightY,
-    setPointLightZ,
+    setPointLightPosition,
   } = useDebugStore();
 
   // Update mesh position when store values change
   useEffect(() => {
     if (!meshRef.current) return;
-    meshRef.current.position.set(pointLightX, pointLightY, pointLightZ);
-  }, [pointLightX, pointLightY, pointLightZ]);
+    meshRef.current.position.set(pointLightPosition[0], pointLightPosition[1], pointLightPosition[2]);
+  }, [pointLightPosition]);
 
   // Handle transform changes from controls
   const onTransform = () => {
     if (!meshRef.current) return;
 
     const pos = meshRef.current.position;
-    setPointLightX(pos.x);
-    setPointLightY(pos.y);
-    setPointLightZ(pos.z);
+    setPointLightPosition([pos.x, pos.y, pos.z]);
   };
 
   if (!pointLightActive) return null;
@@ -43,7 +37,7 @@ const PointLightWithControls = () => {
     <>
       {/* Point Light */}
       <pointLight
-        position={[pointLightX, pointLightY, pointLightZ]}
+        position={pointLightPosition}
         intensity={pointLightIntensity}
         distance={pointLightDistance}
         decay={pointLightDecay}
@@ -58,7 +52,7 @@ const PointLightWithControls = () => {
       {/* Visual indicator sphere */}
       <mesh
         ref={meshRef}
-        position={[pointLightX, pointLightY, pointLightZ]}
+        position={pointLightPosition}
       >
         <sphereGeometry args={[0.2, 16, 12]} />
         <meshBasicMaterial color="violet" transparent opacity={0.8} />

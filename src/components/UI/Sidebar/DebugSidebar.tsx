@@ -16,12 +16,8 @@ const DebugSidebar = ({ project: _project }: { project: Project }) => {
     setAmbientLightIntensity,
     pointLightActive,
     setPointLightActive,
-    pointLightX,
-    setPointLightX,
-    pointLightY,
-    setPointLightY,
-    pointLightZ,
-    setPointLightZ,
+    pointLightPosition,
+    setPointLightPosition,
     pointLightIntensity,
     setPointLightIntensity,
     pointLightDistance,
@@ -98,8 +94,8 @@ const DebugSidebar = ({ project: _project }: { project: Project }) => {
               className="w-24 ml-2 text-center bg-inactive"
               type="number"
               step={0.1}
-              value={pointLightX}
-              onChange={(e) => setPointLightX(Number(e.target.value))}
+              value={pointLightPosition[0]}
+              onChange={(e) => setPointLightPosition([Number(e.target.value), pointLightPosition[1], pointLightPosition[2]])}
             />
           </div>
           <div className="flex items-center">
@@ -109,8 +105,8 @@ const DebugSidebar = ({ project: _project }: { project: Project }) => {
               className="w-24 ml-2 text-center bg-inactive"
               type="number"
               step={0.1}
-              value={pointLightY}
-              onChange={(e) => setPointLightY(Number(e.target.value))}
+              value={pointLightPosition[1]}
+              onChange={(e) => setPointLightPosition([pointLightPosition[0], Number(e.target.value), pointLightPosition[2]])}
             />
           </div>
           <div className="flex items-center">
@@ -120,8 +116,8 @@ const DebugSidebar = ({ project: _project }: { project: Project }) => {
               className="w-24 ml-2 text-center bg-inactive"
               type="number"
               step={0.1}
-              value={pointLightZ}
-              onChange={(e) => setPointLightZ(Number(e.target.value))}
+              value={pointLightPosition[2]}
+              onChange={(e) => setPointLightPosition([pointLightPosition[0], pointLightPosition[1], Number(e.target.value)])}
             />
           </div>
           <div className="flex items-center">
