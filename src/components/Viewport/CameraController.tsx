@@ -9,8 +9,8 @@ const CameraController = () => {
     targetCameraPosition, 
     targetCameraTarget, 
     clearCameraTarget,
-    setReactiveCameraPosition,
-    setReactiveCameraRotation 
+    setCurrentCameraPosition,
+    setCurrentCameraRotation 
   } = useCameraPoseStore();
   
   const animationRef = useRef<{
@@ -41,9 +41,9 @@ const CameraController = () => {
       }
     }
     
-    // Update reactive camera pose
-    setReactiveCameraPosition([camera.position.x, camera.position.y, camera.position.z]);
-    setReactiveCameraRotation([camera.rotation.x, camera.rotation.y, camera.rotation.z]);
+    // Update current camera pose for UI display
+    setCurrentCameraPosition([camera.position.x, camera.position.y, camera.position.z]);
+    setCurrentCameraRotation([camera.rotation.x, camera.rotation.y, camera.rotation.z]);
   });
 
   useEffect(() => {

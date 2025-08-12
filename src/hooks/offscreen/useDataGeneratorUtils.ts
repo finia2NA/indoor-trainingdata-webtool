@@ -272,14 +272,14 @@ const useDataGeneratorUtils = () => {
     // }
 
     // check if we are in the polygon. If not, recurse
-    let isInPolygon = false;
+    let isInExtrudedPolygon = false;
     for (const polygon of polygonsEX) {
-      if (polygon.triangulation.isInPolygon(newPos, heightOffset)) {
-        isInPolygon = true;
+      if (polygon.triangulation.isInExtrudedPolygon(newPos, heightOffset)) {
+        isInExtrudedPolygon = true;
         break;
       }
     }
-    if (!isInPolygon) {
+    if (!isInExtrudedPolygon) {
       return getPairPoint(pose, numSeries, numTries - 1);
     }
 

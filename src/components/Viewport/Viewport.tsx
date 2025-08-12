@@ -33,7 +33,7 @@ const raycasterParams = {
 const Viewport = ({ project, setSelectedImage }: ViewportProps) => {
   const { showGrid, editorMode, showImages } = useEditorStore();
   const {
-    useAmbientLight,
+    ambientLightActive,
     ambientLightIntensity,
     measuringActive,
     measuredPoint
@@ -48,7 +48,7 @@ const Viewport = ({ project, setSelectedImage }: ViewportProps) => {
         shadows
         raycaster={{ params: raycasterParams }}
       >
-        {useAmbientLight && <ambientLight intensity={ambientLightIntensity} />}
+        {ambientLightActive && <ambientLight intensity={ambientLightIntensity} />}
 
         <PointLightWithControls />
 

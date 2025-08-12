@@ -2,10 +2,10 @@ import { useFrame, useThree } from "@react-three/fiber";
 import useCameraPoseStore from "../../hooks/sync/useCameraPoseStore";
 const CameraPosLogging = () => {
   const { camera } = useThree();
-  const { setReactiveCameraPosition, setReactiveCameraRotation } = useCameraPoseStore();
+  const { setCurrentCameraPosition, setCurrentCameraRotation } = useCameraPoseStore();
   useFrame(() => {
-    setReactiveCameraPosition(camera.position.toArray());
-    setReactiveCameraRotation([camera.rotation.x, camera.rotation.y, camera.rotation.z]);
+    setCurrentCameraPosition(camera.position.toArray());
+    setCurrentCameraRotation([camera.rotation.x, camera.rotation.y, camera.rotation.z]);
   });
   return null;
 }

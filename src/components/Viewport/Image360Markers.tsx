@@ -15,7 +15,7 @@ type Image360MarkersProps = {
 const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => {
   const [positions, setPositions] = useState<Image360[]>([]);
   const [selectedImage, setSelectedImage] = useState<Image360 | null>(null);
-  const { moveCameraTo, enter360View, reactiveCameraPosition, reactiveTarget, is360ViewActive } = useCameraPoseStore();
+  const { moveCameraTo, enter360View, currentCameraPosition, currentCameraTarget, is360ViewActive } = useCameraPoseStore();
 
   useEffect(() => {
     const loadMetadata = async () => {
@@ -44,7 +44,7 @@ const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => 
 
   const handleSphereClick = (pos: Image360) => {
     // Store current camera position before entering 360° view
-    enter360View(reactiveCameraPosition, reactiveTarget);
+    enter360View(currentCameraPosition, currentCameraTarget);
     
     // Set the selected image for texture display
     setSelectedImage(pos);

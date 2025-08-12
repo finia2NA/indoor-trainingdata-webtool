@@ -21,7 +21,7 @@ const WrappedOrbitControls = React.memo((props: WrappedOrbitControlsProps) => {
 
   // get shared orbit state
   const { orbitAngles, updateOrbitAngles } = useOrbitAngleSync((state) => state);
-  const { setReactiveTarget } = useCameraPoseStore();
+  const { setCurrentCameraTarget } = useCameraPoseStore();
 
   // we only want to apply the orbit control when the user is not transforming
   const { isTransforming } = useTransformingSync();
@@ -90,7 +90,7 @@ const WrappedOrbitControls = React.memo((props: WrappedOrbitControlsProps) => {
   useFrame(() => {
     if (props.useCase !== OrbitUsecase.VIEWPORT) return;
     if (controlsRef.current && controlsRef.current.target) {
-      setReactiveTarget(controlsRef.current.target.toArray());
+      setCurrentCameraTarget(controlsRef.current.target.toArray());
     }
   });
 

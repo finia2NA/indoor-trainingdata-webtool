@@ -9,13 +9,13 @@ type IndexedPoint = {
 class Triangulation {
   polygon: Vector3[];
   lines: [IndexedPoint, IndexedPoint][];
-  outliLines: [IndexedPoint, IndexedPoint][];
+  outLines: [IndexedPoint, IndexedPoint][];
   triangles: [IndexedPoint, IndexedPoint, IndexedPoint][];
   #area: number | null = null;
 
   constructor(polygon: Vector3[]) {
     this.polygon = polygon;
-    this.outliLines = polygon.map((point, index) => {
+    this.outLines = polygon.map((point, index) => {
       const nextIndex = (index + 1) % polygon.length;
       return [{ index, position: point }, { index: nextIndex, position: polygon[nextIndex] }];
     }) as [IndexedPoint, IndexedPoint][];
@@ -122,7 +122,7 @@ class Triangulation {
    * @param heightOffset - The maximum allowed height offset to the triangle.
    * @returns True if the point is inside the polygon, false otherwise.
    */
-  isInPolygon = (point: Vector3, heightOffset: number) => {
+  isInExtrudedPolygon = (point: Vector3, heightOffset: number) => {
     // part 1: find the triangle we project to
     const p = new Vector2(point.x, point.z);
     for (const tri of this.triangles) {
@@ -176,10 +176,10 @@ class Triangulation {
 
    The returned distance and closest point are for an assumed perpendicular line from the point to the closest edge
   */
-  getClosestEdgePoint = (point: Vector2) => {
+  getClosestEdgePoint2D = (point: Vector2) => {
     let closestDistance = Infinity;
     let closestPoint = new Vector3();
-    for (let i = 0; i < this.outliLines.length; i++) {
+    for (let i = 0; i < this.outLines.length; i++) {
       const A = new Vector3(point.x, 0, point.y);
       const B = new Vector3(this.lines[i][0].position.x, 0, this.lines[i][0].position.z);
       const C = new Vector3(this.lines[i][1].position.x, 0, this.lines[i][1].position.z);

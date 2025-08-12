@@ -10,7 +10,7 @@ import PoseList from "./PoseList";
 const DebugSidebar = ({ project: _project }: { project: Project }) => {
   const { moveCameraTo } = useCameraPoseStore();
   const {
-    useAmbientLight,
+    ambientLightActive,
     setUseAmbientLight,
     ambientLightIntensity,
     setAmbientLightIntensity,
@@ -61,7 +61,7 @@ const DebugSidebar = ({ project: _project }: { project: Project }) => {
             <input
               type="checkbox"
               className="ml-2"
-              checked={useAmbientLight}
+              checked={ambientLightActive}
               onChange={(e) => setUseAmbientLight(e.target.checked)}
             />
           </div>

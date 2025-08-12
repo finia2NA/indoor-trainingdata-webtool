@@ -8,7 +8,7 @@ import { create } from 'zustand';
 
 export type DebugState = {
   // Ambient Light
-  useAmbientLight: boolean;
+  ambientLightActive: boolean;
   setUseAmbientLight: (use: boolean) => void;
   
   ambientLightIntensity: number;
@@ -54,8 +54,8 @@ export type DebugState = {
 // Store creation
 const useDebugStore = create<DebugState>((set) => ({
   // Ambient Light defaults
-  useAmbientLight: true,
-  setUseAmbientLight: (use: boolean) => set({ useAmbientLight: use }),
+  ambientLightActive: true,
+  setUseAmbientLight: (use: boolean) => set({ ambientLightActive: use }),
   
   ambientLightIntensity: 1,
   setAmbientLightIntensity: (intensity: number) => set({ ambientLightIntensity: intensity }),
@@ -94,7 +94,7 @@ const useDebugStore = create<DebugState>((set) => ({
   clearMeasuredPoint: () => set({ measuredPoint: null }),
   
   resetDebugConfig: () => set({
-    useAmbientLight: true,
+    ambientLightActive: true,
     ambientLightIntensity: 1,
     pointLightActive: false,
     pointLightX: 0,
