@@ -120,7 +120,7 @@ function Node({ node, style, dragHandle }: NodeProps) {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`flex row justify-between p-1 place-items-center ${node.data.isSelected ? 'bg-secondary' : 'hover:bg-[#31364d]'}`}
+        className={`flex row justify-between p-1 place-items-center ${node.data.isSelected ? 'bg-gray-100 text-black' : 'hover:bg-[#31364d]'}`}
         onClick={handleNodeClick}
       >
         <div className="flex flex-row gap-1 place-items-center">

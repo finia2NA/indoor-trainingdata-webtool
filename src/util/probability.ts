@@ -56,3 +56,23 @@ export const takeRandomSample = ({ dist, maxTries = 10000, positive = false }: R
   // This happens when we exhausted all attempts
   throw new Error("Sampling failed after maximum attempts.");
 };
+
+/**
+ * Pseudocode for sampling from a distribution
+ * 
+ *  function takeRandomSample(dist, maxTries = 10000, positive = false) {
+ *    maxValue = dist(0) // Approximate upper bound
+ *    for i = 0 to maxTries - 1 do
+ *      candidateX = random(-1, 1)
+ *      acceptCriterion = random(0, 1)
+ *      if acceptCriterion < dist(candidateX) / maxValue then
+ *        if positive then
+ *          return abs(candidateX)
+ *        else
+ *          return candidateX
+ *        end if
+ *      end if
+ *    end for
+ *    throw "Sampling failed after maximum attempts."
+ *  }
+ */
