@@ -70,7 +70,8 @@ const Viewport = ({ project, setSelectedImage }: ViewportProps) => {
         }
         <color attach="background" args={['#484848']} />
 
-        <> // Camera Controls
+        <>
+          {/* // Camera Controls */}
           <SwitchableCamera />
           <CameraPosLogging />
           <CameraController />
