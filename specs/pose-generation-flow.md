@@ -1,6 +1,6 @@
-# Pose Generation and Screenshot Flow - Sequence Diagram
+# Pose Generation Flow - Sequence Diagram
 
-This sequence diagram visualizes the complete flow from user clicking "Generate Poses" through to completing screenshot generation, showing the interactions between UI components, hooks, stores, and the various screenshot types (mesh with shaded/unshaded variants and 360° screenshots).
+This sequence diagram shows the complete flow from user clicking "Generate Poses" through to pose storage, including mesh poses and posttraining poses with all their validation and raycast operations.
 
 ```mermaid
 sequenceDiagram
@@ -13,7 +13,6 @@ sequenceDiagram
     participant SceneManager
     participant Database
     participant get360s
-    participant FileSystem
 
     %% GENERATE POSES FLOW
     User->>GenerateSidebar: Click "Generate Poses"
@@ -129,93 +128,6 @@ sequenceDiagram
         end
     end
 
-    %% TAKE SCREENSHOTS FLOW
-    Note over User,FileSystem: User can now click "Take Screenshots"
-    
-    User->>GenerateSidebar: Click "Take Screenshots"
-    GenerateSidebar->>useDataGeneratorUtils: takeScreenshots()
-    useDataGeneratorUtils->>FileSystem: create ZIP with timestamp
-    
-    par Mesh Screenshots
-        useDataGeneratorUtils->>useOffscreenThree: takeOffscreenScreenshots(poses, width, height)
-        useOffscreenThree->>ProgressToast: show progress (screenshots)
-        
-        alt If 360° shading enabled
-            useOffscreenThree->>useOffscreenThree: takeOffscreenScreenshotsShaded()
-            
-            Note over useOffscreenThree,Database: Load 360° images for lighting
-            useOffscreenThree->>get360s: get360s(project, withImages=true)
-            get360s->>Database: db.getImages360(projectId)
-            Database-->>get360s: 360° image blobs
-            get360s->>get360s: load textures via THREE.TextureLoader
-            get360s-->>useOffscreenThree: 360° images with textures
-            
-            useOffscreenThree->>SceneManager: getOrCreateScene(width, height, doubleSided=false, use360Shading=true)
-            SceneManager-->>useOffscreenThree: scene with 3D models
-            
-            Note over useOffscreenThree: Creates multiple render targets per pose<br/>Uses 360° images as lighting sources<br/>Composites final image via post-processing
-            
-            loop For each pose
-                useOffscreenThree->>useOffscreenThree: find nearby 360° images
-                useOffscreenThree->>useOffscreenThree: create point lights at 360° positions
-                
-                loop For each light
-                    useOffscreenThree->>useOffscreenThree: render to separate target
-                end
-                
-                useOffscreenThree->>useOffscreenThree: composite via post-processing quad
-                useOffscreenThree->>ProgressToast: update progress
-            end
-        else Ambient lighting only
-            useOffscreenThree->>useOffscreenThree: takeOffscreenScreenshotsAmbient()
-            useOffscreenThree->>SceneManager: getOrCreateScene(width, height, doubleSided=false)
-            SceneManager-->>useOffscreenThree: scene with 3D models
-            
-            loop For each pose
-                useOffscreenThree->>useOffscreenThree: render with ambient lighting
-                useOffscreenThree->>ProgressToast: update progress
-            end
-        end
-        
-        useOffscreenThree->>FileSystem: save screenshots to mesh folder
-        useOffscreenThree->>FileSystem: save pose metadata (JSON)
-        useOffscreenThree->>ProgressToast: dismiss toast
-        useOffscreenThree->>User: "Screenshots complete"
-    
-    and 360° Screenshots
-        alt If posttraining poses exist
-            useDataGeneratorUtils->>useOffscreenThree: take360Screenshots(posttrainingPoses, width, height)
-            
-            Note over useOffscreenThree,Database: Load and validate 360° images
-            useOffscreenThree->>get360s: get360s(project, withImages=true)
-            get360s->>Database: db.getImages360(projectId)
-            Database-->>get360s: 360° image blobs
-            get360s->>get360s: load textures via THREE.TextureLoader
-            get360s-->>useOffscreenThree: 360° images with textures
-            
-            useOffscreenThree->>useOffscreenThree: createScene360(width, height)
-            Note over useOffscreenThree: Creates sphere scene for 360° rendering
-            
-            useOffscreenThree->>ProgressToast: show progress (360° screenshots)
-            
-            loop For each posttraining pose
-                useOffscreenThree->>useOffscreenThree: load corresponding 360° image texture
-                useOffscreenThree->>useOffscreenThree: apply texture to sphere
-                useOffscreenThree->>useOffscreenThree: rotate sphere by course value
-                useOffscreenThree->>useOffscreenThree: render from pose perspective
-                useOffscreenThree->>ProgressToast: update progress
-            end
-            
-            useOffscreenThree->>FileSystem: save screenshots to posttraining folder
-            useOffscreenThree->>FileSystem: save pose metadata (JSON)
-            useOffscreenThree->>ProgressToast: dismiss toast
-            useOffscreenThree->>User: "Screenshots complete"
-        end
-    end
-    
-    useDataGeneratorUtils->>FileSystem: finalize and download ZIP
-    useDataGeneratorUtils->>User: Download "screenshots.zip"
-
     %% OPTIONAL USER INTERACTIONS
     Note over User,ProgressToast: User can click "Stop" on any progress toast
     ProgressToast-->>useDataGeneratorUtils: stop signal
@@ -224,24 +136,29 @@ sequenceDiagram
 
 ## Key Flow Points
 
-### Generate Poses Phase
-1. **Parallel Execution**: Mesh and posttraining pose generation run simultaneously
-2. **Progress Feedback**: Real-time progress updates with stop functionality
-3. **Conditional Logic**: Posttraining only runs if 360° metadata exists
-4. **Pair Generation**: Optional secondary poses generated for each primary pose
+### Database Initialization
+- Project data loaded at start to check for 360° metadata availability
+- Determines which pose generation flows will be executed
 
-### Take Screenshots Phase
-1. **Dual Screenshot Types**: 
-   - **Mesh Screenshots**: 3D model renders (shaded vs unshaded variants)
-   - **360° Screenshots**: Spherical environment renders
-2. **Shading Variants**:
-   - **Unshaded**: Simple ambient lighting
-   - **Shaded**: Complex multi-light setup using 360° images as light sources
-3. **File Organization**: Screenshots saved in structured ZIP with metadata
-4. **Progress Management**: Stoppable processes with user feedback
+### Mesh Pose Generation
+1. **Random Position Generation**: Within polygon triangulations with height offset
+2. **Wall Avoidance**: Optional raycast validation using cached 3D scenes
+3. **Pair Generation**: Optional secondary poses with dual raycast validation
+4. **Progress Management**: Real-time updates with user stop functionality
+
+### Posttraining Pose Generation
+1. **360° Position Loading**: Metadata parsed to extract camera positions
+2. **Pose Creation**: Generated at 360° image locations with random orientations
+3. **Same Validation**: Wall avoidance and pair generation using identical raycast logic
+4. **Parallel Execution**: Runs simultaneously with mesh pose generation
+
+### Scene Management
+- **Caching**: SceneManager reuses 3D scenes across multiple raycast operations
+- **Performance**: Avoids rebuilding scenes for each validation check
+- **Flexibility**: Supports different scene configurations (doubleSided, dimensions)
 
 ### Key Interactions
-- Store updates happen in real-time during pose generation
-- Screenshot generation depends on pose availability
-- Progress toasts provide user control over long-running operations
-- File system operations are batched for efficiency
+- All raycast operations go through SceneManager for performance
+- Progress toasts provide real-time feedback and user control
+- Poses stored immediately in usePrecomputedPoses store
+- Error handling and retry logic for failed pose validation
