@@ -461,6 +461,7 @@ const useDataGeneratorUtils = () => {
 
 
   const generateMeshPoses = async () => {
+    const startTime = performance.now();
     console.log("Generating mesh poses with worker threads");
     clearPoses();
 
@@ -542,10 +543,14 @@ const useDataGeneratorUtils = () => {
       );
 
       if (!stop) {
-        console.log("Pose generation complete");
+        const endTime = performance.now();
+        const duration = (endTime - startTime) / 1000;
+        console.log(`Mesh pose generation complete in ${duration.toFixed(2)}s`);
         toast("Mesh pose generation complete", { type: "success" });
       } else {
-        console.log("Pose generation stopped prematurely");
+        const endTime = performance.now();
+        const duration = (endTime - startTime) / 1000;
+        console.log(`Mesh pose generation stopped prematurely after ${duration.toFixed(2)}s`);
         toast("Mesh pose generation stopped", { type: "warning" });
       }
 
@@ -561,6 +566,7 @@ const useDataGeneratorUtils = () => {
   }
 
   const generatePosttrainingPoses = async () => {
+    const startTime = performance.now();
     console.log("Generating posttraining images with worker threads");
     clearPosttrainingPoses();
 
@@ -642,10 +648,14 @@ const useDataGeneratorUtils = () => {
       );
 
       if (!stop) {
-        console.log("Posttraining pose generation complete");
+        const endTime = performance.now();
+        const duration = (endTime - startTime) / 1000;
+        console.log(`Posttraining pose generation complete in ${duration.toFixed(2)}s`);
         toast("Posttraining pose generation complete", { type: "success" });
       } else {
-        console.log("Posttraining pose generation stopped prematurely");
+        const endTime = performance.now();
+        const duration = (endTime - startTime) / 1000;
+        console.log(`Posttraining pose generation stopped prematurely after ${duration.toFixed(2)}s`);
         toast("Posttraining pose generation stopped", { type: "warning" });
       }
 
