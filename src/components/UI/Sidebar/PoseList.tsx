@@ -169,7 +169,7 @@ const PoseList = () => {
             ) : (
               <div className="space-y-2">
                 {posttrainingPoses.map((pose, index) => (
-                  <div key={index} className="p-2 bg-gray-100 rounded text-xs">
+                  <div key={index} className="p-2 bg-black rounded text-xs">
                     <div><strong>Series:</strong> {pose.series}{pose.type === PoseType.PAIR ? 'b' : 'a'}</div>
                     <div><strong>Type:</strong> {pose.type}</div>
                     <div><strong>Image:</strong> {pose.imageName}</div>
