@@ -1,6 +1,7 @@
 import { useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Quaternion, Vector2, Vector3 } from "three";
+import * as THREE from "three";
 import useMultiGenerationStore from "../state/useMultiGenerationStore";
 import { createDistribution, takeRandomSample } from "../../util/probability";
 import Triangulation from "../../util/triangulate";
@@ -14,6 +15,7 @@ import { saveAs } from 'file-saver';
 import { Matrix4 } from "three";
 import db from "../../data/db";
 import { get360s } from "../../util/get360s";
+import useMultiTransformationStore from "../state/useMultiTransformationStore";
 
 const logging = false;
 const progressLogging = false;
@@ -68,11 +70,30 @@ const getQuaternionFromTarget = (position: Vector3, target: Vector3) => {
   return new Quaternion().setFromRotationMatrix(m);
 }
 
+const applyTransformationToPosition = (position: Vector3, transformation: any) => {
+  if (!transformation) return position.clone();
+
+  // Create transformation matrix
+  const matrix = new Matrix4();
+  const quaternion = new Quaternion().setFromEuler(
+    new THREE.Euler(...transformation.rotation)
+  );
+  matrix.compose(
+    new Vector3(...transformation.translation),
+    quaternion,
+    new Vector3(...transformation.scale)
+  );
+
+  // Apply transformation to the position
+  return position.clone().applyMatrix4(matrix);
+}
+
 const useDataGeneratorUtils = () => {
   const { takeOffscreenScreenshots, take360Screenshots, doOffscreenRaycast } = useOffscreenThree();
   const { poses, posttrainingPoses, addPose, addPosttrainingPose, clearPoses, clearPosttrainingPoses } = usePrecomputedPoses();
   const id = Number(useParams<{ id: string }>().id);
   const { getPolygons } = useMultiPolygonStore();
+  const { getTransformation } = useMultiTransformationStore();
   const polygons = getPolygons(id);
   const progressToastId = useRef<null | Id>(null);
   const posttrainingProgressToastId = useRef<null | Id>(null);
@@ -336,7 +357,7 @@ const useDataGeneratorUtils = () => {
 
     // For posttraining poses, pairs should have the SAME position (360° image location)
     // but DIFFERENT rotation (viewing direction)
-    
+
     // SAMPLING - only angle, no distance
     const pairAngleDist = createDistribution(pairAngleConcentration);
     const pairAngleSample = takeRandomSample({ dist: pairAngleDist });
@@ -354,22 +375,22 @@ const useDataGeneratorUtils = () => {
     const t = Math.random();
     const yawAngle = t * pairAngleVal;
     const pitchAngle = (1 - t) * pairAngleVal;
-    
+
     // Apply Yaw (rotation around up vector)
     const yawQuat = new Quaternion().setFromAxisAngle(up, yawAngle);
     direction.applyQuaternion(yawQuat);
-    
+
     // Apply Pitch (rotation around right vector)
     const pitchQuat = new Quaternion().setFromAxisAngle(right, pitchAngle);
     direction.applyQuaternion(pitchQuat);
     direction.normalize();
-    
+
     // Compute the new target position and quaternion
     const newTarget = newPos.clone().add(direction);
     const quaternionRotation = getQuaternionFromTarget(newPos, newTarget);
 
     // THE DEALBREAKERS - Wall avoidance validation
-    
+
     // check if we are too close to a wall with the new rotation. If so, recurse
     if (avoidWalls) {
       const wallIntersections = await doOffscreenRaycast(newPos, newTarget, false);
@@ -413,7 +434,7 @@ const useDataGeneratorUtils = () => {
     const posttrainingFolder = screenshotsFolder?.folder("posttraining");
 
     // We're using closures to gc memory after the screenshots are taken. I'm worried about memory usage, so that's why
-    {
+    if (poses && poses.length > 0) {
       console.log("Taking mesh screenshots");
       const meshScreenshots = await takeOffscreenScreenshots({ poses: poses, width: imageSize[0], height: imageSize[1] });
       meshScreenshots.forEach((screenshot) => {
@@ -427,6 +448,8 @@ const useDataGeneratorUtils = () => {
         meshFolder?.file(`screenshot_${filename}.png`, blob);
         meshFolder?.file(`screenshot_${filename}.json`, JSON.stringify(label, null, 2));
       });
+    } else {
+      console.log("No mesh poses to take screenshots of");
     }
 
     {
@@ -527,7 +550,7 @@ const useDataGeneratorUtils = () => {
     console.log("Generating posttraining images");
     clearPosttrainingPoses();
 
-    if( !usePosttrainingImages) {
+    if (!usePosttrainingImages) {
       console.log("Posttraining images are disabled, skipping generation");
       return;
     }
@@ -544,6 +567,9 @@ const useDataGeneratorUtils = () => {
       toast.error("No 360° image metadata found");
       return;
     }
+
+    // Get the 360s transformation
+    const transformation = getTransformation(id, "360s");
 
     // Load the metadata
     const positions = await get360s(project, false);
@@ -587,8 +613,9 @@ const useDataGeneratorUtils = () => {
             toast.update(posttrainingProgressToastId.current, { progress, data: { progress, type: ProgressType.POSTTRAINING } });
           }
 
-          // Create position vector
-          const pos = new Vector3(position.x, position.y, position.z);
+          // Create position vector and apply transformation
+          const originalPos = new Vector3(position.x, position.y, position.z);
+          const pos = applyTransformationToPosition(originalPos, transformation);
 
           // Generate random direction in XZ plane
           const directionXZ = new Vector2(Math.random() * 2 - 1, Math.random() * 2 - 1);

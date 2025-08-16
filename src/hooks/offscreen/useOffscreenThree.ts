@@ -123,6 +123,24 @@ const downloadRenderTarget = (renderer: THREE.WebGLRenderer, renderTarget: THREE
   renderer.setRenderTarget(null);
 };
 
+const applyTransformationToPosition = (position: THREE.Vector3, transformation: any) => {
+  if (!transformation) return position.clone();
+  
+  // Create transformation matrix
+  const matrix = new THREE.Matrix4();
+  const quaternion = new THREE.Quaternion().setFromEuler(
+    new THREE.Euler(...transformation.rotation)
+  );
+  matrix.compose(
+    new THREE.Vector3(...transformation.translation),
+    quaternion,
+    new THREE.Vector3(...transformation.scale)
+  );
+  
+  // Apply transformation to the position
+  return position.clone().applyMatrix4(matrix);
+}
+
 const useOffscreenThree = () => {
   const { id: projectId } = useParams();
   const progressToastId = useRef<null | Id>(null);
@@ -244,6 +262,9 @@ const useOffscreenThree = () => {
     const maxShadingImages = getMaxShadingImages(projectIdNum);
     const maxShadingDistance = getMaxShadingDistance(projectIdNum);
 
+    // Get the 360s transformation
+    const transformation = getTransformation(projectIdNum, "360s");
+
     // Load 360° images with positions
     const images360 = await get360s(project, true);
     if (!images360 || images360.length === 0) {
@@ -288,10 +309,15 @@ const useOffscreenThree = () => {
       const pose = poses[i];
 
       // Find closest 360° images for this pose
-      const imagesWithDistances = images360.map(img => ({
-        image: img,
-        distance: pose.position.distanceTo(new THREE.Vector3(img.x, img.y, img.z))
-      }));
+      const imagesWithDistances = images360.map(img => {
+        const originalPos = new THREE.Vector3(img.x, img.y, img.z);
+        const transformedPos = applyTransformationToPosition(originalPos, transformation);
+        return {
+          image: img,
+          transformedPosition: transformedPos,
+          distance: pose.position.distanceTo(transformedPos)
+        };
+      });
 
       // Filter by max distance and sort by distance
       const nearbyImages = imagesWithDistances
@@ -306,7 +332,8 @@ const useOffscreenThree = () => {
         light.decay = 0;
         light.distance = 0;
         light.castShadow = true;
-        light.position.set(imageAndDistance.image.x, imageAndDistance.image.y, imageAndDistance.image.z);
+        // Use transformed position for light placement
+        light.position.copy(imageAndDistance.transformedPosition);
         light.shadow.mapSize.width = 2048;
         light.shadow.mapSize.height = 2048;
         scene.add(light);
@@ -364,11 +391,12 @@ const useOffscreenThree = () => {
             const material = child.material as any;
             // Set sphere map from the 360° image texture
             material.uniforms.sphereMap.value = container.imgWithDistance.image.texture;
-            // Set light position as vec4 (x, y, z, course)
+            // Set light position as vec4 (x, y, z, course) using transformed position
+            const transformedPos = container.imgWithDistance.transformedPosition;
             material.uniforms.lightPos.value.set(
-              container.imgWithDistance.image.x,
-              container.imgWithDistance.image.y,
-              container.imgWithDistance.image.z,
+              transformedPos.x,
+              transformedPos.y,
+              transformedPos.z,
               container.imgWithDistance.image.course
             );
           }
