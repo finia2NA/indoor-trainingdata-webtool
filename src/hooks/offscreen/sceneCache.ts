@@ -129,21 +129,17 @@ if ( gl_FragColor.a > 0.1 ) {
 if ( gl_FragColor.a == 0.0 ) {
   vec3 lightToFrag = vWorldPosition - lightPos.xyz;
   vec3 direction = normalize(lightToFrag);
-  // float x = -direction.x;
-  // float y = direction.z;
-  // float z = -direction.y;
-  float x = direction.x;
-  float y = direction.y;
-  float z = direction.z;
+  float x = -direction.x;
+  float y = direction.z;
+  float z = -direction.y;
   float u = atan(y, x);
   float v = acos(z);
-  // u = (u + 3.14159265) / (2.0 * 3.14159265);
-  // v = v / 3.14159265;
+  u = (u + 3.14159265) / (2.0 * 3.14159265);
+  v = v / 3.14159265;
   
   // Apply course rotation (lightPos.w is in degrees)
   float courseRadians = lightPos.w * 3.14159265 / 180.0;
-  float courseNewGrads = courseRadians / (2.0 * 3.14159265);
-  u = u + courseNewGrads;
+  u = u + courseRadians / (2.0 * 3.14159265);
   u = mod(u, 1.0); // Wrap around if u goes beyond 1.0
   
   // Apply flipping based on scale
