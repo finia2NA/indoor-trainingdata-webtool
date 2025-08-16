@@ -66,19 +66,25 @@ const setupScene = async (
           // Add custom uniforms
           (compMat as any).uniforms = {
             sphereMap: { value: null },
-            lightPos: { value: new THREE.Vector4() }
+            lightPos: { value: new THREE.Vector4() },
+            flipHorizontal: { value: false },
+            flipVertical: { value: false }
           };
           
           compMat.onBeforeCompile = shader => {
             // Link custom uniforms
             shader.uniforms.sphereMap = (compMat as any).uniforms.sphereMap;
             shader.uniforms.lightPos = (compMat as any).uniforms.lightPos;
+            shader.uniforms.flipHorizontal = (compMat as any).uniforms.flipHorizontal;
+            shader.uniforms.flipVertical = (compMat as any).uniforms.flipVertical;
             
             // Inject world position varying for sphere mapping
             shader.vertexShader = shader.vertexShader.replace(
               '#include <common>',
               `#include <common>
 uniform vec4 lightPos;
+uniform bool flipHorizontal;
+uniform bool flipVertical;
 varying vec3 vWorldPosition;`
             );
             shader.vertexShader = shader.vertexShader.replace(
@@ -93,7 +99,9 @@ varying vec3 vWorldPosition;`
               `#include <common>
 varying vec3 vWorldPosition;
 uniform vec4 lightPos;
-uniform sampler2D sphereMap;`
+uniform sampler2D sphereMap;
+uniform bool flipHorizontal;
+uniform bool flipVertical;`
             );
             
             // Replace fog fragment
@@ -138,7 +146,11 @@ if ( gl_FragColor.a == 0.0 ) {
   u = u + courseNewGrads;
   u = mod(u, 1.0); // Wrap around if u goes beyond 1.0
   
-  vec4 sphereColor = texture2D(sphereMap, vec2(u, v));
+  // Apply flipping based on scale
+  float finalU = flipHorizontal ? (1.0 - u) : u;
+  float finalV = flipVertical ? (1.0 - v) : v;
+  
+  vec4 sphereColor = texture2D(sphereMap, vec2(finalU, finalV));
 
   float distanceToLight = length(lightToFrag);
   float opacity = clamp(1.0 - (distanceToLight - ${ensureFloatFormat(MAXOPAT)}) / ${ensureFloatFormat(OPACITYDISTANCE)}, 0.0, 1.0);

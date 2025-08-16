@@ -399,6 +399,20 @@ const useOffscreenThree = () => {
               transformedPos.z,
               container.imgWithDistance.image.course
             );
+            
+            // Calculate flip values based on transformation scale
+            if (transformation) {
+              // Horizontal flip when x XOR z scale is negative
+              const flipHorizontal = (transformation.scale[0] < 0) !== (transformation.scale[2] < 0);
+              // Vertical flip when y scale is negative
+              const flipVertical = transformation.scale[1] < 0;
+              
+              material.uniforms.flipHorizontal.value = flipHorizontal;
+              material.uniforms.flipVertical.value = flipVertical;
+            } else {
+              material.uniforms.flipHorizontal.value = false;
+              material.uniforms.flipVertical.value = false;
+            }
           }
         });
 
