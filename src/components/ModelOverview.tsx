@@ -42,7 +42,7 @@ const ProjectOverview = () => {
 
   return (
     <>
-      <div className="p-6">
+      <div className="p-6 h-full overflow-y-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
           {projects && projects.map((project, idx) => (
             <div key={idx} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-200 relative max-w-sm">
