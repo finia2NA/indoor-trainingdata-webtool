@@ -11,7 +11,9 @@ import useMultiGenerationStore from '../state/useMultiGenerationStore';
 import useDebugStore from '../state/useDebugStore';
 import { get360s } from '../../util/get360s';
 import useScene from './useScene';
+import { sceneCache as globalSceneCache } from './sceneCache';
 
+const DO_CLEANUP = false;
 const DEBUG_RENDERTARGETS = true; // Set to true to enable render target downloads for debugging
 
 // Post-processing material for combining multiple render targets
@@ -377,6 +379,7 @@ const useOffscreenThree = () => {
         renderer.clear();
         renderer.render(scene, camera);
 
+        debugger;
         // Download the render target for debugging
         if (DEBUG_RENDERTARGETS) {
           downloadRenderTarget(renderer, renderTargets[j], `pose_${i}_light_${j}.png`);
@@ -395,16 +398,18 @@ const useOffscreenThree = () => {
       renderer.render(postScene, postCamera);
 
       // Clean up render targets and post-processing quad for this pose
-      renderTargets.forEach(rt => rt.dispose());
-      postScene.remove(quad);
-      postMaterial.dispose();
+      if (DO_CLEANUP) {
+        renderTargets.forEach(rt => rt.dispose());
+        postScene.remove(quad);
+        postMaterial.dispose();
+      }
       // ----------------------------------------
 
       // Clean up point lights after rendering this pose
       lightContainers.forEach(container => {
         scene.remove(container.light);
         // Clean up shadow map if it exists
-        if (container.light.shadow && container.light.shadow.map) {
+        if (DO_CLEANUP && container.light.shadow && container.light.shadow.map) {
           container.light.shadow.map.dispose();
         }
       });
@@ -433,7 +438,12 @@ const useOffscreenThree = () => {
     }
 
     // Clean up post-processing scene and geometry
-    quadGeom.dispose();
+    if (DO_CLEANUP) {
+      quadGeom.dispose();
+    }
+
+    // Invalidate the global scene cache to ensure fresh scene on next render
+    globalSceneCache.invalidateProject(project.id);
 
     return results;
   }, [getTransformation, getVisibility, project, projectId, getMaxShadingImages, getMaxShadingDistance, renderScreenshotsFromAbove]);
@@ -649,13 +659,15 @@ const useOffscreenThree = () => {
 
 
     // Clean up
-    renderer.dispose();
-    sphere.geometry.dispose();
-    sphere.material.dispose();
+    if (DO_CLEANUP) {
+      renderer.dispose();
+      sphere.geometry.dispose();
+      sphere.material.dispose();
 
-    for (const imageData of images360) {
-      if (imageData.texture) {
-        imageData.texture.dispose();
+      for (const imageData of images360) {
+        if (imageData.texture) {
+          imageData.texture.dispose();
+        }
       }
     }
 
