@@ -8,10 +8,10 @@ type View360OverlayProps = {
 };
 
 const View360Overlay = ({ selectedImage, onExit }: View360OverlayProps) => {
-  const { is360ViewActive, exit360View, exit360ViewWithoutReset, sphereOpacity, setSphereOpacity } = useCameraPoseStore();
+  const { is360ViewActive, restoreCameraPose, exit360ViewWithoutReset, sphereOpacity, setSphereOpacity } = useCameraPoseStore();
 
   const handleExit = () => {
-    exit360View();
+    restoreCameraPose();
     if (onExit) onExit();
   };
 

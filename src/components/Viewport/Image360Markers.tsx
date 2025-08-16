@@ -15,7 +15,7 @@ type Image360MarkersProps = {
 const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => {
   const [positions, setPositions] = useState<Image360[]>([]);
   const [selectedImage, setSelectedImage] = useState<Image360 | null>(null);
-  const { moveCameraTo, enter360View, currentCameraPosition, currentCameraTarget, is360ViewActive } = useCameraPoseStore();
+  const { moveCameraTo, saveCameraPose, currentCameraPosition, currentCameraTarget, is360ViewActive } = useCameraPoseStore();
   const { getTransformation } = useMultiTransformationStore();
 
   const projectId = project.id;
@@ -53,7 +53,7 @@ const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => 
 
   const handleSphereClick = (pos: Image360) => {
     // Store current camera position before entering 360° view
-    enter360View(currentCameraPosition, currentCameraTarget);
+    saveCameraPose(currentCameraPosition, currentCameraTarget);
 
     // Set the selected image for texture display
     setSelectedImage(pos);
@@ -82,6 +82,15 @@ const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => 
     const offset = 0.005;
     const courseRadians = THREE.MathUtils.degToRad(pos.course);
     const courseVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), courseRadians);
+    
+    // Apply transformation rotation to the course vector
+    if (transformation) {
+      const rotationQuaternion = new THREE.Quaternion().setFromEuler(
+        new THREE.Euler(...transformation.rotation)
+      );
+      courseVector.applyQuaternion(rotationQuaternion);
+    }
+    
     courseVector.multiplyScalar(offset); // Negative to position camera opposite to course direction
 
     const cameraPosition: [number, number, number] = [

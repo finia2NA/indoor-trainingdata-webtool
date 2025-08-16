@@ -56,8 +56,8 @@ type CameraPoseState = {
   originalCameraTarget: [number, number, number] | null;
   sphereOpacity: number;
   setSphereOpacity: (opacity: number) => void;
-  enter360View: (originalPosition: [number, number, number], originalTarget: [number, number, number]) => void;
-  exit360View: () => void;
+  saveCameraPose: (originalPosition: [number, number, number], originalTarget: [number, number, number]) => void;
+  restoreCameraPose: () => void;
   exit360ViewWithoutReset: () => void;
 };
 
@@ -84,12 +84,12 @@ const useCameraPoseStore = create<CameraPoseState>((set, get) => ({
   originalCameraTarget: null,
   sphereOpacity: 0.5,
   setSphereOpacity: (opacity) => set({ sphereOpacity: opacity }),
-  enter360View: (originalPosition, originalTarget) => set({ 
+  saveCameraPose: (originalPosition, originalTarget) => set({ 
     is360ViewActive: true, 
     originalCameraPosition: originalPosition, 
     originalCameraTarget: originalTarget 
   }),
-  exit360View: () => {
+  restoreCameraPose: () => {
     const state = get();
     if (state.originalCameraPosition && state.originalCameraTarget) {
       set({ 
