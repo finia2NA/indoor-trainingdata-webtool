@@ -70,10 +70,12 @@ const Viewport = ({ project, setSelectedImage }: ViewportProps) => {
         }
         <color attach="background" args={['#484848']} />
 
-        <SwitchableCamera />
-        <CameraPosLogging />
-        <CameraController />
-
+        <>
+          {/* // Camera Controls */}
+          <SwitchableCamera />
+          <CameraPosLogging />
+          <CameraController />
+        </>
         {measuringActive && measuredPoint && (
           <Html position={measuredPoint} center style={{ pointerEvents: 'none' }}>
             <div className="px-2 py-1 rounded bg-black/70 text-white text-xs whitespace-nowrap">

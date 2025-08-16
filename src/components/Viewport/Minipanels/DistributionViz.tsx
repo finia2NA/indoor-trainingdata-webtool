@@ -31,7 +31,7 @@ const ReferenceScope = ({ startAtZero, minVal, maxVal }: ReferenceScopeProps) =>
           <Html position={[xSpread - 1, -0.3, 0]} center>
             <div style={{ color: 'violet' }}>max:{parseFloat(maxVal.toFixed(2))}</div>
           </Html>
-          <Html position={[-xSpread + 1, -0.3, 0]} center>
+          <Html position={[-xSpread + 1.5, -0.3, 0]} center>
             <div style={{ color: 'violet' }}>min:{parseFloat(minVal.toFixed(2))}</div>
           </Html>
         </>
