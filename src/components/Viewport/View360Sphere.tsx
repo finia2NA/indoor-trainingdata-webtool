@@ -31,11 +31,50 @@ const View360Sphere = ({ selectedImage, transformation }: View360SphereProps) =>
 
   // The presentation of a react component is defined in its return statement.
   if (!is360ViewActive || !selectedImage || !texture) return null;
+
+  // Calculate transformed position and rotation
+  let transformedPosition: [number, number, number] = [selectedImage.x, selectedImage.y, selectedImage.z];
+  let transformedRotation: [number, number, number] = [0, THREE.MathUtils.degToRad(selectedImage.course), 0];
+  let transformedScale: [number, number, number] = [1, 1, 1];
+
+  if (transformation) {
+    // Apply transformation to the original position
+    const originalPosition = new THREE.Vector3(selectedImage.x, selectedImage.y, selectedImage.z);
+    
+    // Create transformation matrix
+    const matrix = new THREE.Matrix4();
+    const quaternion = new THREE.Quaternion().setFromEuler(
+      new THREE.Euler(...transformation.rotation)
+    );
+    matrix.compose(
+      new THREE.Vector3(...transformation.translation),
+      quaternion,
+      new THREE.Vector3(...transformation.scale)
+    );
+    
+    // Apply transformation to the original position
+    const finalPosition = originalPosition.applyMatrix4(matrix);
+    transformedPosition = [finalPosition.x, finalPosition.y, finalPosition.z];
+
+    // Combine the original course rotation with the transformation rotation
+    const originalRotation = new THREE.Euler(0, THREE.MathUtils.degToRad(selectedImage.course), 0);
+    const transformationRotation = new THREE.Euler(...transformation.rotation);
+    
+    // Add the rotations
+    transformedRotation = [
+      originalRotation.x + transformationRotation.x,
+      originalRotation.y + transformationRotation.y,
+      originalRotation.z + transformationRotation.z
+    ];
+
+    transformedScale = transformation.scale as [number, number, number];
+  }
+
   return (
     <mesh
-      position={[selectedImage.x, selectedImage.y, selectedImage.z]}
-      rotation={[0, THREE.MathUtils.degToRad(selectedImage.course), 0]}
-      scale={transformation ? transformation.scale as [number, number, number] : [1, 1, 1]}
+      position={transformedPosition}
+      rotation={transformedRotation}
+      scale={transformedScale}
     >
       <sphereGeometry args={[0.5, 32, 32]} />
       <meshBasicMaterial
