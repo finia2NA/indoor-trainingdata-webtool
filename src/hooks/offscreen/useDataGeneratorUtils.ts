@@ -327,6 +327,81 @@ const useDataGeneratorUtils = () => {
     };
   }
 
+  const getPosttrainingPairPoint = async (pose: Pose, numSeries: number, numTries = 10000) => {
+    if (numTries <= 0) {
+      throw new Error('getPosttrainingPairPoint failed after maximum attempts');
+    }
+
+    // For posttraining poses, pairs should have the SAME position (360° image location)
+    // but DIFFERENT rotation (viewing direction)
+    
+    // SAMPLING - only angle, no distance
+    const pairAngleDist = createDistribution(pairAngleConcentration);
+    const pairAngleSample = takeRandomSample({ dist: pairAngleDist });
+    const pairAngleVal = pairAngleSample * pairAngleOffset * (Math.PI / 180);
+
+    // POSITION - keep the same position as the original pose (360° image location)
+    const newPos = pose.position.clone();
+
+    // ANGLE - apply rotation offset to the viewing direction
+    const direction = pose.target.clone().sub(pose.position).normalize();
+    const up = new Vector3(0, 1, 0);
+    const right = new Vector3().crossVectors(up, direction).normalize();
+
+    // Randomly split angleVal into yaw and pitch
+    const t = Math.random();
+    const yawAngle = t * pairAngleVal;
+    const pitchAngle = (1 - t) * pairAngleVal;
+    
+    // Apply Yaw (rotation around up vector)
+    const yawQuat = new Quaternion().setFromAxisAngle(up, yawAngle);
+    direction.applyQuaternion(yawQuat);
+    
+    // Apply Pitch (rotation around right vector)
+    const pitchQuat = new Quaternion().setFromAxisAngle(right, pitchAngle);
+    direction.applyQuaternion(pitchQuat);
+    direction.normalize();
+    
+    // Compute the new target position and quaternion
+    const newTarget = newPos.clone().add(direction);
+    const quaternionRotation = getQuaternionFromTarget(newPos, newTarget);
+
+    // THE DEALBREAKERS - Wall avoidance validation
+    
+    // check if we are too close to a wall with the new rotation. If so, recurse
+    if (avoidWalls) {
+      const wallIntersections = await doOffscreenRaycast(newPos, newTarget, false);
+      if (wallIntersections.length > 0) {
+        const intersection = wallIntersections[0];
+        const distance = newPos.distanceTo(intersection.point);
+        if (distance < wallAvoidanceThreshold) {
+          return getPosttrainingPairPoint(pose, numSeries, numTries - 1);
+        }
+      }
+    }
+
+    // HAPPY PATH
+    if (logging) {
+      console.table({
+        Series: numSeries + "b",
+        Position: (to2accuracy(newPos.toArray()) as number[]).join(', '),
+        "Relative Target": (to2accuracy(newTarget.clone().sub(newPos).toArray()) as number[]).join(', '),
+        "Angle to first": to2accuracy(pairAngleVal),
+        "Position change": "NONE (posttraining pair)",
+        Iterations: 10000 - numTries,
+      });
+    }
+
+    return {
+      position: newPos,
+      target: newTarget,
+      quaternion: quaternionRotation,
+      fov: pose.fov,
+      type: PoseType.PAIR,
+      series: numSeries,
+    };
+  }
+
   const takeScreenshots = async () => {
     console.log("Creating screenshot zip");
     const timeStamp = new Date().toISOString().replace(/:/g, '-');
@@ -567,7 +642,7 @@ const useDataGeneratorUtils = () => {
 
           // If we are doing pair generation, add a second pose
           if (pair) {
-            const pairPose = await getPairPoint(pose, totalPoses - 1);
+            const pairPose = await getPosttrainingPairPoint(pose, totalPoses - 1);
             // Add the image name to the pair pose as well
             const postTrainingPairPose: PostTrainingPose = {
               ...pairPose,

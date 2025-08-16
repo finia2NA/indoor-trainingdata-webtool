@@ -6,9 +6,9 @@ This sequence diagram shows the complete flow from user clicking "Generate Poses
 sequenceDiagram
     participant User
     participant GenerateSidebar
-    participant useDataGeneratorUtils
-    participant usePrecomputedPoses
     participant ProgressToast
+    participant usePrecomputedPoses
+    participant useDataGeneratorUtils
     participant useOffscreenThree
     participant SceneManager
     participant Database
@@ -32,7 +32,7 @@ sequenceDiagram
             
             alt If avoidWalls enabled
                 useDataGeneratorUtils->>useOffscreenThree: doOffscreenRaycast(position, target)
-                useOffscreenThree->>SceneManager: getOrCreateScene(512x512, doubleSided=true)
+                useOffscreenThree->>SceneManager: getOrCreateScene()
                 SceneManager-->>useOffscreenThree: cached/new scene with 3D models
                 useOffscreenThree->>useOffscreenThree: perform raycast on scene
                 useOffscreenThree-->>useDataGeneratorUtils: intersection results
@@ -48,7 +48,7 @@ sequenceDiagram
                 
                 Note over useDataGeneratorUtils,SceneManager: Two raycasts for pair validation
                 useDataGeneratorUtils->>useOffscreenThree: doOffscreenRaycast(originalPos, newPos, limitDistance=true)
-                useOffscreenThree->>SceneManager: getOrCreateScene(512x512, doubleSided=true)
+                useOffscreenThree->>SceneManager: getOrCreateScene()
                 SceneManager-->>useOffscreenThree: cached scene
                 useOffscreenThree-->>useDataGeneratorUtils: check if path goes through wall
                 alt If path blocked
@@ -57,7 +57,7 @@ sequenceDiagram
                 
                 alt If avoidWalls enabled
                     useDataGeneratorUtils->>useOffscreenThree: doOffscreenRaycast(newPos, newTarget)
-                    useOffscreenThree->>SceneManager: getOrCreateScene(512x512, doubleSided=true)
+                    useOffscreenThree->>SceneManager: getOrCreateScene()
                     SceneManager-->>useOffscreenThree: cached scene
                     useOffscreenThree-->>useDataGeneratorUtils: check wall proximity
                     alt If too close to wall
@@ -92,7 +92,7 @@ sequenceDiagram
                     
                     alt If avoidWalls enabled
                         useDataGeneratorUtils->>useOffscreenThree: doOffscreenRaycast(pos, target)
-                        useOffscreenThree->>SceneManager: getOrCreateScene(512x512, doubleSided=true)
+                        useOffscreenThree->>SceneManager: getOrCreateScene()
                         SceneManager-->>useOffscreenThree: cached scene
                         useOffscreenThree-->>useDataGeneratorUtils: check wall proximity
                         alt If too close to wall
@@ -103,18 +103,18 @@ sequenceDiagram
                     useDataGeneratorUtils->>usePrecomputedPoses: addPosttrainingPose(pose)
                     
                     alt If pair generation enabled
-                        useDataGeneratorUtils->>useDataGeneratorUtils: getPairPoint(pose)
+                        useDataGeneratorUtils->>useDataGeneratorUtils: getPosttrainingPairPoint(pose)
                         
-                        useDataGeneratorUtils->>useOffscreenThree: doOffscreenRaycast(originalPos, newPos, limitDistance=true)
-                        useOffscreenThree->>SceneManager: getOrCreateScene(512x512, doubleSided=true)
-                        SceneManager-->>useOffscreenThree: cached scene
-                        useOffscreenThree-->>useDataGeneratorUtils: check if path goes through wall
+                        Note over useDataGeneratorUtils: Position stays same (360° location)<br/>Only rotation changes for posttraining pairs
                         
                         alt If avoidWalls enabled
-                            useDataGeneratorUtils->>useOffscreenThree: doOffscreenRaycast(newPos, newTarget)
-                            useOffscreenThree->>SceneManager: getOrCreateScene(512x512, doubleSided=true)
+                            useDataGeneratorUtils->>useOffscreenThree: doOffscreenRaycast(samePos, newTarget)
+                            useOffscreenThree->>SceneManager: getOrCreateScene()
                             SceneManager-->>useOffscreenThree: cached scene
-                            useOffscreenThree-->>useDataGeneratorUtils: check wall proximity
+                            useOffscreenThree-->>useDataGeneratorUtils: check wall proximity with new rotation
+                            alt If too close to wall
+                                useDataGeneratorUtils->>useDataGeneratorUtils: retry pair generation (different rotation)
+                            end
                         end
                         
                         useDataGeneratorUtils->>usePrecomputedPoses: addPosttrainingPose(pairPose)
