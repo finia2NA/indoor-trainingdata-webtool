@@ -74,15 +74,15 @@ const SingleChannel = ({ name, values, onChange, step = 1, min = -100, max = 100
 }
 
 type ModelChannelProps = {
-  model: Model3D
-  modelId: number
+  id: number | "360s"
   projectId: number
+  model?: Model3D
 }
 
-const ModelChannel = ({ model, modelId, projectId }: ModelChannelProps) => {
+const ModelChannel = ({ id, projectId, model }: ModelChannelProps) => {
   const { getTransformation, setTranslation, setRotation, setScale, getVisibility, setVisibility } = useMultiTransformationStore();
-  const myTransformation = getTransformation(projectId, modelId);
-  const myVisibility = getVisibility(projectId, modelId);
+  const myTransformation = getTransformation(projectId, id);
+  const myVisibility = getVisibility(projectId, id);
 
   if (!myTransformation) {
     return <></>
@@ -95,7 +95,7 @@ const ModelChannel = ({ model, modelId, projectId }: ModelChannelProps) => {
       }
       return val;
     });
-    setTranslation(projectId, modelId, sanitizedVals);
+    setTranslation(projectId, id, sanitizedVals);
   }
 
   const rotateSetter = (newVals: number[]) => {
@@ -105,7 +105,7 @@ const ModelChannel = ({ model, modelId, projectId }: ModelChannelProps) => {
       }
       return val;
     });
-    setRotation(projectId, modelId, sanitizedVals);
+    setRotation(projectId, id, sanitizedVals);
   }
 
   const scaleSetter = (newVals: number[]) => {
@@ -115,12 +115,14 @@ const ModelChannel = ({ model, modelId, projectId }: ModelChannelProps) => {
       }
       return val;
     });
-    setScale(projectId, modelId, sanitizedVals);
+    setScale(projectId, id, sanitizedVals);
   }
 
   const visibilitySetter = (newVal: boolean) => {
-    setVisibility(projectId, modelId, newVal);
+    setVisibility(projectId, id, newVal);
   }
+
+  const displayName = model ? model.name : "360° Images";
 
   const titleSection =
     <div className='flex flex-row gap-2 items-center'>
@@ -129,7 +131,7 @@ const ModelChannel = ({ model, modelId, projectId }: ModelChannelProps) => {
         onClick={() => visibilitySetter(!myVisibility)}>
         {myVisibility ? <IoMdEye /> : <IoMdEyeOff />}
       </button>
-      <span>{model.name}</span>
+      <span>{displayName}</span>
     </div>
 
   return (
@@ -159,21 +161,32 @@ const LayoutSidebar = ({ project }: LayoutSidebarProps) => {
     throw new Error("Project has no id");
   }
   const models = project.models;
+  
+  // Initialize transformations for all models
   for (const model of models) {
     if (!getTransformation(projectId, model.id)) {
       addTransformation(projectId, model.id);
     }
   }
+  
+  // Always initialize transformation for 360s
+  if (!getTransformation(projectId, "360s")) {
+    addTransformation(projectId, "360s");
+  }
 
   return (
     <>
+      {/* Always show 360s channel first */}
+      <ModelChannel id="360s" projectId={projectId} />
+      
+      {/* Show all model channels */}
       {models.map((model) => {
         if (model.id === undefined) {
           throw new Error("Model has no id");
         }
         return (
           <Fragment key={model.id}>
-            <ModelChannel model={model} modelId={model.id} projectId={projectId!} />
+            <ModelChannel id={model.id} projectId={projectId} model={model} />
           </Fragment>
         )
       })

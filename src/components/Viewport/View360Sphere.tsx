@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import * as THREE from 'three';
 import useCameraPoseStore from '../../hooks/sync/useCameraPoseStore';
 import { Image360 } from '../../util/get360s';
+import Transformation from '../../data/Transformation';
 
 type View360SphereProps = {
   selectedImage: Image360 | null;
+  transformation: Transformation | null;
 };
 
 /**
@@ -12,7 +14,7 @@ type View360SphereProps = {
  */
 // React components are functions that return JSX, which describes the UI.
 // They take in outside data as props and can contain their own state.
-const View360Sphere = ({ selectedImage }: View360SphereProps) => {
+const View360Sphere = ({ selectedImage, transformation }: View360SphereProps) => {
   // Global state can be accessed using helper functions, called hooks.
   const { is360ViewActive, sphereOpacity } = useCameraPoseStore();
 
@@ -33,6 +35,7 @@ const View360Sphere = ({ selectedImage }: View360SphereProps) => {
     <mesh
       position={[selectedImage.x, selectedImage.y, selectedImage.z]}
       rotation={[0, THREE.MathUtils.degToRad(selectedImage.course), 0]}
+      scale={transformation ? transformation.scale as [number, number, number] : [1, 1, 1]}
     >
       <sphereGeometry args={[0.5, 32, 32]} />
       <meshBasicMaterial
