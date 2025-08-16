@@ -10,6 +10,7 @@ import useEditorStore, { EditorMode, EditorState, Perspective, PolygonToolMode, 
 import { CiGlobe } from "react-icons/ci";
 import { BiExpand, BiCollapse } from "react-icons/bi";
 import { CgArrowLongUpC } from "react-icons/cg";
+import { Slider } from "@mui/material";
 
 const StrikeThrough = ({ children }: { children: React.ReactNode }) => (
   <>
@@ -115,11 +116,11 @@ type MultitoggleProps = {
   direction?: 'row' | 'column';
   expanded?: boolean;
   verbose?: boolean;
+  additionalUI?: React.ReactNode;
 };
 
 
-const Multitoggle = ({ items, direction, verbose, expanded }: MultitoggleProps) => {
-
+const Multitoggle = ({ items, direction, verbose, expanded, additionalUI }: MultitoggleProps) => {
 
   let myItems = items;
   if (!expanded) {
@@ -128,22 +129,27 @@ const Multitoggle = ({ items, direction, verbose, expanded }: MultitoggleProps) 
   }
 
   return (
-    <div className={`
-    bg-bg bg-opacity-60
-    px-2 py-3 gap-2
-    flex flex-${direction === 'row' ? 'row' : 'col'}
-    pointer-events-auto
-    flex-wrap`}>
-      {myItems.map((item, index) => (
-        <ToggleHelper
-          key={'id' in item ? item.id : `group-${index}`}
-          item={item}
-          verbose={verbose}
-          direction={direction}
-        />
-      ))
-      }
-    </div >
+    <div
+      className="
+      bg-bg bg-opacity-60
+      pointer-events-auto
+      px-2 py-3 
+    ">
+      <div className={`
+      gap-2
+      flex flex-${direction === 'row' ? 'row' : 'col'} flex-wrap`}>
+        {myItems.map((item, index) => (
+          <ToggleHelper
+            key={'id' in item ? item.id : `group-${index}`}
+            item={item}
+            verbose={verbose}
+            direction={direction}
+          />
+        ))
+        }
+      </div >
+      {additionalUI && (<><hr className="my-3 border-secondary" /><div className="py-1">{additionalUI}</div></>)}
+    </div>
   )
 }
 
@@ -228,7 +234,7 @@ export const PolygonCreatorToggles = () => {
 export const ViewmodeToggles = () => {
   // Perspective stuff
   // state
-  const { editorMode, perspectiveMode, setPerspectiveMode, wireframeMode, setWireframeMode, showLabels: showLabel, setShowLabel, showGrid, setShowGrid, showTriangulation, setShowTriangulation, showImages, setShowImages, showPoses, setShowPoses, showNormals, setShowNormals, controlsExpanded, setControlsExpanded } = useEditorStore();
+  const { editorMode, perspectiveMode, fov, setFov, setPerspectiveMode, wireframeMode, setWireframeMode, showLabels: showLabel, setShowLabel, showGrid, setShowGrid, showTriangulation, setShowTriangulation, showImages, setShowImages, showPoses, setShowPoses, showNormals, setShowNormals, controlsExpanded, setControlsExpanded } = useEditorStore();
 
   // icons
   const PerspectiveOrthographicIcon = perspectiveMode === Perspective.ORTHOGRAPHIC ? TbPerspectiveOff : TbPerspective;
@@ -272,6 +278,38 @@ export const ViewmodeToggles = () => {
   const toggleShowNormals = () => {
     setShowNormals(!showNormals);
   }
+
+  const additionalUI =
+    <div className="flex items-center gap-1 w-full -my-1">
+      <label className="text-xs text-white font-medium uppercase tracking-wide whitespace-nowrap">FOV</label>
+      <Slider
+        color="secondary"
+        value={fov}
+        onChange={(_, value) => setFov(value as number)}
+        valueLabelDisplay="auto"
+        valueLabelFormat={(value) => `${value}°`}
+        min={30}
+        max={100}
+        step={1}
+        sx={{
+          flex: 1,
+          minWidth: 0,
+          height: 4,
+          margin: 0,
+          padding: '4px 0',
+          '& .MuiSlider-thumb': {
+            width: 12,
+            height: 12,
+          },
+          '& .MuiSlider-track': {
+            height: 2,
+          },
+          '& .MuiSlider-rail': {
+            height: 2,
+          }
+        }}
+      />
+    </div>
 
 
 
@@ -380,7 +418,7 @@ export const ViewmodeToggles = () => {
   }
 
   return (
-    <Multitoggle items={items} direction="row" expanded={controlsExpanded} verbose={controlsExpanded} />
+    <Multitoggle items={items} direction="row" expanded={controlsExpanded} verbose={controlsExpanded} additionalUI={additionalUI} />
   );
 }
 

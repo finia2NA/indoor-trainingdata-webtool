@@ -34,6 +34,7 @@ const SwitchableCamera = forwardRef((_props, ref) => {
         position={[0, 1, 0]}
         ref={perspectiveRef}
         zoom={1}
+        fov={useEditorStore.getState().fov}
       />
       <OrthographicCamera
         makeDefault={perspectiveMode === Perspective.ORTHOGRAPHIC}

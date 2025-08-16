@@ -76,12 +76,14 @@ const View360Sphere = ({ selectedImage, transformation }: View360SphereProps) =>
       rotation={transformedRotation}
       scale={transformedScale}
     >
-      <sphereGeometry args={[0.5, 32, 32]} />
+      <sphereGeometry args={[2, 32, 32]} />
       <meshBasicMaterial
         map={texture}
         transparent
         opacity={sphereOpacity}
         side={THREE.DoubleSide}
+        depthTest={false}
+        depthWrite={false}
       />
     </mesh>
   );

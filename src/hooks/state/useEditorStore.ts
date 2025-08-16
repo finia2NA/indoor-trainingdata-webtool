@@ -39,6 +39,9 @@ export type EditorState = {
   perspectiveMode: Perspective;
   setPerspectiveMode: (mode: Perspective) => void;
 
+  fov: number;
+  setFov: (fov: number) => void;
+
   wireframeMode: boolean;
   setWireframeMode: (wireframe: boolean) => void;
 
@@ -87,6 +90,7 @@ export type EditorState = {
 // Default editor configuration
 const defaults = {
   perspectiveMode: Perspective.PERSPECTIVE,
+  fov: 75,
   wireframeMode: false,
   editorMode: EditorMode.LAYOUT,
   transformMode: TransformMode.NONE,
@@ -106,7 +110,7 @@ const defaults = {
 // Store creation
 const useEditorStore = create<EditorState>((set) => ({
   ...defaults,
-
+  setFov: (fov: number) => set({ fov }),
   setPerspectiveMode: (mode: Perspective) => set({ perspectiveMode: mode }),
   setWireframeMode: (wireframe: boolean) => set({ wireframeMode: wireframe }),
   setEditorMode: (mode: EditorMode) => set((state: EditorState) => ({
