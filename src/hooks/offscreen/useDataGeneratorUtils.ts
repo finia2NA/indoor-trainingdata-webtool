@@ -91,6 +91,7 @@ const useDataGeneratorUtils = () => {
     getFovConcentration,
     getNumSeries,
     getImageDimensions,
+    getUsePosttrainingImages,
     getNumPosttrainingImages,
   } = useMultiGenerationStore();
   const heightOffset = getHeightOffset(id);
@@ -105,6 +106,7 @@ const useDataGeneratorUtils = () => {
   const fovRange = getFovRange(id);
   const fovConcentration = getFovConcentration(id);
   const numSeries = getNumSeries(id);
+  const usePosttrainingImages = getUsePosttrainingImages(id);
   const numPosttrainingImages = getNumPosttrainingImages(id);
   const imageSize = getImageDimensions(id);
 
@@ -524,6 +526,11 @@ const useDataGeneratorUtils = () => {
   const generatePosttrainingPoses = async () => {
     console.log("Generating posttraining images");
     clearPosttrainingPoses();
+
+    if( !usePosttrainingImages) {
+      console.log("Posttraining images are disabled, skipping generation");
+      return;
+    }
 
     let stop = false;
     const doStop = () => {
