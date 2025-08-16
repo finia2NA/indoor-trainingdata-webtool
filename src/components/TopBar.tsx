@@ -1,8 +1,24 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { MdArrowBackIosNew } from "react-icons/md";
+import { useLiveQuery } from 'dexie-react-hooks';
+import db from '../data/db';
 
 const TopBar = () => {
   const location = useLocation();
+  const { id } = useParams<{ id: string; editorMode?: string }>();
+
+  // Extract ID from pathname as fallback
+  const pathId = location.pathname.startsWith('/view/')
+    ? location.pathname.split('/')[2]
+    : undefined;
+  const projectId = id || pathId;
+
+  const project = useLiveQuery(
+    () => projectId ? db.projects.get(Number(projectId)) : undefined,
+    [projectId]
+  );
+
+  console.log('TopBar debug:', { id, pathId, projectId, project, pathname: location.pathname });
 
   return (
     <div className="
@@ -20,7 +36,7 @@ const TopBar = () => {
         </Link>
       )}
       <div className="flex-grow text-center">
-        <h1 className="text-xl">Webtool</h1>
+        <h1 className="text-xl">{project?.name ? 'Webtool: ' + project?.name : 'Webtool'}</h1>
       </div>
     </div>
   );
