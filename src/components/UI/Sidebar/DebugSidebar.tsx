@@ -5,10 +5,15 @@ import SidebarSection from "./SidebarSection";
 import useDebugStore from "../../../hooks/state/useDebugStore";
 import useCameraPoseStore from "../../../hooks/sync/useCameraPoseStore";
 import PoseList from "./PoseList";
+import useDataGeneratorUtils from "../../../hooks/offscreen/useDataGeneratorUtils";
+import usePrecomputedPoses from "../../../hooks/state/usePrecomputedPoses";
+import { toast } from "react-toastify";
 
 
 const DebugSidebar = ({ project: _project }: { project: Project }) => {
   const { moveCameraTo } = useCameraPoseStore();
+  const { takeScreenshots } = useDataGeneratorUtils();
+  const { poses, posttrainingPoses } = usePrecomputedPoses();
   const {
     ambientLightActive,
     setUseAmbientLight,
@@ -47,6 +52,15 @@ const DebugSidebar = ({ project: _project }: { project: Project }) => {
     ];
     moveCameraTo(randomPosition, target);
   };
+
+  const takeScreenshotsHandler = () => {
+    console.log("Taking screenshots");
+    if (poses.length === 0 && posttrainingPoses.length === 0)
+      toast.error('Need to generate poses first');
+    takeScreenshots();
+  };
+
+  const screenshotColor = (poses.length || posttrainingPoses.length) ? "blue" : "gray";
 
   return (
     <SidebarSection title="Debug">
@@ -174,6 +188,13 @@ const DebugSidebar = ({ project: _project }: { project: Project }) => {
               onChange={(e) => setRenderScreenshotsFromAbove(e.target.checked)}
             />
           </div>
+          <button
+            className={`bg-${screenshotColor}-500 hover:bg-${screenshotColor}-600 text-white px-4 py-2 rounded`}
+            disabled={poses.length === 0 && posttrainingPoses.length === 0}
+            onClick={takeScreenshotsHandler}
+          >
+            Take Screenshots
+          </button>
         </div>
       </SidebarSection>
       <SidebarSection title="Measuring" level={2}>

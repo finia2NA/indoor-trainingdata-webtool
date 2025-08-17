@@ -22,7 +22,7 @@ const getQuaternionFromTarget = (position: Vector3, target: Vector3) => {
 const PoseList = () => {
   const { id } = useParams<{ id: string }>();
   const projectId = Number(id);
-  const { poses, posttrainingPoses, addPose } = usePrecomputedPoses();
+  const { poses, posttrainingPoses, addPose, clearAllPoses } = usePrecomputedPoses();
   const { getFovRange } = useMultiGenerationStore();
 
   // Form state for adding new pose
@@ -59,6 +59,12 @@ const PoseList = () => {
     addPose(pose);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleAddPose();
+    }
+  };
+
   const formatVector = (vec: Vector3) => {
     return `(${vec.x.toFixed(2)}, ${vec.y.toFixed(2)}, ${vec.z.toFixed(2)})`;
   };
@@ -73,7 +79,7 @@ const PoseList = () => {
 
         {/* Add New Pose Section */}
         <SidebarSection title="Add New Pose" level={3}>
-          <div className="flex flex-col gap-2">
+          <form onSubmit={(e) => { e.preventDefault(); handleAddPose(); }} className="flex flex-col gap-2">
             <div className="text-sm font-medium">Position</div>
             <div className="flex gap-2">
               <InteractiveInput
@@ -131,13 +137,23 @@ const PoseList = () => {
             </div>
 
             <button
-              onClick={handleAddPose}
+              type="submit"
               className="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
             >
               Add Pose
             </button>
-          </div>
+          </form>
         </SidebarSection>
+
+        {/* Clear All Poses Button */}
+        {(poses.length > 0 || posttrainingPoses.length > 0) && (
+          <button
+            onClick={clearAllPoses}
+            className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+          >
+            Clear All Poses
+          </button>
+        )}
 
         {/* Regular Poses List */}
         <SidebarSection title={`Regular Poses (${poses.length})`} level={3}>
