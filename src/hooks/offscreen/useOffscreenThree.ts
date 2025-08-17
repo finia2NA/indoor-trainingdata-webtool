@@ -126,7 +126,7 @@ const downloadRenderTarget = (renderer: THREE.WebGLRenderer, renderTarget: THREE
 
 const applyTransformationToPosition = (position: THREE.Vector3, transformation: any) => {
   if (!transformation) return position.clone();
-  
+
   // Create transformation matrix
   const matrix = new THREE.Matrix4();
   const quaternion = new THREE.Quaternion().setFromEuler(
@@ -137,7 +137,7 @@ const applyTransformationToPosition = (position: THREE.Vector3, transformation: 
     quaternion,
     new THREE.Vector3(...transformation.scale)
   );
-  
+
   // Apply transformation to the position
   return position.clone().applyMatrix4(matrix);
 }
@@ -395,16 +395,16 @@ const useOffscreenThree = () => {
             material.uniforms.sphereMap.value = container.imgWithDistance.image.texture;
             // Set light position as vec4 (x, y, z, course) using transformed position
             const transformedPos = container.imgWithDistance.transformedPosition;
-            
+
             // Transform the course direction vector to account for coordinate system flips
             let transformedCourse = container.imgWithDistance.image.course;
             if (transformation) {
               console.log("Original course:", container.imgWithDistance.image.course);
               console.log("Transformation scale:", transformation.scale);
-              
+
               const courseVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(container.imgWithDistance.image.course));
               console.log("Course vector before transform:", courseVector);
-              
+
               const matrix = new THREE.Matrix4();
               const quaternion = new THREE.Quaternion().setFromEuler(
                 new THREE.Euler(...transformation.rotation)
@@ -416,12 +416,12 @@ const useOffscreenThree = () => {
               );
               courseVector.applyMatrix4(matrix);
               console.log("Course vector after transform:", courseVector);
-              
+
               // Convert back to angle
               transformedCourse = Math.atan2(courseVector.z, courseVector.x) * 180 / Math.PI;
               console.log("Transformed course:", transformedCourse);
             }
-            
+
             material.uniforms.lightPos.value.set(
               transformedPos.x,
               transformedPos.y,
@@ -429,7 +429,7 @@ const useOffscreenThree = () => {
               transformedCourse
             );
             console.log("Light position sent to shader:", transformedPos.x, transformedPos.y, transformedPos.z, transformedCourse);
-            
+
             // Calculate flip values based on transformation scale
             if (transformation) {
               // Horizontal flip when x XOR z scale is negative. inverted FOR SOME REASON
@@ -437,26 +437,22 @@ const useOffscreenThree = () => {
               // Vertical flip when y scale is negative
               const flipVertical = false;
               console.log("Vertical flip:", flipVertical, "Horizontal flip:", flipHorizontal);
-              
+
               material.uniforms.flipHorizontal.value = flipHorizontal;
               material.uniforms.flipVertical.value = flipVertical;
             } else {
               material.uniforms.flipHorizontal.value = false;
               material.uniforms.flipVertical.value = false;
             }
-            
-            // Set pitch limits (convert degrees to radians, then to spherical coordinates)
-            // In spherical coordinates: 0 = north pole, π/2 = horizon, π = south pole
-            // User input: negative = up from horizon, positive = down from horizon
-            const minPitchDegrees = pitchAngleRange[0]; // Most negative (up)
-            const maxPitchDegrees = pitchAngleRange[1]; // Most positive (down)
-            
+
+            // coordinate system used in shader: 0° is the equator, 90° is the north pole, -90° is the south pole
+            const minPitchDegrees = pitchAngleRange[0]; // Most negative (down)
+            const maxPitchDegrees = pitchAngleRange[1]; // Most positive (up)
+
             // Convert to spherical coordinate system
-            // const minPitchRadians = (90 - maxPitchDegrees) * Math.PI / 180; // Most up becomes smallest v
-            // const maxPitchRadians = (90 - minPitchDegrees) * Math.PI / 180; // Most down becomes largest v
-            const minPitchRadians = minPitchDegrees * Math.PI / 180; // Most up becomes smallest v
-            const maxPitchRadians = maxPitchDegrees * Math.PI / 180; // Most down becomes largest v
-            
+            const minPitchRadians = (90 + minPitchDegrees) * Math.PI / 180; // Min degrees becomes min radians
+            const maxPitchRadians = (90 + maxPitchDegrees) * Math.PI / 180; // Max degrees becomes max radians
+
             material.uniforms.minPitch.value = minPitchRadians;
             material.uniforms.maxPitch.value = maxPitchRadians;
           }
