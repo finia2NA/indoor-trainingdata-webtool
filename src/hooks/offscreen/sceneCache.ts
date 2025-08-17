@@ -68,7 +68,9 @@ const setupScene = async (
             sphereMap: { value: null },
             lightPos: { value: new THREE.Vector4() },
             flipHorizontal: { value: false },
-            flipVertical: { value: false }
+            flipVertical: { value: false },
+            maxPitch: { value: Math.PI / 2 },
+            minPitch: { value: -Math.PI / 2 }
           };
 
           compMat.onBeforeCompile = shader => {
@@ -77,6 +79,8 @@ const setupScene = async (
             shader.uniforms.lightPos = (compMat as any).uniforms.lightPos;
             shader.uniforms.flipHorizontal = (compMat as any).uniforms.flipHorizontal;
             shader.uniforms.flipVertical = (compMat as any).uniforms.flipVertical;
+            shader.uniforms.maxPitch = (compMat as any).uniforms.maxPitch;
+            shader.uniforms.minPitch = (compMat as any).uniforms.minPitch;
 
             // Inject world position varying for sphere mapping
             shader.vertexShader = shader.vertexShader.replace(
@@ -85,6 +89,8 @@ const setupScene = async (
 uniform vec4 lightPos;
 uniform bool flipHorizontal;
 uniform bool flipVertical;
+uniform float maxPitch;
+uniform float minPitch;
 varying vec3 vWorldPosition;`
             );
             shader.vertexShader = shader.vertexShader.replace(
@@ -101,7 +107,9 @@ varying vec3 vWorldPosition;
 uniform vec4 lightPos;
 uniform sampler2D sphereMap;
 uniform bool flipHorizontal;
-uniform bool flipVertical;`
+uniform bool flipVertical;
+uniform float maxPitch;
+uniform float minPitch;`
             );
 
             // Replace fog fragment
@@ -152,6 +160,10 @@ float courseDirection = flipHorizontal ? -1.0 : 1.0;
 u = u + (courseDirection * courseRadians) / (2.0 * 3.14159265);
 u = mod(u, 1.0);
 
+// Apply pitch limits
+float currentPitch = v * 3.14159265; // Convert back to radians
+bool withinPitchLimits = currentPitch <= maxPitch && currentPitch >= minPitch;
+
 // determine opacity based on distance to light
 float distanceToLight = length(fragToLight);
 float opacity = clamp(1.0 - (distanceToLight - ${ensureFloatFormat(MAXOPAT)}) / ${ensureFloatFormat(OPACITYDISTANCE)}, 0.0, 1.0);
@@ -160,7 +172,7 @@ float opacity = clamp(1.0 - (distanceToLight - ${ensureFloatFormat(MAXOPAT)}) / 
 vec4 sphereColor = texture2D(sphereMap, vec2(u, v));
 
 // output the final color
-if (sphereColor.a > 0.1) {
+if (sphereColor.a > 0.1 && withinPitchLimits) {
   gl_FragColor = vec4(sphereColor.rgb, opacity);
 } else {
   gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);

@@ -16,6 +16,10 @@ import { sceneCache as globalSceneCache } from './sceneCache';
 const DO_CLEANUP = false;
 const DEBUG_RENDERTARGETS = true; // Set to true to enable render target downloads for debugging
 
+// Pitch angle limits in spherical coordinates (0 = up, π/2 = horizon, π = down)
+const MAX_PITCH_RADIANS = (2 * Math.PI) / 3; // 60° down from horizon (120° from north)
+const MIN_PITCH_RADIANS = Math.PI / 3; // 60° up from horizon (60° from north)
+
 // Post-processing material for combining multiple render targets
 function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
   // Build the fragment shader with dynamic texture sampling
@@ -442,6 +446,10 @@ const useOffscreenThree = () => {
               material.uniforms.flipHorizontal.value = false;
               material.uniforms.flipVertical.value = false;
             }
+            
+            // Set pitch limits
+            material.uniforms.maxPitch.value = MAX_PITCH_RADIANS;
+            material.uniforms.minPitch.value = MIN_PITCH_RADIANS;
           }
         });
 
