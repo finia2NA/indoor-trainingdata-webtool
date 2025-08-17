@@ -3,6 +3,7 @@ import SidebarSection from "./SidebarSection";
 import { Slider } from "@mui/material";
 import AngleDisplay from "../../Viewport/Minipanels/AngleDisplay";
 import DistributionViz from "../../Viewport/Minipanels/DistributionViz";
+import InfluenceDisplay from "../../Viewport/Minipanels/InfluenceDisplay";
 import { useParams } from "react-router-dom";
 import useMultiGenerationStore, { GenPair } from "../../../hooks/state/useMultiGenerationStore";
 import { ResetConfirmationToast } from "../Toasts";
@@ -459,6 +460,7 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
                         />
                       </div>
                     </div>
+                    <InfluenceDisplay fullInfluenceUntil={influenceRange[0]} zeroInfluenceAt={influenceRange[1]} />
                     <p className="text-gray-400">Controls distance-based weighting: full influence until {influenceRange[0]}m, zero influence at {influenceRange[1]}m</p>
                   </div>
                   <div className="flex flex-col mb-2">
