@@ -1,8 +1,9 @@
 import useCameraPoseStore from '../../hooks/sync/useCameraPoseStore';
 import { Image360 } from '../../util/get360s';
-import { Slider } from "@mui/material";
 import { Project } from '../../data/db';
 import useMultiTransformationStore from '../../hooks/state/useMultiTransformationStore';
+import { useRef } from 'react';
+import { Slider } from "@mui/material";
 
 type View360OverlayProps = {
   selectedImage?: Image360 | null;
@@ -12,12 +13,22 @@ type View360OverlayProps = {
 
 const View360Overlay = ({ selectedImage, onExit, project }: View360OverlayProps) => {
   const { is360ViewActive, restoreCameraPose, exit360ViewWithoutReset, sphereOpacity, setSphereOpacity } = useCameraPoseStore();
-  const { getCourseCorrection, setCourseCorrection, getFineCourseCorrection, setFineCourseCorrection, getCourseCorrectionOrNull, getFineCorrectionOrNull, removeCourseCorrection, removeFineCourseCorrection } = useMultiTransformationStore();
+  const { setCourseCorrection, getCoarseCourseCorrection, getFineCourseCorrection, getCourseCorrectionOrNull, removeCourseCorrection } = useMultiTransformationStore();
+  
+  const fineSliderRef = useRef<HTMLInputElement>(null);
+  const coarseSliderRef = useRef<HTMLInputElement>(null);
 
   const projectId = project.id;
   if (!projectId) {
     throw new Error("Project has no id");
   }
+
+  const updateCourseCorrections = (imageName: string) => {
+    if (!fineSliderRef.current || !coarseSliderRef.current) return;
+    const fineValue = parseFloat(fineSliderRef.current.value) || 0;
+    const coarseValue = parseFloat(coarseSliderRef.current.value) || 0;
+    setCourseCorrection(projectId, imageName, coarseValue, fineValue);
+  };
 
   const handleExit = () => {
     restoreCameraPose();
@@ -59,7 +70,7 @@ const View360Overlay = ({ selectedImage, onExit, project }: View360OverlayProps)
             <div className="flex items-center gap-2">
               <span className="text-gray-300">Course:</span> 
               <span>{selectedImage.course.toFixed(1)}°</span>
-              {((getCourseCorrectionOrNull(projectId, selectedImage.name) !== null) || (getFineCorrectionOrNull(projectId, selectedImage.name) !== null)) && (
+              {getCourseCorrectionOrNull(projectId, selectedImage.name) !== null && (
                 <span className="text-green-400 text-xs">,modified</span>
               )}
             </div>
@@ -73,42 +84,39 @@ const View360Overlay = ({ selectedImage, onExit, project }: View360OverlayProps)
             <label className="text-sm font-medium">
               Course Correction
             </label>
-            <button
-              onClick={() => {
-                removeCourseCorrection(projectId, selectedImage.name);
-                removeFineCourseCorrection(projectId, selectedImage.name);
-              }}
-              className="bg-red-500 text-white px-2 py-1 rounded text-xs"
-            >
-              Reset
-            </button>
+            <div className="flex gap-1">
+              <button
+                onClick={() => {
+                  updateCourseCorrections(selectedImage.name);
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs"
+              >
+                Done
+              </button>
+              <button
+                onClick={() => {
+                  removeCourseCorrection(projectId, selectedImage.name);
+                }}
+                className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs"
+              >
+                Reset
+              </button>
+            </div>
           </div>
 
           {/* Fine Course Correction (-5 to +5) */}
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-300">Fine (-5° to +5°)</label>
             <div className="flex items-center gap-4">
-              <Slider
-                color="secondary"
-                getAriaLabel={() => 'Fine Course Correction'}
-                value={getFineCourseCorrection(projectId, selectedImage.name)}
-                onChange={(_, value) => setFineCourseCorrection(projectId, selectedImage.name, value as number)}
-                valueLabelDisplay="off"
-                getAriaValueText={(value) => `${value}°`}
+              <input
+                ref={fineSliderRef}
+                type="range"
                 min={-5}
                 max={5}
                 step={0.1}
-                className="flex-grow"
-                sx={{
-                  '& .MuiSlider-thumb': {
-                    width: 16,
-                    height: 16,
-                    color: 'primary.main',
-                    '&:hover, &:focus-visible': {
-                      boxShadow: '0px 0px 0px 6px rgba(0, 0, 0, 0.3)',
-                    },
-                  },
-                }}
+                value={getFineCourseCorrection(projectId, selectedImage.name)}
+                onChange={() => selectedImage && updateCourseCorrections(selectedImage.name)}
+                className="flex-grow h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
               />
               <span className="text-xs min-w-[2.5rem]">{getFineCourseCorrection(projectId, selectedImage.name).toFixed(1)}°</span>
             </div>
@@ -118,29 +126,17 @@ const View360Overlay = ({ selectedImage, onExit, project }: View360OverlayProps)
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-300">Coarse (-180° to +180°, 10° steps)</label>
             <div className="flex items-center gap-4">
-              <Slider
-                color="secondary"
-                getAriaLabel={() => 'Coarse Course Correction'}
-                value={getCourseCorrection(projectId, selectedImage.name)}
-                onChange={(_, value) => setCourseCorrection(projectId, selectedImage.name, value as number)}
-                valueLabelDisplay="off"
-                getAriaValueText={(value) => `${value}°`}
+              <input
+                ref={coarseSliderRef}
+                type="range"
                 min={-180}
                 max={180}
                 step={10}
-                className="flex-grow"
-                sx={{
-                  '& .MuiSlider-thumb': {
-                    width: 16,
-                    height: 16,
-                    color: 'primary.main',
-                    '&:hover, &:focus-visible': {
-                      boxShadow: '0px 0px 0px 6px rgba(0, 0, 0, 0.3)',
-                    },
-                  },
-                }}
+                value={getCoarseCourseCorrection(projectId, selectedImage.name)}
+                onChange={() => selectedImage && updateCourseCorrections(selectedImage.name)}
+                className="flex-grow h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
               />
-              <span className="text-xs min-w-[2.5rem]">{getCourseCorrection(projectId, selectedImage.name)}°</span>
+              <span className="text-xs min-w-[2.5rem]">{getCoarseCourseCorrection(projectId, selectedImage.name)}°</span>
             </div>
           </div>
         </div>

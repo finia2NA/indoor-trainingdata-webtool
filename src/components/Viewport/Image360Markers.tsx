@@ -16,7 +16,7 @@ const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => 
   const [positions, setPositions] = useState<Image360[]>([]);
   const [selectedImage, setSelectedImage] = useState<Image360 | null>(null);
   const { moveCameraTo, saveCameraPose, currentCameraPosition, currentCameraTarget, is360ViewActive } = useCameraPoseStore();
-  const { getTransformation, getCourseCorrection, getFineCourseCorrection, getCourseCorrectionOrNull, getFineCorrectionOrNull } = useMultiTransformationStore();
+  const { getTransformation, getCourseCorrection, getCourseCorrectionOrNull } = useMultiTransformationStore();
 
   const projectId = project.id;
   if (!projectId) {
@@ -80,9 +80,8 @@ const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => 
 
     // Calculate camera position based on negative course direction (camera looks back towards sphere)
     const offset = -0.005;
-    const coarseCorrection = getCourseCorrection(projectId, pos.name);
-    const fineCorrection = getFineCourseCorrection(projectId, pos.name);
-    const totalCourse = pos.course + coarseCorrection + fineCorrection;
+    const courseCorrection = getCourseCorrection(projectId, pos.name); // Returns total correction (coarse + fine)
+    const totalCourse = pos.course + courseCorrection;
     const courseRadians = THREE.MathUtils.degToRad(totalCourse);
     const courseVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), courseRadians);
     
@@ -120,9 +119,8 @@ const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => 
         scale={transformation ? transformation.scale as [number, number, number] : [1, 1, 1]}
       >
         {positions.map((pos, index) => {
-          const coarseCorrection = getCourseCorrection(projectId, pos.name); // Returns 0 if not set
-          const fineCorrection = getFineCourseCorrection(projectId, pos.name); // Returns 0 if not set
-          const isModified = getCourseCorrectionOrNull(projectId, pos.name) !== null || getFineCorrectionOrNull(projectId, pos.name) !== null;
+          const courseCorrection = getCourseCorrection(projectId, pos.name); // Returns total correction (coarse + fine)
+          const isModified = getCourseCorrectionOrNull(projectId, pos.name) !== null;
           const sphereColor = isModified ? "#44aa44" : "#ffff00"; // Green if modified, yellow if not
           
           return (
@@ -134,7 +132,7 @@ const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => 
               </mesh>
 
               {/* Direction indicator cylinder */}
-              <group rotation={[0, THREE.MathUtils.degToRad(pos.course + coarseCorrection + fineCorrection), 0]}>
+              <group rotation={[0, THREE.MathUtils.degToRad(pos.course + courseCorrection), 0]}>
                 <mesh position={[0.15, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
                   <cylinderGeometry args={[0.005, 0.005, 0.3, 8]} />
                   <meshBasicMaterial color="#ff0000" />
