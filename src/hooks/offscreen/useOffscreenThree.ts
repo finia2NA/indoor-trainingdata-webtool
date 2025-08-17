@@ -15,6 +15,7 @@ import { sceneCache as globalSceneCache } from './sceneCache';
 
 const DO_CLEANUP = false;
 const DEBUG_RENDERTARGETS = true; // Set to true to enable render target downloads for debugging
+const MAX_IMAGES_TO_KEEP = 4; // Maximum number of images to keep after outlier rejection
 
 
 // Post-processing material for combining multiple render targets
@@ -73,27 +74,86 @@ function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
     ${renderTargets.map((_, i) => `uniform sampler2D uTexture${i};`).join('\n    ')}
     
     void main() {
-      vec3 weightedSum = vec3(0.0);
-      float totalWeight = 0.0;
+      // First pass: decode all samples and collect valid ones with influence
+      vec3 colors[${renderTargets.length}];
+      float influences[${renderTargets.length}];
+      bool validSamples[${renderTargets.length}];
+      int numValid = 0;
       
       ${renderTargets.map((_, i) => `
       vec4 sample${i} = texture2D(uTexture${i}, vUv);
       if (sample${i}.a > 0.1) {
-        // Decode influence from red channel (same in all RGB channels)
-        int packedValue = int(sample${i}.r * 65535.0 + 0.5); // +0.5 for rounding
+        // Decode influence from red channel
+        int packedValue = int(sample${i}.r * 65535.0 + 0.5);
         int influenceInt = packedValue & 255;
-        float influence = clamp(float(influenceInt) / 255.0, 0.0, 1.0);
+        influences[${i}] = clamp(float(influenceInt) / 255.0, 0.0, 1.0);
         
         // Decode color from all RGB channels
-        vec3 decodedColor;
-        decodedColor.r = float((int(sample${i}.r * 65535.0 + 0.5) >> 8) & 255) / 255.0;
-        decodedColor.g = float((int(sample${i}.g * 65535.0 + 0.5) >> 8) & 255) / 255.0;
-        decodedColor.b = float((int(sample${i}.b * 65535.0 + 0.5) >> 8) & 255) / 255.0;
+        colors[${i}].r = float((int(sample${i}.r * 65535.0 + 0.5) >> 8) & 255) / 255.0;
+        colors[${i}].g = float((int(sample${i}.g * 65535.0 + 0.5) >> 8) & 255) / 255.0;
+        colors[${i}].b = float((int(sample${i}.b * 65535.0 + 0.5) >> 8) & 255) / 255.0;
         
-        // Weight by influence
-        weightedSum += decodedColor * influence;
-        totalWeight += influence;
+        // Only consider samples with non-zero influence for outlier rejection
+        if (influences[${i}] > 0.0) {
+          validSamples[${i}] = true;
+          numValid++;
+        } else {
+          validSamples[${i}] = false;
+        }
+      } else {
+        validSamples[${i}] = false;
+        influences[${i}] = 0.0;
       }`).join('')}
+      
+      // Apply outlier rejection to keep only the best images
+      if (numValid > ${MAX_IMAGES_TO_KEEP}) {
+        int numToKeep = ${MAX_IMAGES_TO_KEEP};
+        int numToReject = numValid - numToKeep;
+        
+        // Calculate total distances for each valid sample
+        float totalDistances[${renderTargets.length}];
+        for (int i = 0; i < ${renderTargets.length}; i++) {
+          totalDistances[i] = 0.0;
+          if (validSamples[i]) {
+            for (int j = 0; j < ${renderTargets.length}; j++) {
+              if (validSamples[j] && i != j) {
+                vec3 diff = colors[i] - colors[j];
+                float dist = length(diff);
+                totalDistances[i] += dist;
+              }
+            }
+          } else {
+            totalDistances[i] = 999999.0; // Mark invalid samples with high distance
+          }
+        }
+        
+        // Simple selection sort to find samples with smallest distances
+        // Mark the numToReject samples with highest distances as invalid
+        for (int reject = 0; reject < numToReject; reject++) {
+          int maxIdx = -1;
+          float maxDist = -1.0;
+          for (int i = 0; i < ${renderTargets.length}; i++) {
+            if (validSamples[i] && totalDistances[i] > maxDist) {
+              maxDist = totalDistances[i];
+              maxIdx = i;
+            }
+          }
+          if (maxIdx >= 0) {
+            validSamples[maxIdx] = false; // Reject this outlier
+          }
+        }
+      }
+      
+      // Final weighted averaging using remaining valid samples
+      vec3 weightedSum = vec3(0.0);
+      float totalWeight = 0.0;
+      
+      for (int i = 0; i < ${renderTargets.length}; i++) {
+        if (validSamples[i]) {
+          weightedSum += colors[i] * influences[i];
+          totalWeight += influences[i];
+        }
+      }
       
       vec3 finalColor = totalWeight > 0.0 ? weightedSum / totalWeight : vec3(0.0);
       float finalAlpha = totalWeight > 0.0 ? 1.0 : 0.0;
