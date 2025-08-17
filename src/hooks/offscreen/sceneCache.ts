@@ -4,8 +4,8 @@ import { loadModel } from '../../util/loadModel';
 import Transformation from '../../data/Transformation';
 import { get360s, Image360 } from '../../util/get360s';
 
-const ZEROOPACITYAT = 10.0;
-const FULLOPACITYUNTIL = 5.1;
+const ZEROINFLUENCEAT = 10.0;
+const FULLINFLUENCEUNTIL = 5.1;
 
 // Helper function to ensure numbers have at least one decimal place for GLSL compatibility
 const ensureFloatFormat = (value: number): string => {
@@ -164,24 +164,41 @@ u = mod(u, 1.0);
 float currentPitch = v * 3.14159265; // Convert back to radians
 bool withinPitchLimits = currentPitch >= minPitch && currentPitch <= maxPitch;
 
-// determine opacity based on distance to light
+// determine influence based on distance to light
 float distanceToLight = length(fragToLight);
-float opacity;
-if (distanceToLight <= ${ensureFloatFormat(FULLOPACITYUNTIL)}) {
-  opacity = 1.0;
-} else if (distanceToLight >= ${ensureFloatFormat(ZEROOPACITYAT)}) {
-  opacity = 0.0;
+float influence;
+if (distanceToLight <= ${ensureFloatFormat(FULLINFLUENCEUNTIL)}) {
+  influence = 1.0;
+} else if (distanceToLight >= ${ensureFloatFormat(ZEROINFLUENCEAT)}) {
+  influence = 0.0;
 } else {
-  // Linear falloff between FULLOPACITYUNTIL and ZEROOPACITYAT
-  opacity = 1.0 - (distanceToLight - ${ensureFloatFormat(FULLOPACITYUNTIL)}) / (${ensureFloatFormat(ZEROOPACITYAT)} - ${ensureFloatFormat(FULLOPACITYUNTIL)});
+  // Linear falloff between FULLINFLUENCEUNTIL and ZEROINFLUENCEAT
+  influence = 1.0 - (distanceToLight - ${ensureFloatFormat(FULLINFLUENCEUNTIL)}) / (${ensureFloatFormat(ZEROINFLUENCEAT)} - ${ensureFloatFormat(FULLINFLUENCEUNTIL)});
 }
 
 // sample the sphere map texture
 vec4 sphereColor = texture2D(sphereMap, vec2(u, v));
 
-// output the final color
+// output the final color with encoded data
 if (sphereColor.a > 0.1 && withinPitchLimits) {
-  gl_FragColor = vec4(sphereColor.rgb, opacity);
+  // Create array of RGB channels for encoding
+  float rgb[3];
+  rgb[0] = sphereColor.r;
+  rgb[1] = sphereColor.g;
+  rgb[2] = sphereColor.b;
+  
+  // Encode each channel with influence data inline
+  vec3 encodedColor;
+  for (int i = 0; i < 3; i++) {
+    // Inline bit-packing: [8 bits color][8 bits influence]
+    int colorInt = int(rgb[i] * 255.0);        // 0-255
+    int influenceInt = int(influence * 255.0); // 0-255
+    int packed = (colorInt << 8) | influenceInt;
+    encodedColor[i] = float(packed) / 65535.0; // Convert to 0.0-1.0
+  }
+  
+  // Alpha always 1.0 for proper occlusion
+  gl_FragColor = vec4(encodedColor, 1.0);
 } else {
   gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 }
