@@ -17,6 +17,11 @@ const DO_CLEANUP = false;
 const DEBUG_RENDERTARGETS = true; // Set to true to enable render target downloads for debugging
 const MAX_IMAGES_TO_KEEP = 4; // Maximum number of images to keep after outlier rejection
 
+// Weighting function configuration
+const WEIGHTING_MODE = 'polynomial'; // 'linear', 'polynomial', 'exponential'
+const POLYNOMIAL_EXPONENT = 2.0; // For polynomial mode: weight^exponent
+const EXPONENTIAL_BASE = 2.0; // For exponential mode: base^weight
+
 
 // Post-processing material for combining multiple render targets
 /*
@@ -150,8 +155,18 @@ function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
       
       for (int i = 0; i < ${renderTargets.length}; i++) {
         if (validSamples[i]) {
-          weightedSum += colors[i] * influences[i];
-          totalWeight += influences[i];
+          // Apply weighting function to influence
+          float weight = influences[i];
+          ${WEIGHTING_MODE === 'polynomial' ? `
+          weight = pow(weight, ${POLYNOMIAL_EXPONENT.toFixed(1)}) * 100.0;
+          ` : WEIGHTING_MODE === 'exponential' ? `
+          weight = (pow(${EXPONENTIAL_BASE.toFixed(1)}, weight) - 1.0) * 10.0;
+          ` : `
+          // Linear weighting (no transformation needed)
+          `}
+          
+          weightedSum += colors[i] * weight;
+          totalWeight += weight;
         }
       }
       

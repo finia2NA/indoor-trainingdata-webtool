@@ -4,8 +4,8 @@ import { loadModel } from '../../util/loadModel';
 import Transformation from '../../data/Transformation';
 import { get360s, Image360 } from '../../util/get360s';
 
-const ZEROINFLUENCEAT = 10.0;
-const FULLINFLUENCEUNTIL = 5.1;
+const ZEROINFLUENCEAT = 5.0;
+const FULLINFLUENCEUNTIL = 0.31;
 
 // Helper function to ensure numbers have at least one decimal place for GLSL compatibility
 const ensureFloatFormat = (value: number): string => {
