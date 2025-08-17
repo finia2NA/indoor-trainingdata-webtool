@@ -65,7 +65,7 @@ function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
 }
 */
 
-// DEBUG: Post-processing material that shows which render targets contribute by color
+// Post-processing material for combining multiple render targets with influence-based weighting
 function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
   // Build the fragment shader with dynamic texture sampling
   const fragmentShader = `
@@ -73,18 +73,32 @@ function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
     ${renderTargets.map((_, i) => `uniform sampler2D uTexture${i};`).join('\n    ')}
     
     void main() {
-      vec3 debugColor = vec3(0.0);
+      vec3 weightedSum = vec3(0.0);
+      float totalWeight = 0.0;
       
-      ${renderTargets.slice(0, 3).map((_, i) => {
-        const color = i === 0 ? 'vec3(1.0, 0.0, 0.0)' : i === 1 ? 'vec3(0.0, 1.0, 0.0)' : 'vec3(0.0, 0.0, 1.0)';
-        return `
+      ${renderTargets.map((_, i) => `
       vec4 sample${i} = texture2D(uTexture${i}, vUv);
       if (sample${i}.a > 0.1) {
-        debugColor += ${color} * sample${i}.a;
-      }`;
-      }).join('')}
+        // Decode influence from red channel (same in all RGB channels)
+        int packedValue = int(sample${i}.r * 65535.0 + 0.5); // +0.5 for rounding
+        int influenceInt = packedValue & 255;
+        float influence = clamp(float(influenceInt) / 255.0, 0.0, 1.0);
+        
+        // Decode color from all RGB channels
+        vec3 decodedColor;
+        decodedColor.r = float((int(sample${i}.r * 65535.0 + 0.5) >> 8) & 255) / 255.0;
+        decodedColor.g = float((int(sample${i}.g * 65535.0 + 0.5) >> 8) & 255) / 255.0;
+        decodedColor.b = float((int(sample${i}.b * 65535.0 + 0.5) >> 8) & 255) / 255.0;
+        
+        // Weight by influence
+        weightedSum += decodedColor * influence;
+        totalWeight += influence;
+      }`).join('')}
       
-      gl_FragColor = vec4(debugColor, 1.0);
+      vec3 finalColor = totalWeight > 0.0 ? weightedSum / totalWeight : vec3(0.0);
+      float finalAlpha = totalWeight > 0.0 ? 1.0 : 0.0;
+      
+      gl_FragColor = vec4(finalColor, finalAlpha);
     }
   `;
 
@@ -135,30 +149,119 @@ const downloadRenderTarget = (renderer: THREE.WebGLRenderer, renderTarget: THREE
   renderer.setRenderTarget(renderTarget);
   renderer.readRenderTargetPixels(renderTarget, 0, 0, renderTarget.width, renderTarget.height, pixels);
 
-  // Test alpha channel - check if at least some pixels are not 100% opaque
-  let transparentPixels = 0;
-  let opaquePixels = 0;
-  let totalPixels = renderTarget.width * renderTarget.height;
+  // Test influence encoding - check if pixels have influence data encoded
+  let pixelsWithInfluence = 0;
+  let pixelsWithoutInfluence = 0;
+  let maxInfluenceError = 0;
+  let maxColorError = 0;
+  let pixelsWithCleanEncoding = 0;
+  let pixelsWithFractionalBits = 0;
+  let maxFractionalError = 0;
   
-  for (let i = 3; i < pixels.length; i += 4) { // Check every 4th value (alpha channel)
-    const alpha = pixels[i];
-    // For FloatType, alpha is 0.0-1.0
-    if (alpha < 0.99) { // Allow for slight precision issues
-      transparentPixels++;
+  for (let i = 0; i < pixels.length; i += 4) {
+    const r = pixels[i];
+    const g = pixels[i + 1];
+    const b = pixels[i + 2];
+    const alpha = pixels[i + 3];
+    
+    // Skip transparent pixels (no data)
+    if (alpha < 0.1) continue;
+    
+    // Check if encoded values are clean integers (no fractional bits)
+    const channels = [r, g, b];
+    let hasCleanEncoding = true;
+    let maxChannelFractionalError = 0;
+    
+    // Debug: log first few pixels to see what we're getting
+    if (i < 20) {
+      console.log(`Pixel ${i/4}: R=${r.toFixed(6)}, G=${g.toFixed(6)}, B=${b.toFixed(6)}, A=${alpha.toFixed(6)}`);
+      console.log(`  Scaled: R=${(r*65535).toFixed(6)}, G=${(g*65535).toFixed(6)}, B=${(b*65535).toFixed(6)}`);
+    }
+    
+    for (let c = 0; c < 3; c++) {
+      const scaledValue = channels[c] * 65535.0;
+      const fractionalPart = scaledValue - Math.floor(scaledValue);
+      maxChannelFractionalError = Math.max(maxChannelFractionalError, fractionalPart);
+      
+      if (fractionalPart > 0.0001) { // Allow tiny floating point errors
+        hasCleanEncoding = false;
+      }
+    }
+    
+    if (hasCleanEncoding) {
+      pixelsWithCleanEncoding++;
     } else {
-      opaquePixels++;
+      pixelsWithFractionalBits++;
+      maxFractionalError = Math.max(maxFractionalError, maxChannelFractionalError);
+    }
+    
+    // Decode influence from each RGB channel (should be identical)
+    let hasInfluence = false;
+    let influenceValues = [];
+    let colorValues = [];
+    
+    for (let c = 0; c < 3; c++) {
+      const packedValue = Math.round(channels[c] * 65535.0);
+      const colorInt = (packedValue >> 8) & 0xFF; // High 8 bits
+      const influenceInt = packedValue & 0xFF;    // Low 8 bits
+      
+      const decodedColor = colorInt / 255.0;
+      const decodedInfluence = influenceInt / 255.0;
+      
+      influenceValues.push(decodedInfluence);
+      colorValues.push(decodedColor);
+      
+      if (decodedInfluence < 0.99) { // Non-full influence
+        hasInfluence = true;
+      }
+    }
+    
+    if (hasInfluence) {
+      pixelsWithInfluence++;
+      
+      // Check encoding accuracy - influence should be identical across RGB channels
+      const minInfluence = Math.min(...influenceValues);
+      const maxInfluence = Math.max(...influenceValues);
+      const influenceError = maxInfluence - minInfluence;
+      maxInfluenceError = Math.max(maxInfluenceError, influenceError);
+      
+      // Check color encoding accuracy (less critical but good to verify)
+      const minColor = Math.min(...colorValues);
+      const maxColor = Math.max(...colorValues);
+      const colorError = maxColor - minColor;
+      maxColorError = Math.max(maxColorError, colorError);
+    } else {
+      pixelsWithoutInfluence++;
     }
   }
   
-  console.log(`Alpha channel analysis for ${filename}:`);
-  console.log(`  Total pixels: ${totalPixels}`);
-  console.log(`  Transparent/semi-transparent pixels: ${transparentPixels} (${(transparentPixels/totalPixels*100).toFixed(1)}%)`);
-  console.log(`  Fully opaque pixels: ${opaquePixels} (${(opaquePixels/totalPixels*100).toFixed(1)}%)`);
+  console.log(`Influence encoding analysis for ${filename}:`);
+  console.log(`  Total non-transparent pixels: ${pixelsWithInfluence + pixelsWithoutInfluence}`);
+  console.log(`  Pixels with clean integer encoding: ${pixelsWithCleanEncoding} (${(pixelsWithCleanEncoding/(pixelsWithInfluence + pixelsWithoutInfluence)*100).toFixed(1)}%)`);
+  console.log(`  Pixels with fractional bits: ${pixelsWithFractionalBits} (${(pixelsWithFractionalBits/(pixelsWithInfluence + pixelsWithoutInfluence)*100).toFixed(1)}%)`);
+  console.log(`  Max fractional error: ${maxFractionalError.toFixed(6)}`);
+  console.log(`  Pixels with variable influence: ${pixelsWithInfluence} (${(pixelsWithInfluence/(pixelsWithInfluence + pixelsWithoutInfluence)*100).toFixed(1)}%)`);
+  console.log(`  Pixels with full influence: ${pixelsWithoutInfluence} (${(pixelsWithoutInfluence/(pixelsWithInfluence + pixelsWithoutInfluence)*100).toFixed(1)}%)`);
+  console.log(`  Max influence encoding error: ${(maxInfluenceError * 255).toFixed(2)}/255`);
+  console.log(`  Max color encoding error: ${(maxColorError * 255).toFixed(2)}/255`);
   
-  if (transparentPixels === 0) {
-    console.warn(`⚠️  No transparent pixels found in ${filename} - alpha channel may not be working correctly!`);
+  if (pixelsWithFractionalBits > 0) {
+    console.warn(`⚠️  Found ${pixelsWithFractionalBits} pixels with fractional bits - encoding may have precision issues!`);
+    console.warn(`⚠️  Max fractional error: ${maxFractionalError.toFixed(6)}`);
   } else {
-    console.log(`✅ Alpha channel working - found ${transparentPixels} transparent pixels`);
+    console.log(`✅ All pixels have clean integer encoding - no fractional bits detected`);
+  }
+  
+  if (pixelsWithInfluence === 0) {
+    console.warn(`⚠️  No pixels with variable influence found in ${filename} - encoding may not be working correctly!`);
+  } else {
+    console.log(`✅ Influence encoding working - found ${pixelsWithInfluence} pixels with variable influence`);
+  }
+  
+  if (maxInfluenceError > 0.004) { // More than 1/255 difference
+    console.warn(`⚠️  High influence encoding error: ${(maxInfluenceError * 255).toFixed(2)}/255`);
+  } else {
+    console.log(`✅ Influence encoding accuracy good - max error: ${(maxInfluenceError * 255).toFixed(2)}/255`);
   }
 
   // Create ImageData and put it on canvas
