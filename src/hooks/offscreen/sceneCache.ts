@@ -127,7 +127,7 @@ if ( gl_FragColor.a > 0.1 ) {
 
 // -------------------------- SPHERE MAPPING CODE --------------------------
 if ( gl_FragColor.a == 0.0 ) {
-  vec3 lightToFrag = vWorldPosition - lightPos.xyz;
+  vec3 lightToFrag = lightPos.xyz - vWorldPosition;
   vec3 direction = normalize(lightToFrag);
   float x = -direction.x;
   float y = direction.z;
