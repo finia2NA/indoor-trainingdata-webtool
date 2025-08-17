@@ -13,10 +13,13 @@ type MultiTransformationState = {
   setRotation: (projectId: number, modelId: number | "360s", rotation: number[]) => void;
   setScale: (projectId: number, modelId: number | "360s", scale: number[]) => void;
 
-  multiVisibility: Record<number, Record<number | "360s",boolean>>;
+  multiVisibility: Record<number, Record<number | "360s", boolean>>;
   getVisibility: (projectId: number, modelId: number | "360s") => boolean;
   setVisibility: (projectId: number, modelId: number | "360s", visibility: boolean) => void;
 
+  multiCourseCorrection: Record<number, Record<string, number>>; // project -> image name -> course correction value
+  getCourseCorrection: (projectId: number, imageName: string) => number | null;
+  setCourseCorrection: (projectId: number, imageName: string, value: number) => void;
 
 };
 
@@ -25,6 +28,7 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
     (set, get) => ({
       mulitTransformations: {},
       multiVisibility: {},
+      multiCourseCorrection: {},
 
       getTransformation: (projectId: number, modelId: number | "360s") => {
         const obj = get().mulitTransformations[projectId]?.[modelId];
@@ -133,6 +137,20 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
           [projectId]: {
             ...state.multiVisibility[projectId],
             [modelId]: visibility,
+          },
+        },
+      })),
+
+      getCourseCorrection: (projectId: number, imageName: string) => {
+        return get().multiCourseCorrection[projectId]?.[imageName] ?? 0;
+      },
+
+      setCourseCorrection: (projectId: number, imageName: string, value: number) => set((state) => ({
+        multiCourseCorrection: {
+          ...state.multiCourseCorrection,
+          [projectId]: {
+            ...state.multiCourseCorrection[projectId],
+            [imageName]: value,
           },
         },
       })),

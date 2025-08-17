@@ -1,14 +1,23 @@
 import useCameraPoseStore from '../../hooks/sync/useCameraPoseStore';
 import { Image360 } from '../../util/get360s';
 import { Slider } from "@mui/material";
+import { Project } from '../../data/db';
+import useMultiTransformationStore from '../../hooks/state/useMultiTransformationStore';
 
 type View360OverlayProps = {
   selectedImage?: Image360 | null;
   onExit?: () => void;
+  project: Project;
 };
 
-const View360Overlay = ({ selectedImage, onExit }: View360OverlayProps) => {
+const View360Overlay = ({ selectedImage, onExit, project }: View360OverlayProps) => {
   const { is360ViewActive, restoreCameraPose, exit360ViewWithoutReset, sphereOpacity, setSphereOpacity } = useCameraPoseStore();
+  const { getCourseCorrection, setCourseCorrection } = useMultiTransformationStore();
+
+  const projectId = project.id;
+  if (!projectId) {
+    throw new Error("Project has no id");
+  }
 
   const handleExit = () => {
     restoreCameraPose();
@@ -51,6 +60,49 @@ const View360Overlay = ({ selectedImage, onExit }: View360OverlayProps) => {
           </div>
         </div>
       )}
+
+      {selectedImage && (
+        <div className="flex flex-col gap-2 text-white">
+          <div className="flex items-center justify-between">
+            <label htmlFor="course-correction-slider" className="text-sm font-medium">
+              Course Correction
+            </label>
+            <button
+              onClick={() => setCourseCorrection(projectId, selectedImage.name, 0)}
+              className="bg-red-500 text-white px-2 py-1 rounded text-xs"
+            >
+              Reset
+            </button>
+          </div>
+          <div className="flex items-center gap-4">
+            <Slider
+              color="secondary"
+              getAriaLabel={() => 'Course Correction'}
+              value={getCourseCorrection(projectId, selectedImage.name) ?? 0}
+              onChange={(_, value) => setCourseCorrection(projectId, selectedImage.name, value as number)}
+              valueLabelDisplay="off"
+              getAriaValueText={(value) => `${value}°`}
+              min={-180}
+              max={180}
+              step={1}
+              className="flex-grow"
+              sx={{
+                '& .MuiSlider-thumb': {
+                  width: 16,
+                  height: 16,
+                  color: 'primary.main',
+                  '&:hover, &:focus-visible': {
+                    boxShadow: '0px 0px 0px 6px rgba(0, 0, 0, 0.3)',
+                  },
+                },
+              }}
+            />
+            <span className="text-xs min-w-[2.5rem]">{getCourseCorrection(projectId, selectedImage.name) ?? 0}°</span>
+          </div>
+        </div>
+      )}
+
+      <hr className="border-gray-400" />
 
       <div className="flex flex-col gap-2 text-white">
         <label htmlFor="opacity-slider" className="text-sm font-medium">

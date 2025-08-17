@@ -32,7 +32,7 @@ const Editor = ({ project }: EditorProps) => {
         ">
         <div className="flex flex-row gap-2 items-start justify-start p-2">
           {/* Top Left Corner Content */}
-          <View360Overlay selectedImage={selectedImage} />
+          <View360Overlay selectedImage={selectedImage} project={project} />
           {editorMode === EditorMode.LAYOUT &&
             <TransformToggles />
           }
