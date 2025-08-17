@@ -397,7 +397,12 @@ const useOffscreenThree = () => {
             // Transform the course direction vector to account for coordinate system flips
             let transformedCourse = container.imgWithDistance.image.course;
             if (transformation) {
+              console.log("Original course:", container.imgWithDistance.image.course);
+              console.log("Transformation scale:", transformation.scale);
+              
               const courseVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(container.imgWithDistance.image.course));
+              console.log("Course vector before transform:", courseVector);
+              
               const matrix = new THREE.Matrix4();
               const quaternion = new THREE.Quaternion().setFromEuler(
                 new THREE.Euler(...transformation.rotation)
@@ -408,8 +413,11 @@ const useOffscreenThree = () => {
                 new THREE.Vector3(...transformation.scale) // Include scale!
               );
               courseVector.applyMatrix4(matrix);
+              console.log("Course vector after transform:", courseVector);
+              
               // Convert back to angle
               transformedCourse = Math.atan2(courseVector.z, courseVector.x) * 180 / Math.PI;
+              console.log("Transformed course:", transformedCourse);
             }
             
             material.uniforms.lightPos.value.set(
@@ -418,13 +426,15 @@ const useOffscreenThree = () => {
               transformedPos.z,
               transformedCourse
             );
+            console.log("Light position sent to shader:", transformedPos.x, transformedPos.y, transformedPos.z, transformedCourse);
             
             // Calculate flip values based on transformation scale
             if (transformation) {
-              // Horizontal flip when x XOR z scale is negative
-              const flipHorizontal = (transformation.scale[0] < 0) !== (transformation.scale[2] < 0);
+              // Horizontal flip when x XOR z scale is negative. inverted FOR SOME REASON
+              const flipHorizontal = !(transformation.scale[0] < 0) !== (transformation.scale[2] < 0);
               // Vertical flip when y scale is negative
-              const flipVertical = transformation.scale[1] < 0;
+              const flipVertical = false;
+              console.log("Vertical flip:", flipVertical, "Horizontal flip:", flipHorizontal);
               
               material.uniforms.flipHorizontal.value = flipHorizontal;
               material.uniforms.flipVertical.value = flipVertical;
@@ -440,7 +450,6 @@ const useOffscreenThree = () => {
         renderer.clear();
         renderer.render(scene, camera);
 
-        debugger;
         // Download the render target for debugging
         if (DEBUG_RENDERTARGETS) {
           downloadRenderTarget(renderer, renderTargets[j], `pose_${i}_light_${j}.png`);

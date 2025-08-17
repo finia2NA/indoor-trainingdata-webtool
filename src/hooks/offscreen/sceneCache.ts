@@ -58,11 +58,11 @@ const setupScene = async (
       if (child instanceof THREE.Mesh) {
         if (use360Shading) {
           // Create custom shadow material for 360° shading
-          const compMat = new THREE.ShadowMaterial({ 
-            color: 0xffffff, 
+          const compMat = new THREE.ShadowMaterial({
+            color: 0xffffff,
             side: doubleSided ? THREE.DoubleSide : THREE.FrontSide
           });
-          
+
           // Add custom uniforms
           (compMat as any).uniforms = {
             sphereMap: { value: null },
@@ -70,14 +70,14 @@ const setupScene = async (
             flipHorizontal: { value: false },
             flipVertical: { value: false }
           };
-          
+
           compMat.onBeforeCompile = shader => {
             // Link custom uniforms
             shader.uniforms.sphereMap = (compMat as any).uniforms.sphereMap;
             shader.uniforms.lightPos = (compMat as any).uniforms.lightPos;
             shader.uniforms.flipHorizontal = (compMat as any).uniforms.flipHorizontal;
             shader.uniforms.flipVertical = (compMat as any).uniforms.flipVertical;
-            
+
             // Inject world position varying for sphere mapping
             shader.vertexShader = shader.vertexShader.replace(
               '#include <common>',
@@ -92,7 +92,7 @@ varying vec3 vWorldPosition;`
               `#include <project_vertex>
   vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;`
             );
-            
+
             // Inject uniforms and varying in fragment shader
             shader.fragmentShader = shader.fragmentShader.replace(
               '#include <common>',
@@ -103,7 +103,7 @@ uniform sampler2D sphereMap;
 uniform bool flipHorizontal;
 uniform bool flipVertical;`
             );
-            
+
             // Replace fog fragment
             shader.fragmentShader = shader.fragmentShader.replace(
               '#include <fog_fragment>',
@@ -126,39 +126,50 @@ if ( gl_FragColor.a > 0.1 ) {
 */
 
 // -------------------------- SPHERE MAPPING CODE --------------------------
-if ( gl_FragColor.a == 0.0 ) {
-  vec3 lightToFrag = lightPos.xyz - vWorldPosition;
-  vec3 direction = normalize(lightToFrag);
-  float x = -direction.x;
-  float y = direction.z;
-  float z = -direction.y;
-  float u = atan(y, x);
-  float v = acos(z);
-  u = (u + 3.14159265) / (2.0 * 3.14159265);
-  v = v / 3.14159265;
-  
-  // Apply course rotation (lightPos.w is in degrees)
-  float courseRadians = lightPos.w * 3.14159265 / 180.0;
-  u = u + courseRadians / (2.0 * 3.14159265);
-  u = mod(u, 1.0); // Wrap around if u goes beyond 1.0
-  
-  // Apply flipping based on scale
-  float finalU = flipHorizontal ? (1.0 - u) : u;
-  float finalV = flipVertical ? (1.0 - v) : v;
-  
-  vec4 sphereColor = texture2D(sphereMap, vec2(finalU, finalV));
 
-  float distanceToLight = length(lightToFrag);
-  float opacity = clamp(1.0 - (distanceToLight - ${ensureFloatFormat(MAXOPAT)}) / ${ensureFloatFormat(OPACITYDISTANCE)}, 0.0, 1.0);
+vec3 fragToLight = lightPos.xyz - vWorldPosition;
+vec3 direction = normalize(fragToLight);
+float x = direction.x;
+float y = direction.z;
+float z = direction.y;
 
+// generate spherical coordinates
+float u = atan(y, x) + 8.0*(3.14159265 / 8.0);
+float v = acos(z);
+
+// convert to UV coordinates
+u = (u + 3.14159265) / (2.0 * 3.14159265);
+v = v / 3.14159265;
+
+// Apply horizontal flip
+if (flipHorizontal) {
+  u = 1.0 - u;
+}
+
+// Apply course rotation (lightPos.w is in degrees)
+float courseRadians = lightPos.w * 3.14159265 / 180.0;
+float courseDirection = flipHorizontal ? -1.0 : 1.0;
+u = u + (courseDirection * courseRadians) / (2.0 * 3.14159265);
+u = mod(u, 1.0);
+
+// determine opacity based on distance to light
+float distanceToLight = length(fragToLight);
+float opacity = clamp(1.0 - (distanceToLight - ${ensureFloatFormat(MAXOPAT)}) / ${ensureFloatFormat(OPACITYDISTANCE)}, 0.0, 1.0);
+
+// sample the sphere map texture
+vec4 sphereColor = texture2D(sphereMap, vec2(u, v));
+
+// output the final color
+if (sphereColor.a > 0.1) {
   gl_FragColor = vec4(sphereColor.rgb, opacity);
 } else {
   gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 }
-#include <fog_fragment>`
+#include <fog_fragment>
+`
             );
           };
-          
+
           child.material = compMat;
         } else {
           if (doubleSided) {

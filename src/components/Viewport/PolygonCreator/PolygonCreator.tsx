@@ -47,7 +47,6 @@ const PolygonCreator: React.FC = () => {
    */
   const tryPolygonCompletion = (position: Vector3) => {
     const currentPolygon = polygons[polygons.length - 1];
-    debugger;
     if (currentPolygon.length < 3) {
       toast.warn('Cannot complete a polygon with less than 3 points', { type: 'error' });
       return;
