@@ -25,6 +25,13 @@ const defaults = {
   maxShadingImages: 10,
   maxShadingDistance: 1.0,
   pitchAngleRange: [-40, 90],
+  maxImagesToKeep: 4,
+  influenceRange: [0.31, 5.0], // [fullInfluenceUntil, zeroInfluenceAt]
+  weightingMode: 'linear',
+  polynomialExponent: 2.0,
+  exponentialBase: 2.0,
+  polynomialMultiplier: 100.0,
+  exponentialMultiplier: 10.0,
 }
 
 export type MultiGenrationState = {
@@ -94,6 +101,29 @@ export type MultiGenrationState = {
   multiPitchAngleRanges: Record<number, GenPair>;
   getPitchAngleRange: (id: number) => GenPair;
   setPitchAngleRange: (id: number, pitchRange: GenPair) => void;
+
+  // advanced 360 shading
+  multiMaxImagesToKeep: Record<number, number>;
+  getMaxImagesToKeep: (id: number) => number;
+  setMaxImagesToKeep: (id: number, maxImages: number) => void;
+  multiInfluenceRanges: Record<number, GenPair>;
+  getInfluenceRange: (id: number) => GenPair;
+  setInfluenceRange: (id: number, influenceRange: GenPair) => void;
+  multiWeightingModes: Record<number, string>;
+  getWeightingMode: (id: number) => string;
+  setWeightingMode: (id: number, mode: string) => void;
+  multiPolynomialExponents: Record<number, number>;
+  getPolynomialExponent: (id: number) => number;
+  setPolynomialExponent: (id: number, exponent: number) => void;
+  multiExponentialBases: Record<number, number>;
+  getExponentialBase: (id: number) => number;
+  setExponentialBase: (id: number, base: number) => void;
+  multiPolynomialMultipliers: Record<number, number>;
+  getPolynomialMultiplier: (id: number) => number;
+  setPolynomialMultiplier: (id: number, multiplier: number) => void;
+  multiExponentialMultipliers: Record<number, number>;
+  getExponentialMultiplier: (id: number) => number;
+  setExponentialMultiplier: (id: number, multiplier: number) => void;
 
   reset(id: number): void;
 }
@@ -263,6 +293,64 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
         },
       })),
 
+      // advanced 360 shading
+      multiMaxImagesToKeep: {},
+      getMaxImagesToKeep: (id) => get().multiMaxImagesToKeep[id] ?? defaults.maxImagesToKeep,
+      setMaxImagesToKeep: (id, maxImages) => set((state) => ({
+        multiMaxImagesToKeep: {
+          ...state.multiMaxImagesToKeep,
+          [id]: maxImages,
+        },
+      })),
+      multiInfluenceRanges: {},
+      getInfluenceRange: (id) => get().multiInfluenceRanges[id] ?? defaults.influenceRange,
+      setInfluenceRange: (id, influenceRange) => set((state) => ({
+        multiInfluenceRanges: {
+          ...state.multiInfluenceRanges,
+          [id]: influenceRange,
+        },
+      })),
+      multiWeightingModes: {},
+      getWeightingMode: (id) => get().multiWeightingModes[id] ?? defaults.weightingMode,
+      setWeightingMode: (id, mode) => set((state) => ({
+        multiWeightingModes: {
+          ...state.multiWeightingModes,
+          [id]: mode,
+        },
+      })),
+      multiPolynomialExponents: {},
+      getPolynomialExponent: (id) => get().multiPolynomialExponents[id] ?? defaults.polynomialExponent,
+      setPolynomialExponent: (id, exponent) => set((state) => ({
+        multiPolynomialExponents: {
+          ...state.multiPolynomialExponents,
+          [id]: exponent,
+        },
+      })),
+      multiExponentialBases: {},
+      getExponentialBase: (id) => get().multiExponentialBases[id] ?? defaults.exponentialBase,
+      setExponentialBase: (id, base) => set((state) => ({
+        multiExponentialBases: {
+          ...state.multiExponentialBases,
+          [id]: base,
+        },
+      })),
+      multiPolynomialMultipliers: {},
+      getPolynomialMultiplier: (id) => get().multiPolynomialMultipliers[id] ?? defaults.polynomialMultiplier,
+      setPolynomialMultiplier: (id, multiplier) => set((state) => ({
+        multiPolynomialMultipliers: {
+          ...state.multiPolynomialMultipliers,
+          [id]: multiplier,
+        },
+      })),
+      multiExponentialMultipliers: {},
+      getExponentialMultiplier: (id) => get().multiExponentialMultipliers[id] ?? defaults.exponentialMultiplier,
+      setExponentialMultiplier: (id, multiplier) => set((state) => ({
+        multiExponentialMultipliers: {
+          ...state.multiExponentialMultipliers,
+          [id]: multiplier,
+        },
+      })),
+
       reset: (id) => {
         get().setHeightOffset(id, defaults.heightOffset);
         get().setAnglesRange(id, defaults.anglesRange as GenPair);
@@ -287,6 +375,14 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
         get().setMaxShadingImages(id, defaults.maxShadingImages);
         get().setMaxShadingDistance(id, defaults.maxShadingDistance);
         get().setPitchAngleRange(id, defaults.pitchAngleRange as GenPair);
+
+        get().setMaxImagesToKeep(id, defaults.maxImagesToKeep);
+        get().setInfluenceRange(id, defaults.influenceRange as GenPair);
+        get().setWeightingMode(id, defaults.weightingMode);
+        get().setPolynomialExponent(id, defaults.polynomialExponent);
+        get().setExponentialBase(id, defaults.exponentialBase);
+        get().setPolynomialMultiplier(id, defaults.polynomialMultiplier);
+        get().setExponentialMultiplier(id, defaults.exponentialMultiplier);
       }
     }),
     {

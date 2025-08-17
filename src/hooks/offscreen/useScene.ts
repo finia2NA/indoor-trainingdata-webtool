@@ -8,6 +8,7 @@ type GetOrCreateSceneProps = {
   height: number;
   doubleSided?: boolean;
   use360Shading?: boolean;
+  influenceRange?: [number, number];
 }
 
 
@@ -39,6 +40,7 @@ const useScene = (project?: Project) => {
       props.height,
       props.doubleSided ?? false,
       props.use360Shading ?? false,
+      props.influenceRange ?? [0.31, 5.0]
     );
   }, [project, getVisibility, getTransformation]);
 

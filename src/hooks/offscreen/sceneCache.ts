@@ -4,8 +4,6 @@ import { loadModel } from '../../util/loadModel';
 import Transformation from '../../data/Transformation';
 import { get360s, Image360 } from '../../util/get360s';
 
-const ZEROINFLUENCEAT = 5.0;
-const FULLINFLUENCEUNTIL = 0.31;
 
 // Helper function to ensure numbers have at least one decimal place for GLSL compatibility
 const ensureFloatFormat = (value: number): string => {
@@ -20,7 +18,8 @@ const setupScene = async (
   width: number,
   height: number,
   doubleSided: boolean,
-  use360Shading: boolean = false
+  use360Shading: boolean = false,
+  influenceRange: [number, number] = [0.31, 5.0] // [fullInfluenceUntil, zeroInfluenceAt]
 ) => {
   if (!project) throw new Error('Model not found');
   if (!project.id) throw new Error('Model id not found');
@@ -167,13 +166,13 @@ bool withinPitchLimits = currentPitch >= minPitch && currentPitch <= maxPitch;
 // determine influence based on distance to light
 float distanceToLight = length(fragToLight);
 float influence;
-if (distanceToLight <= ${ensureFloatFormat(FULLINFLUENCEUNTIL)}) {
+if (distanceToLight <= ${ensureFloatFormat(influenceRange[0])}) {
   influence = 1.0;
-} else if (distanceToLight >= ${ensureFloatFormat(ZEROINFLUENCEAT)}) {
+} else if (distanceToLight >= ${ensureFloatFormat(influenceRange[1])}) {
   influence = 0.0;
 } else {
-  // Linear falloff between FULLINFLUENCEUNTIL and ZEROINFLUENCEAT
-  influence = 1.0 - (distanceToLight - ${ensureFloatFormat(FULLINFLUENCEUNTIL)}) / (${ensureFloatFormat(ZEROINFLUENCEAT)} - ${ensureFloatFormat(FULLINFLUENCEUNTIL)});
+  // Linear falloff between fullInfluenceUntil and zeroInfluenceAt
+  influence = 1.0 - (distanceToLight - ${ensureFloatFormat(influenceRange[0])}) / (${ensureFloatFormat(influenceRange[1])} - ${ensureFloatFormat(influenceRange[0])});
 }
 
 // sample the sphere map texture
@@ -316,7 +315,8 @@ class SceneCache {
     width: number,
     height: number,
     doubleSided: boolean = false,
-    use360Shading: boolean = false
+    use360Shading: boolean = false,
+    influenceRange: [number, number] = [0.31, 5.0]
   ): Promise<SceneData> {
     if (!project?.id) {
       throw new Error('Project or project ID is missing');
@@ -367,6 +367,7 @@ class SceneCache {
       height,
       doubleSided,
       use360Shading,
+      influenceRange
     );
 
     // Cache the new scene

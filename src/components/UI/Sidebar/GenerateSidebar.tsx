@@ -19,8 +19,8 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
   const { poses, posttrainingPoses } = usePrecomputedPoses();
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
-  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize, usePosttraining, numPosttrainingImages, use360Shading, maxShadingImages, maxShadingDistance, pitchAngleRange;
-  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, setUsePosttraining, setNumPosttrainingImages, setUse360Shading, setMaxShadingImages, setMaxShadingDistance, setPitchAngleRange, reset;
+  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize, usePosttraining, numPosttrainingImages, use360Shading, maxShadingImages, maxShadingDistance, pitchAngleRange, maxImagesToKeep, influenceRange, weightingMode, polynomialExponent, exponentialBase, polynomialMultiplier, exponentialMultiplier;
+  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, setUsePosttraining, setNumPosttrainingImages, setUse360Shading, setMaxShadingImages, setMaxShadingDistance, setPitchAngleRange, setMaxImagesToKeep, setInfluenceRange, setWeightingMode, setPolynomialExponent, setExponentialBase, setPolynomialMultiplier, setExponentialMultiplier, reset;
   {
     // getting values from store
     const {
@@ -62,6 +62,20 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
       setMaxShadingDistance: storeSetMaxShadingDistance,
       getPitchAngleRange,
       setPitchAngleRange: storeSetPitchAngleRange,
+      getMaxImagesToKeep,
+      setMaxImagesToKeep: storeSetMaxImagesToKeep,
+      getInfluenceRange,
+      setInfluenceRange: storeSetInfluenceRange,
+      getWeightingMode,
+      setWeightingMode: storeSetWeightingMode,
+      getPolynomialExponent,
+      setPolynomialExponent: storeSetPolynomialExponent,
+      getExponentialBase,
+      setExponentialBase: storeSetExponentialBase,
+      getPolynomialMultiplier,
+      setPolynomialMultiplier: storeSetPolynomialMultiplier,
+      getExponentialMultiplier,
+      setExponentialMultiplier: storeSetExponentialMultiplier,
       reset: storeReset
     } = useMultiGenerationStore();
     offset = getHeightOffset(id);
@@ -83,6 +97,13 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
     maxShadingImages = getMaxShadingImages(id);
     maxShadingDistance = getMaxShadingDistance(id);
     pitchAngleRange = getPitchAngleRange(id);
+    maxImagesToKeep = getMaxImagesToKeep(id);
+    influenceRange = getInfluenceRange(id);
+    weightingMode = getWeightingMode(id);
+    polynomialExponent = getPolynomialExponent(id);
+    exponentialBase = getExponentialBase(id);
+    polynomialMultiplier = getPolynomialMultiplier(id);
+    exponentialMultiplier = getExponentialMultiplier(id);
 
     setHeightOffset = (offset: number) => storeSetHeightOffset(id, offset);
     setAnglesRange = (angles: GenPair) => storeSetAnglesRange(id, angles);
@@ -103,6 +124,13 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
     setMaxShadingImages = (maxImages: number) => storeSetMaxShadingImages(id, maxImages);
     setMaxShadingDistance = (maxDistance: number) => storeSetMaxShadingDistance(id, maxDistance);
     setPitchAngleRange = (pitchRange: GenPair) => storeSetPitchAngleRange(id, pitchRange);
+    setMaxImagesToKeep = (maxImages: number) => storeSetMaxImagesToKeep(id, maxImages);
+    setInfluenceRange = (influenceRange: GenPair) => storeSetInfluenceRange(id, influenceRange);
+    setWeightingMode = (mode: string) => storeSetWeightingMode(id, mode);
+    setPolynomialExponent = (exponent: number) => storeSetPolynomialExponent(id, exponent);
+    setExponentialBase = (base: number) => storeSetExponentialBase(id, base);
+    setPolynomialMultiplier = (multiplier: number) => storeSetPolynomialMultiplier(id, multiplier);
+    setExponentialMultiplier = (multiplier: number) => storeSetExponentialMultiplier(id, multiplier);
     reset = () => storeReset(id);
   }
 
@@ -383,6 +411,18 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
                       onChange={(e) => setMaxShadingDistance(parseFloat(e.target.value))}
                     />
                   </div>
+                  <div className="flex items-center mb-2">
+                    <label htmlFor="maxImagesToKeep" className="mr-2 w-20">Max Images to Keep</label>
+                    <InteractiveInput
+                      id="maxImagesToKeep"
+                      className='w-32 text-center bg-inactive basis-1/3'
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={maxImagesToKeep}
+                      onChange={(e) => setMaxImagesToKeep(parseInt(e.target.value))}
+                    />
+                  </div>
                   <div className="flex items-center mb-2 gap-2">
                     <div className="w-10/12">
                       <label htmlFor="pitchAngle" className="mr-2 w-20">Pitch Range</label>
@@ -399,6 +439,95 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
                     </div>
                     <AngleDisplay minAngle={pitchAngleRange[0]} maxAngle={pitchAngleRange[1]} />
                   </div>
+                  <div className="flex items-center mb-2 gap-2">
+                    <div className="w-10/12">
+                      <label htmlFor="influenceRange" className="mr-2 w-20">Influence Range</label>
+                      <Slider
+                        color="secondary"
+                        getAriaLabel={() => 'Influence Range'}
+                        value={influenceRange}
+                        onChange={(_, value) => setInfluenceRange(value as GenPair)}
+                        valueLabelDisplay="auto"
+                        getAriaValueText={(value) => `${value}m`}
+                        min={0}
+                        max={20}
+                        step={0.1}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center mb-2">
+                    <label htmlFor="weightingMode" className="mr-2 w-20">Weighting Mode</label>
+                    <select
+                      id="weightingMode"
+                      className="bg-inactive p-1 rounded"
+                      value={weightingMode}
+                      onChange={(e) => setWeightingMode(e.target.value)}
+                    >
+                      <option value="linear">Linear</option>
+                      <option value="polynomial">Polynomial</option>
+                      <option value="exponential">Exponential</option>
+                    </select>
+                  </div>
+                  {weightingMode === 'polynomial' && (
+                    <>
+                      <div className="flex items-center mb-2">
+                        <label htmlFor="polynomialExponent" className="mr-2 w-20">Exponent</label>
+                        <InteractiveInput
+                          id="polynomialExponent"
+                          className='w-32 text-center bg-inactive basis-1/3'
+                          type="number"
+                          min={0.1}
+                          max={10}
+                          step={0.1}
+                          value={polynomialExponent}
+                          onChange={(e) => setPolynomialExponent(parseFloat(e.target.value))}
+                        />
+                      </div>
+                      <div className="flex items-center mb-2">
+                        <label htmlFor="polynomialMultiplier" className="mr-2 w-20">Multiplier</label>
+                        <InteractiveInput
+                          id="polynomialMultiplier"
+                          className='w-32 text-center bg-inactive basis-1/3'
+                          type="number"
+                          min={1}
+                          max={1000}
+                          step={1}
+                          value={polynomialMultiplier}
+                          onChange={(e) => setPolynomialMultiplier(parseFloat(e.target.value))}
+                        />
+                      </div>
+                    </>
+                  )}
+                  {weightingMode === 'exponential' && (
+                    <>
+                      <div className="flex items-center mb-2">
+                        <label htmlFor="exponentialBase" className="mr-2 w-20">Base</label>
+                        <InteractiveInput
+                          id="exponentialBase"
+                          className='w-32 text-center bg-inactive basis-1/3'
+                          type="number"
+                          min={1.1}
+                          max={10}
+                          step={0.1}
+                          value={exponentialBase}
+                          onChange={(e) => setExponentialBase(parseFloat(e.target.value))}
+                        />
+                      </div>
+                      <div className="flex items-center mb-2">
+                        <label htmlFor="exponentialMultiplier" className="mr-2 w-20">Multiplier</label>
+                        <InteractiveInput
+                          id="exponentialMultiplier"
+                          className='w-32 text-center bg-inactive basis-1/3'
+                          type="number"
+                          min={1}
+                          max={1000}
+                          step={1}
+                          value={exponentialMultiplier}
+                          onChange={(e) => setExponentialMultiplier(parseFloat(e.target.value))}
+                        />
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </div>

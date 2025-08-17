@@ -15,12 +15,6 @@ import { sceneCache as globalSceneCache } from './sceneCache';
 
 const DO_CLEANUP = false;
 const DEBUG_RENDERTARGETS = true; // Set to true to enable render target downloads for debugging
-const MAX_IMAGES_TO_KEEP = 4; // Maximum number of images to keep after outlier rejection
-
-// Weighting function configuration
-const WEIGHTING_MODE = 'polynomial'; // 'linear', 'polynomial', 'exponential'
-const POLYNOMIAL_EXPONENT = 2.0; // For polynomial mode: weight^exponent
-const EXPONENTIAL_BASE = 2.0; // For exponential mode: base^weight
 
 
 // Post-processing material for combining multiple render targets
@@ -72,7 +66,7 @@ function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
 */
 
 // Post-processing material for combining multiple render targets with influence-based weighting
-function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
+function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[], maxImagesToKeep: number, weightingMode: string, polynomialExponent: number, exponentialBase: number, polynomialMultiplier: number, exponentialMultiplier: number) {
   // Build the fragment shader with dynamic texture sampling
   const fragmentShader = `
     varying vec2 vUv;
@@ -111,8 +105,8 @@ function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
       }`).join('')}
       
       // Apply outlier rejection to keep only the best images
-      if (numValid > ${MAX_IMAGES_TO_KEEP}) {
-        int numToKeep = ${MAX_IMAGES_TO_KEEP};
+      if (numValid > ${maxImagesToKeep}) {
+        int numToKeep = ${maxImagesToKeep};
         int numToReject = numValid - numToKeep;
         
         // Calculate total distances for each valid sample
@@ -157,10 +151,10 @@ function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
         if (validSamples[i]) {
           // Apply weighting function to influence
           float weight = influences[i];
-          ${WEIGHTING_MODE === 'polynomial' ? `
-          weight = pow(weight, ${POLYNOMIAL_EXPONENT.toFixed(1)}) * 100.0;
-          ` : WEIGHTING_MODE === 'exponential' ? `
-          weight = (pow(${EXPONENTIAL_BASE.toFixed(1)}, weight) - 1.0) * 10.0;
+          ${weightingMode === 'polynomial' ? `
+          weight = pow(weight, ${polynomialExponent.toFixed(1)}) * ${polynomialMultiplier.toFixed(1)};
+          ` : weightingMode === 'exponential' ? `
+          weight = (pow(${exponentialBase.toFixed(1)}, weight) - 1.0) * ${exponentialMultiplier.toFixed(1)};
           ` : `
           // Linear weighting (no transformation needed)
           `}
@@ -406,7 +400,7 @@ const useOffscreenThree = () => {
   const { id: projectId } = useParams();
   const progressToastId = useRef<null | Id>(null);
   const { getTransformation, getVisibility } = useMultiTransformationStore();
-  const { getUse360Shading, getMaxShadingImages, getMaxShadingDistance, getPitchAngleRange } = useMultiGenerationStore();
+  const { getUse360Shading, getMaxShadingImages, getMaxShadingDistance, getPitchAngleRange, getMaxImagesToKeep, getWeightingMode, getPolynomialExponent, getExponentialBase, getInfluenceRange, getPolynomialMultiplier, getExponentialMultiplier } = useMultiGenerationStore();
   const { renderScreenshotsFromAbove } = useDebugStore();
 
   // Scene cache to avoid rebuilding for each raycast
@@ -542,9 +536,12 @@ const useOffscreenThree = () => {
       },
     });
 
+    // Get influence range from store
+    const influenceRange = getInfluenceRange(projectIdNum);
+
     // build the scene with 360° shading enabled
     const { offscreen, renderer, scene, camera } =
-      await getOrCreateScene({ width, height, doubleSided: false, use360Shading: true });
+      await getOrCreateScene({ width, height, doubleSided: false, use360Shading: true, influenceRange });
 
     // Set up post-processing scene outside the loop
     const postScene = new THREE.Scene();
@@ -634,8 +631,16 @@ const useOffscreenThree = () => {
         renderTargets.push(renderTarget);
       }
 
+      // Get settings for post-processing
+      const maxImagesToKeep = getMaxImagesToKeep(projectIdNum);
+      const weightingMode = getWeightingMode(projectIdNum);
+      const polynomialExponent = getPolynomialExponent(projectIdNum);
+      const exponentialBase = getExponentialBase(projectIdNum);
+      const polynomialMultiplier = getPolynomialMultiplier(projectIdNum);
+      const exponentialMultiplier = getExponentialMultiplier(projectIdNum);
+
       // Create post-processing material for this pose's render targets
-      const postMaterial = createPostMaterial(renderTargets);
+      const postMaterial = createPostMaterial(renderTargets, maxImagesToKeep, weightingMode, polynomialExponent, exponentialBase, polynomialMultiplier, exponentialMultiplier);
       const quad = new THREE.Mesh(quadGeom, postMaterial);
       postScene.add(quad);
 
