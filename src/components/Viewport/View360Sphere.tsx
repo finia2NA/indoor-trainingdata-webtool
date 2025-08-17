@@ -3,10 +3,13 @@ import * as THREE from 'three';
 import useCameraPoseStore from '../../hooks/sync/useCameraPoseStore';
 import { Image360 } from '../../util/get360s';
 import Transformation from '../../data/Transformation';
+import { Project } from '../../data/db';
+import useMultiTransformationStore from '../../hooks/state/useMultiTransformationStore';
 
 type View360SphereProps = {
   selectedImage: Image360 | null;
   transformation: Transformation | null;
+  project: Project;
 };
 
 /**
@@ -14,9 +17,15 @@ type View360SphereProps = {
  */
 // React components are functions that return JSX, which describes the UI.
 // They take in outside data as props and can contain their own state.
-const View360Sphere = ({ selectedImage, transformation }: View360SphereProps) => {
+const View360Sphere = ({ selectedImage, transformation, project }: View360SphereProps) => {
   // Global state can be accessed using helper functions, called hooks.
   const { is360ViewActive, sphereOpacity } = useCameraPoseStore();
+  const { getCourseCorrection } = useMultiTransformationStore();
+
+  const projectId = project.id;
+  if (!projectId) {
+    throw new Error("Project has no id");
+  }
 
   // Component level state can be initiated using useState.
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
@@ -33,8 +42,11 @@ const View360Sphere = ({ selectedImage, transformation }: View360SphereProps) =>
   if (!is360ViewActive || !selectedImage || !texture) return null;
 
   // Calculate transformed position and rotation
+  const courseCorrection = getCourseCorrection(projectId, selectedImage.name) ?? 0;
+  const totalCourse = selectedImage.course + courseCorrection;
+  
   let transformedPosition: [number, number, number] = [selectedImage.x, selectedImage.y, selectedImage.z];
-  let transformedRotation: [number, number, number] = [0, THREE.MathUtils.degToRad(selectedImage.course), 0];
+  let transformedRotation: [number, number, number] = [0, THREE.MathUtils.degToRad(totalCourse), 0];
   let transformedScale: [number, number, number] = [1, 1, 1];
 
   if (transformation) {
@@ -56,8 +68,12 @@ const View360Sphere = ({ selectedImage, transformation }: View360SphereProps) =>
     const finalPosition = originalPosition.applyMatrix4(matrix);
     transformedPosition = [finalPosition.x, finalPosition.y, finalPosition.z];
 
-    // Combine the original course rotation with the transformation rotation
-    const originalRotation = new THREE.Euler(0, THREE.MathUtils.degToRad(selectedImage.course), 0);
+    // Get course correction and apply it to the original course
+    const courseCorrection = getCourseCorrection(projectId, selectedImage.name) ?? 0;
+    const totalCourse = selectedImage.course + courseCorrection;
+    
+    // Combine the corrected course rotation with the transformation rotation
+    const originalRotation = new THREE.Euler(0, THREE.MathUtils.degToRad(totalCourse), 0);
     const transformationRotation = new THREE.Euler(...transformation.rotation);
     
     // Add the rotations

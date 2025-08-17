@@ -16,7 +16,7 @@ const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => 
   const [positions, setPositions] = useState<Image360[]>([]);
   const [selectedImage, setSelectedImage] = useState<Image360 | null>(null);
   const { moveCameraTo, saveCameraPose, currentCameraPosition, currentCameraTarget, is360ViewActive } = useCameraPoseStore();
-  const { getTransformation } = useMultiTransformationStore();
+  const { getTransformation, getCourseCorrection } = useMultiTransformationStore();
 
   const projectId = project.id;
   if (!projectId) {
@@ -80,7 +80,9 @@ const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => 
 
     // Calculate camera position based on negative course direction (camera looks back towards sphere)
     const offset = -0.005;
-    const courseRadians = THREE.MathUtils.degToRad(pos.course);
+    const courseCorrection = getCourseCorrection(projectId, pos.name) ?? 0;
+    const totalCourse = pos.course + courseCorrection;
+    const courseRadians = THREE.MathUtils.degToRad(totalCourse);
     const courseVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), courseRadians);
     
     // Apply full transformation (including scale) to the course vector
@@ -125,7 +127,7 @@ const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => 
             </mesh>
 
             {/* Direction indicator cylinder */}
-            <group rotation={[0, THREE.MathUtils.degToRad(pos.course), 0]}>
+            <group rotation={[0, THREE.MathUtils.degToRad(pos.course + (getCourseCorrection(projectId, pos.name) ?? 0)), 0]}>
               <mesh position={[0.15, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
                 <cylinderGeometry args={[0.005, 0.005, 0.3, 8]} />
                 <meshBasicMaterial color="#ff0000" />
@@ -136,7 +138,7 @@ const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => 
       </group>
 
       {/* 360° view sphere with texture */}
-      <View360Sphere selectedImage={selectedImage} transformation={transformation} />
+      <View360Sphere selectedImage={selectedImage} transformation={transformation} project={project} />
     </>
   );
 };
