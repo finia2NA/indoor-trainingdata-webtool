@@ -130,8 +130,8 @@ const downloadRenderTarget = (renderer: THREE.WebGLRenderer, renderTarget: THREE
     return;
   }
 
-  // Read pixels from the render target
-  const pixels = new Uint8Array(renderTarget.width * renderTarget.height * 4);
+  // Read pixels from the render target (assuming FloatType)
+  const pixels = new Float32Array(renderTarget.width * renderTarget.height * 4);
   renderer.setRenderTarget(renderTarget);
   renderer.readRenderTargetPixels(renderTarget, 0, 0, renderTarget.width, renderTarget.height, pixels);
 
@@ -140,9 +140,10 @@ const downloadRenderTarget = (renderer: THREE.WebGLRenderer, renderTarget: THREE
   let opaquePixels = 0;
   let totalPixels = renderTarget.width * renderTarget.height;
   
-  for (let i = 3; i < pixels.length; i += 4) { // Check every 4th byte (alpha channel)
+  for (let i = 3; i < pixels.length; i += 4) { // Check every 4th value (alpha channel)
     const alpha = pixels[i];
-    if (alpha < 255) {
+    // For FloatType, alpha is 0.0-1.0
+    if (alpha < 0.99) { // Allow for slight precision issues
       transparentPixels++;
     } else {
       opaquePixels++;
@@ -161,7 +162,12 @@ const downloadRenderTarget = (renderer: THREE.WebGLRenderer, renderTarget: THREE
   }
 
   // Create ImageData and put it on canvas
-  const imageData = new ImageData(new Uint8ClampedArray(pixels), renderTarget.width, renderTarget.height);
+  // Convert float values (0.0-1.0) to byte values (0-255) for ImageData
+  const bytePixels = new Uint8ClampedArray(pixels.length);
+  for (let i = 0; i < pixels.length; i++) {
+    bytePixels[i] = Math.round(pixels[i] * 255);
+  }
+  const imageData = new ImageData(bytePixels, renderTarget.width, renderTarget.height);
 
   // Flip the image vertically (WebGL renders upside down)
   const flippedCanvas = document.createElement('canvas');
