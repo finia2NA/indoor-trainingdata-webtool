@@ -162,7 +162,7 @@ u = mod(u, 1.0);
 
 // Apply pitch limits
 float currentPitch = v * 3.14159265; // Convert back to radians
-bool withinPitchLimits = currentPitch >= maxPitch && currentPitch <= minPitch;
+bool withinPitchLimits = currentPitch >= minPitch && currentPitch <= maxPitch;
 
 // determine opacity based on distance to light
 float distanceToLight = length(fragToLight);
