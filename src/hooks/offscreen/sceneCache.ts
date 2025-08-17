@@ -4,8 +4,8 @@ import { loadModel } from '../../util/loadModel';
 import Transformation from '../../data/Transformation';
 import { get360s, Image360 } from '../../util/get360s';
 
-const OPACITYDISTANCE = 10.0;
-const MAXOPAT = 2.0;
+const ZEROOPACITYAT = 10.0;
+const FULLOPACITYUNTIL = 0.1;
 
 // Helper function to ensure numbers have at least one decimal place for GLSL compatibility
 const ensureFloatFormat = (value: number): string => {
@@ -166,7 +166,15 @@ bool withinPitchLimits = currentPitch >= minPitch && currentPitch <= maxPitch;
 
 // determine opacity based on distance to light
 float distanceToLight = length(fragToLight);
-float opacity = clamp(1.0 - (distanceToLight - ${ensureFloatFormat(MAXOPAT)}) / ${ensureFloatFormat(OPACITYDISTANCE)}, 0.0, 1.0);
+float opacity;
+if (distanceToLight <= ${ensureFloatFormat(FULLOPACITYUNTIL)}) {
+  opacity = 1.0;
+} else if (distanceToLight >= ${ensureFloatFormat(ZEROOPACITYAT)}) {
+  opacity = 0.0;
+} else {
+  // Linear falloff between FULLOPACITYUNTIL and ZEROOPACITYAT
+  opacity = 1.0 - (distanceToLight - ${ensureFloatFormat(FULLOPACITYUNTIL)}) / (${ensureFloatFormat(ZEROOPACITYAT)} - ${ensureFloatFormat(FULLOPACITYUNTIL)});
+}
 
 // sample the sphere map texture
 vec4 sphereColor = texture2D(sphereMap, vec2(u, v));

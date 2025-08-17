@@ -18,6 +18,7 @@ const DEBUG_RENDERTARGETS = true; // Set to true to enable render target downloa
 
 
 // Post-processing material for combining multiple render targets
+/*
 function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
   // Build the fragment shader with dynamic texture sampling
   const fragmentShader = `
@@ -62,6 +63,53 @@ function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
     transparent: true
   });
 }
+*/
+
+// DEBUG: Post-processing material that shows which render targets contribute by color
+function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
+  // Build the fragment shader with dynamic texture sampling
+  const fragmentShader = `
+    varying vec2 vUv;
+    ${renderTargets.map((_, i) => `uniform sampler2D uTexture${i};`).join('\n    ')}
+    
+    void main() {
+      vec3 debugColor = vec3(0.0);
+      
+      ${renderTargets.slice(0, 3).map((_, i) => {
+        const color = i === 0 ? 'vec3(1.0, 0.0, 0.0)' : i === 1 ? 'vec3(0.0, 1.0, 0.0)' : 'vec3(0.0, 0.0, 1.0)';
+        return `
+      vec4 sample${i} = texture2D(uTexture${i}, vUv);
+      if (sample${i}.a > 0.1) {
+        debugColor += ${color} * sample${i}.a;
+      }`;
+      }).join('')}
+      
+      gl_FragColor = vec4(debugColor, 1.0);
+    }
+  `;
+
+  const vertexShader = `
+    varying vec2 vUv;
+    
+    void main() {
+      vUv = uv;
+      gl_Position = vec4(position, 1.0);
+    }
+  `;
+
+  // Create uniforms for each texture
+  const uniforms: Record<string, { value: THREE.Texture }> = {};
+  renderTargets.forEach((rt, i) => {
+    uniforms[`uTexture${i}`] = { value: rt.texture };
+  });
+
+  return new THREE.ShaderMaterial({
+    uniforms,
+    vertexShader,
+    fragmentShader,
+    transparent: true
+  });
+}
 
 type TakeScreenshotProps<T extends Pose> = {
   poses: T[];
@@ -75,7 +123,7 @@ const downloadRenderTarget = (renderer: THREE.WebGLRenderer, renderTarget: THREE
   const canvas = document.createElement('canvas');
   canvas.width = renderTarget.width;
   canvas.height = renderTarget.height;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: true });
 
   if (!ctx) {
     console.error('Could not get canvas context for render target download');
@@ -87,6 +135,31 @@ const downloadRenderTarget = (renderer: THREE.WebGLRenderer, renderTarget: THREE
   renderer.setRenderTarget(renderTarget);
   renderer.readRenderTargetPixels(renderTarget, 0, 0, renderTarget.width, renderTarget.height, pixels);
 
+  // Test alpha channel - check if at least some pixels are not 100% opaque
+  let transparentPixels = 0;
+  let opaquePixels = 0;
+  let totalPixels = renderTarget.width * renderTarget.height;
+  
+  for (let i = 3; i < pixels.length; i += 4) { // Check every 4th byte (alpha channel)
+    const alpha = pixels[i];
+    if (alpha < 255) {
+      transparentPixels++;
+    } else {
+      opaquePixels++;
+    }
+  }
+  
+  console.log(`Alpha channel analysis for ${filename}:`);
+  console.log(`  Total pixels: ${totalPixels}`);
+  console.log(`  Transparent/semi-transparent pixels: ${transparentPixels} (${(transparentPixels/totalPixels*100).toFixed(1)}%)`);
+  console.log(`  Fully opaque pixels: ${opaquePixels} (${(opaquePixels/totalPixels*100).toFixed(1)}%)`);
+  
+  if (transparentPixels === 0) {
+    console.warn(`⚠️  No transparent pixels found in ${filename} - alpha channel may not be working correctly!`);
+  } else {
+    console.log(`✅ Alpha channel working - found ${transparentPixels} transparent pixels`);
+  }
+
   // Create ImageData and put it on canvas
   const imageData = new ImageData(new Uint8ClampedArray(pixels), renderTarget.width, renderTarget.height);
 
@@ -94,14 +167,17 @@ const downloadRenderTarget = (renderer: THREE.WebGLRenderer, renderTarget: THREE
   const flippedCanvas = document.createElement('canvas');
   flippedCanvas.width = canvas.width;
   flippedCanvas.height = canvas.height;
-  const flippedCtx = flippedCanvas.getContext('2d');
+  const flippedCtx = flippedCanvas.getContext('2d', { alpha: true });
 
   if (!flippedCtx) {
     console.error('Could not get flipped canvas context');
     return;
   }
 
+  // Ensure canvas contexts preserve alpha
   ctx.putImageData(imageData, 0, 0);
+  
+  // Don't fill with any background color - preserve transparency
   flippedCtx.scale(1, -1);
   flippedCtx.translate(0, -flippedCanvas.height);
   flippedCtx.drawImage(canvas, 0, 0);
@@ -369,6 +445,7 @@ const useOffscreenThree = () => {
           type: THREE.UnsignedByteType,
           depthBuffer: true,
           stencilBuffer: false,
+          generateMipmaps: false,
         });
         renderTargets.push(renderTarget);
       }
@@ -460,6 +537,7 @@ const useOffscreenThree = () => {
 
         // Render the scene with the current point light
         renderer.setRenderTarget(renderTargets[j]);
+        renderer.setClearColor(0x000000, 0.0); // Clear with transparent background
         renderer.clear();
         renderer.render(scene, camera);
 
