@@ -442,7 +442,7 @@ const useOffscreenThree = () => {
       for (let j = 0; j < lightContainers.length; j++) {
         const renderTarget = new THREE.WebGLRenderTarget(width, height, {
           format: THREE.RGBAFormat,
-          type: THREE.UnsignedByteType,
+          type: THREE.FloatType,
           depthBuffer: true,
           stencilBuffer: false,
           generateMipmaps: false,
