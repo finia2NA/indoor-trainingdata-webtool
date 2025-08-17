@@ -20,7 +20,7 @@ type View360SphereProps = {
 const View360Sphere = ({ selectedImage, transformation, project }: View360SphereProps) => {
   // Global state can be accessed using helper functions, called hooks.
   const { is360ViewActive, sphereOpacity } = useCameraPoseStore();
-  const { getCourseCorrection } = useMultiTransformationStore();
+  const { getCourseCorrection, getFineCourseCorrection } = useMultiTransformationStore();
 
   const projectId = project.id;
   if (!projectId) {
@@ -42,8 +42,9 @@ const View360Sphere = ({ selectedImage, transformation, project }: View360Sphere
   if (!is360ViewActive || !selectedImage || !texture) return null;
 
   // Calculate transformed position and rotation
-  const courseCorrection = getCourseCorrection(projectId, selectedImage.name) ?? 0;
-  const totalCourse = selectedImage.course + courseCorrection;
+  const coarseCorrection = getCourseCorrection(projectId, selectedImage.name);
+  const fineCorrection = getFineCourseCorrection(projectId, selectedImage.name);
+  const totalCourse = selectedImage.course + coarseCorrection + fineCorrection;
   
   let transformedPosition: [number, number, number] = [selectedImage.x, selectedImage.y, selectedImage.z];
   let transformedRotation: [number, number, number] = [0, THREE.MathUtils.degToRad(totalCourse), 0];
@@ -68,9 +69,10 @@ const View360Sphere = ({ selectedImage, transformation, project }: View360Sphere
     const finalPosition = originalPosition.applyMatrix4(matrix);
     transformedPosition = [finalPosition.x, finalPosition.y, finalPosition.z];
 
-    // Get course correction and apply it to the original course
-    const courseCorrection = getCourseCorrection(projectId, selectedImage.name) ?? 0;
-    const totalCourse = selectedImage.course + courseCorrection;
+    // Get course corrections and apply them to the original course
+    const coarseCorrection = getCourseCorrection(projectId, selectedImage.name);
+    const fineCorrection = getFineCourseCorrection(projectId, selectedImage.name);
+    const totalCourse = selectedImage.course + coarseCorrection + fineCorrection;
     
     // Combine the corrected course rotation with the transformation rotation
     const originalRotation = new THREE.Euler(0, THREE.MathUtils.degToRad(totalCourse), 0);
@@ -92,7 +94,7 @@ const View360Sphere = ({ selectedImage, transformation, project }: View360Sphere
       rotation={transformedRotation}
       scale={transformedScale}
     >
-      <sphereGeometry args={[2, 32, 32]} />
+      <sphereGeometry args={[20, 32, 32]} />
       <meshBasicMaterial
         map={texture}
         transparent

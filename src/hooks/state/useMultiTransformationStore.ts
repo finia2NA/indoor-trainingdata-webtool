@@ -17,9 +17,17 @@ type MultiTransformationState = {
   getVisibility: (projectId: number, modelId: number | "360s") => boolean;
   setVisibility: (projectId: number, modelId: number | "360s", visibility: boolean) => void;
 
-  multiCourseCorrection: Record<number, Record<string, number>>; // project -> image name -> course correction value
-  getCourseCorrection: (projectId: number, imageName: string) => number | null;
+  multiCourseCorrection: Record<number, Record<string, number>>; // project -> image name -> coarse course correction value
+  getCourseCorrection: (projectId: number, imageName: string) => number;
+  getCourseCorrectionOrNull: (projectId: number, imageName: string) => number | null;
   setCourseCorrection: (projectId: number, imageName: string, value: number) => void;
+  removeCourseCorrection: (projectId: number, imageName: string) => void;
+
+  multiFineCourseCorrection: Record<number, Record<string, number>>; // project -> image name -> fine course correction value
+  getFineCourseCorrection: (projectId: number, imageName: string) => number;
+  getFineCorrectionOrNull: (projectId: number, imageName: string) => number | null;
+  setFineCourseCorrection: (projectId: number, imageName: string, value: number) => void;
+  removeFineCourseCorrection: (projectId: number, imageName: string) => void;
 
 };
 
@@ -29,6 +37,7 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
       mulitTransformations: {},
       multiVisibility: {},
       multiCourseCorrection: {},
+      multiFineCourseCorrection: {},
 
       getTransformation: (projectId: number, modelId: number | "360s") => {
         const obj = get().mulitTransformations[projectId]?.[modelId];
@@ -145,6 +154,10 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
         return get().multiCourseCorrection[projectId]?.[imageName] ?? 0;
       },
 
+      getCourseCorrectionOrNull: (projectId: number, imageName: string) => {
+        return get().multiCourseCorrection[projectId]?.[imageName] ?? null;
+      },
+
       setCourseCorrection: (projectId: number, imageName: string, value: number) => set((state) => ({
         multiCourseCorrection: {
           ...state.multiCourseCorrection,
@@ -154,6 +167,46 @@ const useMultiTransformationStore = create<MultiTransformationState>()(
           },
         },
       })),
+
+      removeCourseCorrection: (projectId: number, imageName: string) => set((state) => {
+        const projectCorrections = { ...state.multiCourseCorrection[projectId] };
+        delete projectCorrections[imageName];
+        return {
+          multiCourseCorrection: {
+            ...state.multiCourseCorrection,
+            [projectId]: projectCorrections,
+          },
+        };
+      }),
+
+      getFineCourseCorrection: (projectId: number, imageName: string) => {
+        return get().multiFineCourseCorrection[projectId]?.[imageName] ?? 0;
+      },
+
+      getFineCorrectionOrNull: (projectId: number, imageName: string) => {
+        return get().multiFineCourseCorrection[projectId]?.[imageName] ?? null;
+      },
+
+      setFineCourseCorrection: (projectId: number, imageName: string, value: number) => set((state) => ({
+        multiFineCourseCorrection: {
+          ...state.multiFineCourseCorrection,
+          [projectId]: {
+            ...state.multiFineCourseCorrection[projectId],
+            [imageName]: value,
+          },
+        },
+      })),
+
+      removeFineCourseCorrection: (projectId: number, imageName: string) => set((state) => {
+        const projectCorrections = { ...state.multiFineCourseCorrection[projectId] };
+        delete projectCorrections[imageName];
+        return {
+          multiFineCourseCorrection: {
+            ...state.multiFineCourseCorrection,
+            [projectId]: projectCorrections,
+          },
+        };
+      }),
     }),
     {
       name: 'multiTransformation'

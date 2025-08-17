@@ -12,7 +12,7 @@ type View360OverlayProps = {
 
 const View360Overlay = ({ selectedImage, onExit, project }: View360OverlayProps) => {
   const { is360ViewActive, restoreCameraPose, exit360ViewWithoutReset, sphereOpacity, setSphereOpacity } = useCameraPoseStore();
-  const { getCourseCorrection, setCourseCorrection } = useMultiTransformationStore();
+  const { getCourseCorrection, setCourseCorrection, getFineCourseCorrection, setFineCourseCorrection, getCourseCorrectionOrNull, getFineCorrectionOrNull, removeCourseCorrection, removeFineCourseCorrection } = useMultiTransformationStore();
 
   const projectId = project.id;
   if (!projectId) {
@@ -56,48 +56,92 @@ const View360Overlay = ({ selectedImage, onExit, project }: View360OverlayProps)
           <div className="text-xs space-y-1">
             <div><span className="text-gray-300">Name:</span> {selectedImage.name}</div>
             <div><span className="text-gray-300">Position:</span> ({selectedImage.x.toFixed(3)}, {selectedImage.y.toFixed(3)}, {selectedImage.z.toFixed(3)})</div>
-            <div><span className="text-gray-300">Course:</span> {selectedImage.course.toFixed(1)}°</div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-300">Course:</span> 
+              <span>{selectedImage.course.toFixed(1)}°</span>
+              {((getCourseCorrectionOrNull(projectId, selectedImage.name) !== null) || (getFineCorrectionOrNull(projectId, selectedImage.name) !== null)) && (
+                <span className="text-green-400 text-xs">,modified</span>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {selectedImage && (
-        <div className="flex flex-col gap-2 text-white">
+        <div className="flex flex-col gap-3 text-white">
           <div className="flex items-center justify-between">
-            <label htmlFor="course-correction-slider" className="text-sm font-medium">
+            <label className="text-sm font-medium">
               Course Correction
             </label>
             <button
-              onClick={() => setCourseCorrection(projectId, selectedImage.name, 0)}
+              onClick={() => {
+                removeCourseCorrection(projectId, selectedImage.name);
+                removeFineCourseCorrection(projectId, selectedImage.name);
+              }}
               className="bg-red-500 text-white px-2 py-1 rounded text-xs"
             >
               Reset
             </button>
           </div>
-          <div className="flex items-center gap-4">
-            <Slider
-              color="secondary"
-              getAriaLabel={() => 'Course Correction'}
-              value={getCourseCorrection(projectId, selectedImage.name) ?? 0}
-              onChange={(_, value) => setCourseCorrection(projectId, selectedImage.name, value as number)}
-              valueLabelDisplay="off"
-              getAriaValueText={(value) => `${value}°`}
-              min={-180}
-              max={180}
-              step={1}
-              className="flex-grow"
-              sx={{
-                '& .MuiSlider-thumb': {
-                  width: 16,
-                  height: 16,
-                  color: 'primary.main',
-                  '&:hover, &:focus-visible': {
-                    boxShadow: '0px 0px 0px 6px rgba(0, 0, 0, 0.3)',
+
+          {/* Fine Course Correction (-5 to +5) */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-gray-300">Fine (-5° to +5°)</label>
+            <div className="flex items-center gap-4">
+              <Slider
+                color="secondary"
+                getAriaLabel={() => 'Fine Course Correction'}
+                value={getFineCourseCorrection(projectId, selectedImage.name)}
+                onChange={(_, value) => setFineCourseCorrection(projectId, selectedImage.name, value as number)}
+                valueLabelDisplay="off"
+                getAriaValueText={(value) => `${value}°`}
+                min={-5}
+                max={5}
+                step={0.1}
+                className="flex-grow"
+                sx={{
+                  '& .MuiSlider-thumb': {
+                    width: 16,
+                    height: 16,
+                    color: 'primary.main',
+                    '&:hover, &:focus-visible': {
+                      boxShadow: '0px 0px 0px 6px rgba(0, 0, 0, 0.3)',
+                    },
                   },
-                },
-              }}
-            />
-            <span className="text-xs min-w-[2.5rem]">{getCourseCorrection(projectId, selectedImage.name) ?? 0}°</span>
+                }}
+              />
+              <span className="text-xs min-w-[2.5rem]">{getFineCourseCorrection(projectId, selectedImage.name).toFixed(1)}°</span>
+            </div>
+          </div>
+
+          {/* Coarse Course Correction (-180 to +180, steps of 10) */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-gray-300">Coarse (-180° to +180°, 10° steps)</label>
+            <div className="flex items-center gap-4">
+              <Slider
+                color="secondary"
+                getAriaLabel={() => 'Coarse Course Correction'}
+                value={getCourseCorrection(projectId, selectedImage.name)}
+                onChange={(_, value) => setCourseCorrection(projectId, selectedImage.name, value as number)}
+                valueLabelDisplay="off"
+                getAriaValueText={(value) => `${value}°`}
+                min={-180}
+                max={180}
+                step={10}
+                className="flex-grow"
+                sx={{
+                  '& .MuiSlider-thumb': {
+                    width: 16,
+                    height: 16,
+                    color: 'primary.main',
+                    '&:hover, &:focus-visible': {
+                      boxShadow: '0px 0px 0px 6px rgba(0, 0, 0, 0.3)',
+                    },
+                  },
+                }}
+              />
+              <span className="text-xs min-w-[2.5rem]">{getCourseCorrection(projectId, selectedImage.name)}°</span>
+            </div>
           </div>
         </div>
       )}

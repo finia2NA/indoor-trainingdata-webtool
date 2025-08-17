@@ -16,7 +16,7 @@ const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => 
   const [positions, setPositions] = useState<Image360[]>([]);
   const [selectedImage, setSelectedImage] = useState<Image360 | null>(null);
   const { moveCameraTo, saveCameraPose, currentCameraPosition, currentCameraTarget, is360ViewActive } = useCameraPoseStore();
-  const { getTransformation, getCourseCorrection } = useMultiTransformationStore();
+  const { getTransformation, getCourseCorrection, getFineCourseCorrection, getCourseCorrectionOrNull, getFineCorrectionOrNull } = useMultiTransformationStore();
 
   const projectId = project.id;
   if (!projectId) {
@@ -80,8 +80,9 @@ const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => 
 
     // Calculate camera position based on negative course direction (camera looks back towards sphere)
     const offset = -0.005;
-    const courseCorrection = getCourseCorrection(projectId, pos.name) ?? 0;
-    const totalCourse = pos.course + courseCorrection;
+    const coarseCorrection = getCourseCorrection(projectId, pos.name);
+    const fineCorrection = getFineCourseCorrection(projectId, pos.name);
+    const totalCourse = pos.course + coarseCorrection + fineCorrection;
     const courseRadians = THREE.MathUtils.degToRad(totalCourse);
     const courseVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), courseRadians);
     
@@ -118,23 +119,30 @@ const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => 
         rotation={transformation ? transformation.rotation as [number, number, number] : [0, 0, 0]}
         scale={transformation ? transformation.scale as [number, number, number] : [1, 1, 1]}
       >
-        {positions.map((pos, index) => (
-          <group key={index} position={[pos.x, pos.y, pos.z]}>
-            {/* Sphere marker */}
-            <mesh onClick={is360ViewActive ? undefined : () => handleSphereClick(pos)}>
-              <sphereGeometry args={[0.03, 16, 16]} />
-              <meshBasicMaterial color="#ffff00" />
-            </mesh>
-
-            {/* Direction indicator cylinder */}
-            <group rotation={[0, THREE.MathUtils.degToRad(pos.course + (getCourseCorrection(projectId, pos.name) ?? 0)), 0]}>
-              <mesh position={[0.15, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.005, 0.005, 0.3, 8]} />
-                <meshBasicMaterial color="#ff0000" />
+        {positions.map((pos, index) => {
+          const coarseCorrection = getCourseCorrection(projectId, pos.name); // Returns 0 if not set
+          const fineCorrection = getFineCourseCorrection(projectId, pos.name); // Returns 0 if not set
+          const isModified = getCourseCorrectionOrNull(projectId, pos.name) !== null || getFineCorrectionOrNull(projectId, pos.name) !== null;
+          const sphereColor = isModified ? "#44aa44" : "#ffff00"; // Green if modified, yellow if not
+          
+          return (
+            <group key={index} position={[pos.x, pos.y, pos.z]}>
+              {/* Sphere marker */}
+              <mesh onClick={is360ViewActive ? undefined : () => handleSphereClick(pos)}>
+                <sphereGeometry args={[0.03, 16, 16]} />
+                <meshBasicMaterial color={sphereColor} />
               </mesh>
+
+              {/* Direction indicator cylinder */}
+              <group rotation={[0, THREE.MathUtils.degToRad(pos.course + coarseCorrection + fineCorrection), 0]}>
+                <mesh position={[0.15, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+                  <cylinderGeometry args={[0.005, 0.005, 0.3, 8]} />
+                  <meshBasicMaterial color="#ff0000" />
+                </mesh>
+              </group>
             </group>
-          </group>
-        ))}
+          );
+        })}
       </group>
 
       {/* 360° view sphere with texture */}
