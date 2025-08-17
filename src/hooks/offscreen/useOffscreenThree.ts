@@ -399,7 +399,7 @@ const applyTransformationToPosition = (position: THREE.Vector3, transformation: 
 const useOffscreenThree = () => {
   const { id: projectId } = useParams();
   const progressToastId = useRef<null | Id>(null);
-  const { getTransformation, getVisibility } = useMultiTransformationStore();
+  const { getTransformation, getVisibility, getCourseCorrection } = useMultiTransformationStore();
   const { getUse360Shading, getMaxShadingImages, getMaxShadingDistance, getPitchAngleRange, getMaxImagesToKeep, getWeightingMode, getPolynomialExponent, getExponentialBase, getInfluenceRange, getPolynomialMultiplier, getExponentialMultiplier } = useMultiGenerationStore();
   const { renderScreenshotsFromAbove } = useDebugStore();
 
@@ -664,11 +664,14 @@ const useOffscreenThree = () => {
 
             // Transform the course direction vector to account for coordinate system flips
             let transformedCourse = container.imgWithDistance.image.course;
+            // Apply course correction
+            const courseCorrection = getCourseCorrection(projectIdNum, container.imgWithDistance.image.name);
+            transformedCourse += courseCorrection;
             if (transformation) {
-              console.log("Original course:", container.imgWithDistance.image.course);
+              console.log("Original course:", transformedCourse);
               console.log("Transformation scale:", transformation.scale);
 
-              const courseVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(container.imgWithDistance.image.course));
+              const courseVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(transformedCourse));
               console.log("Course vector before transform:", courseVector);
 
               const matrix = new THREE.Matrix4();
@@ -965,8 +968,9 @@ const useOffscreenThree = () => {
       sphere.material.map = imageData.texture;
       sphere.material.needsUpdate = true;
 
-      // Rotate the sphere based on course value
-      sphere.rotation.y = THREE.MathUtils.degToRad(imageData.course);
+      // Rotate the sphere based on course value with correction
+      const courseCorrection = getCourseCorrection(Number(projectId), pose.imageName);
+      sphere.rotation.y = THREE.MathUtils.degToRad(imageData.course + courseCorrection);
 
       // Set camera properties
       camera.fov = pose.fov;
