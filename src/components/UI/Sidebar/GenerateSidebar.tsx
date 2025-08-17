@@ -411,17 +411,20 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
                       onChange={(e) => setMaxShadingDistance(parseFloat(e.target.value))}
                     />
                   </div>
-                  <div className="flex items-center mb-2">
-                    <label htmlFor="maxImagesToKeep" className="mr-2 w-20">Max Images to Keep</label>
-                    <InteractiveInput
-                      id="maxImagesToKeep"
-                      className='w-32 text-center bg-inactive basis-1/3'
-                      type="number"
-                      min={1}
-                      step={1}
-                      value={maxImagesToKeep}
-                      onChange={(e) => setMaxImagesToKeep(parseInt(e.target.value))}
-                    />
+                  <div className="flex flex-col mb-2">
+                    <div className="flex items-center">
+                      <label htmlFor="maxImagesToKeep" className="mr-2 w-20">Max Images to Keep</label>
+                      <InteractiveInput
+                        id="maxImagesToKeep"
+                        className='w-32 text-center bg-inactive basis-1/3'
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={maxImagesToKeep}
+                        onChange={(e) => setMaxImagesToKeep(parseInt(e.target.value))}
+                      />
+                    </div>
+                    <p className="text-gray-400">Used for outlier rejection - keeps only the most similar 360° images per pixel</p>
                   </div>
                   <div className="flex items-center mb-2 gap-2">
                     <div className="w-10/12">
@@ -439,92 +442,110 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
                     </div>
                     <AngleDisplay minAngle={pitchAngleRange[0]} maxAngle={pitchAngleRange[1]} />
                   </div>
-                  <div className="flex items-center mb-2 gap-2">
-                    <div className="w-10/12">
-                      <label htmlFor="influenceRange" className="mr-2 w-20">Influence Range</label>
-                      <Slider
-                        color="secondary"
-                        getAriaLabel={() => 'Influence Range'}
-                        value={influenceRange}
-                        onChange={(_, value) => setInfluenceRange(value as GenPair)}
-                        valueLabelDisplay="auto"
-                        getAriaValueText={(value) => `${value}m`}
-                        min={0}
-                        max={20}
-                        step={0.1}
-                      />
+                  <div className="flex flex-col mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-10/12">
+                        <label htmlFor="influenceRange" className="mr-2 w-20">Influence Range</label>
+                        <Slider
+                          color="secondary"
+                          getAriaLabel={() => 'Influence Range'}
+                          value={influenceRange}
+                          onChange={(_, value) => setInfluenceRange(value as GenPair)}
+                          valueLabelDisplay="auto"
+                          getAriaValueText={(value) => `${value}m`}
+                          min={0}
+                          max={20}
+                          step={0.1}
+                        />
+                      </div>
                     </div>
+                    <p className="text-gray-400">Controls distance-based weighting: full influence until {influenceRange[0]}m, zero influence at {influenceRange[1]}m</p>
                   </div>
-                  <div className="flex items-center mb-2">
-                    <label htmlFor="weightingMode" className="mr-2 w-20">Weighting Mode</label>
-                    <select
-                      id="weightingMode"
-                      className="bg-inactive p-1 rounded"
-                      value={weightingMode}
-                      onChange={(e) => setWeightingMode(e.target.value)}
-                    >
-                      <option value="linear">Linear</option>
-                      <option value="polynomial">Polynomial</option>
-                      <option value="exponential">Exponential</option>
-                    </select>
+                  <div className="flex flex-col mb-2">
+                    <div className="flex items-center">
+                      <label htmlFor="weightingMode" className="mr-2 w-20">Weighting Mode</label>
+                      <select
+                        id="weightingMode"
+                        className="bg-inactive p-1 rounded"
+                        value={weightingMode}
+                        onChange={(e) => setWeightingMode(e.target.value)}
+                      >
+                        <option value="linear">Linear</option>
+                        <option value="polynomial">Polynomial</option>
+                        <option value="exponential">Exponential</option>
+                      </select>
+                    </div>
+                    <p className="text-gray-400">Determines how 360° image influence values are weighted in the final combination</p>
                   </div>
                   {weightingMode === 'polynomial' && (
                     <>
-                      <div className="flex items-center mb-2">
-                        <label htmlFor="polynomialExponent" className="mr-2 w-20">Exponent</label>
-                        <InteractiveInput
-                          id="polynomialExponent"
-                          className='w-32 text-center bg-inactive basis-1/3'
-                          type="number"
-                          min={0.1}
-                          max={10}
-                          step={0.1}
-                          value={polynomialExponent}
-                          onChange={(e) => setPolynomialExponent(parseFloat(e.target.value))}
-                        />
+                      <div className="flex flex-col mb-2">
+                        <div className="flex items-center">
+                          <label htmlFor="polynomialExponent" className="mr-2 w-20">Exponent</label>
+                          <InteractiveInput
+                            id="polynomialExponent"
+                            className='w-32 text-center bg-inactive basis-1/3'
+                            type="number"
+                            min={0.1}
+                            max={10}
+                            step={0.1}
+                            value={polynomialExponent}
+                            onChange={(e) => setPolynomialExponent(parseFloat(e.target.value))}
+                          />
+                        </div>
+                        <p className="text-gray-400">Formula: weight = (influence^{polynomialExponent}) × multiplier</p>
                       </div>
-                      <div className="flex items-center mb-2">
-                        <label htmlFor="polynomialMultiplier" className="mr-2 w-20">Multiplier</label>
-                        <InteractiveInput
-                          id="polynomialMultiplier"
-                          className='w-32 text-center bg-inactive basis-1/3'
-                          type="number"
-                          min={1}
-                          max={1000}
-                          step={1}
-                          value={polynomialMultiplier}
-                          onChange={(e) => setPolynomialMultiplier(parseFloat(e.target.value))}
-                        />
+                      <div className="flex flex-col mb-2">
+                        <div className="flex items-center">
+                          <label htmlFor="polynomialMultiplier" className="mr-2 w-20">Multiplier</label>
+                          <InteractiveInput
+                            id="polynomialMultiplier"
+                            className='w-32 text-center bg-inactive basis-1/3'
+                            type="number"
+                            min={1}
+                            max={1000}
+                            step={1}
+                            value={polynomialMultiplier}
+                            onChange={(e) => setPolynomialMultiplier(parseFloat(e.target.value))}
+                          />
+                        </div>
+                        <p className="text-gray-400">Scales the polynomial result to control overall weight magnitude</p>
                       </div>
                     </>
                   )}
                   {weightingMode === 'exponential' && (
                     <>
-                      <div className="flex items-center mb-2">
-                        <label htmlFor="exponentialBase" className="mr-2 w-20">Base</label>
-                        <InteractiveInput
-                          id="exponentialBase"
-                          className='w-32 text-center bg-inactive basis-1/3'
-                          type="number"
-                          min={1.1}
-                          max={10}
-                          step={0.1}
-                          value={exponentialBase}
-                          onChange={(e) => setExponentialBase(parseFloat(e.target.value))}
-                        />
+                      <div className="flex flex-col mb-2">
+                        <div className="flex items-center">
+                          <label htmlFor="exponentialBase" className="mr-2 w-20">Base</label>
+                          <InteractiveInput
+                            id="exponentialBase"
+                            className='w-32 text-center bg-inactive basis-1/3'
+                            type="number"
+                            min={1.1}
+                            max={10}
+                            step={0.1}
+                            value={exponentialBase}
+                            onChange={(e) => setExponentialBase(parseFloat(e.target.value))}
+                          />
+                        </div>
+                        <p className="text-gray-400">Formula: weight = ({exponentialBase}^influence - 1) × multiplier</p>
                       </div>
-                      <div className="flex items-center mb-2">
-                        <label htmlFor="exponentialMultiplier" className="mr-2 w-20">Multiplier</label>
-                        <InteractiveInput
-                          id="exponentialMultiplier"
-                          className='w-32 text-center bg-inactive basis-1/3'
-                          type="number"
-                          min={1}
-                          max={1000}
-                          step={1}
-                          value={exponentialMultiplier}
-                          onChange={(e) => setExponentialMultiplier(parseFloat(e.target.value))}
-                        />
+                      <div className="flex flex-col mb-2">
+                        <div className="flex items-center">
+                          <label htmlFor="exponentialMultiplier" className="mr-2 w-20">Multiplier</label>
+                          <InteractiveInput
+                            id="exponentialMultiplier"
+                            className='w-32 text-center bg-inactive basis-1/3'
+                            type="number"
+                            min={1}
+                            max={1000}
+                            step={1}
+                            value={exponentialMultiplier}
+                            onChange={(e) => setExponentialMultiplier(parseFloat(e.target.value))}
+                          />
+                        </div>
+                        <p className="text-gray-400">Scales the exponential result to control overall weight magnitude</p>
                       </div>
                     </>
                   )}
