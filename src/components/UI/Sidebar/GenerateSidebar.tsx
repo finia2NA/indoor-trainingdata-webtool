@@ -19,8 +19,8 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
   const { poses, posttrainingPoses } = usePrecomputedPoses();
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
-  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize, usePosttraining, numPosttrainingImages, use360Shading, maxShadingImages, maxShadingDistance;
-  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, setUsePosttraining, setNumPosttrainingImages, setUse360Shading, setMaxShadingImages, setMaxShadingDistance, reset;
+  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize, usePosttraining, numPosttrainingImages, use360Shading, maxShadingImages, maxShadingDistance, pitchAngleRange;
+  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, setUsePosttraining, setNumPosttrainingImages, setUse360Shading, setMaxShadingImages, setMaxShadingDistance, setPitchAngleRange, reset;
   {
     // getting values from store
     const {
@@ -60,6 +60,8 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
       setMaxShadingImages: storeSetMaxShadingImages,
       getMaxShadingDistance,
       setMaxShadingDistance: storeSetMaxShadingDistance,
+      getPitchAngleRange,
+      setPitchAngleRange: storeSetPitchAngleRange,
       reset: storeReset
     } = useMultiGenerationStore();
     offset = getHeightOffset(id);
@@ -80,6 +82,7 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
     use360Shading = getUse360Shading(id);
     maxShadingImages = getMaxShadingImages(id);
     maxShadingDistance = getMaxShadingDistance(id);
+    pitchAngleRange = getPitchAngleRange(id);
 
     setHeightOffset = (offset: number) => storeSetHeightOffset(id, offset);
     setAnglesRange = (angles: GenPair) => storeSetAnglesRange(id, angles);
@@ -99,6 +102,7 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
     setUse360Shading = (use360Shading: boolean) => storeSetUse360Shading(id, use360Shading);
     setMaxShadingImages = (maxImages: number) => storeSetMaxShadingImages(id, maxImages);
     setMaxShadingDistance = (maxDistance: number) => storeSetMaxShadingDistance(id, maxDistance);
+    setPitchAngleRange = (pitchRange: GenPair) => storeSetPitchAngleRange(id, pitchRange);
     reset = () => storeReset(id);
   }
 
@@ -378,6 +382,22 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
                       value={maxShadingDistance}
                       onChange={(e) => setMaxShadingDistance(parseFloat(e.target.value))}
                     />
+                  </div>
+                  <div className="flex items-center mb-2 gap-2">
+                    <div className="w-10/12">
+                      <label htmlFor="pitchAngle" className="mr-2 w-20">Pitch Range</label>
+                      <Slider
+                        color="secondary"
+                        getAriaLabel={() => 'Pitch Angle Range'}
+                        value={pitchAngleRange}
+                        onChange={(_, value) => setPitchAngleRange(value as GenPair)}
+                        valueLabelDisplay="auto"
+                        getAriaValueText={(value) => `${value}°`}
+                        min={-90}
+                        max={90}
+                      />
+                    </div>
+                    <AngleDisplay minAngle={pitchAngleRange[0]} maxAngle={pitchAngleRange[1]} />
                   </div>
                 </>
               )}

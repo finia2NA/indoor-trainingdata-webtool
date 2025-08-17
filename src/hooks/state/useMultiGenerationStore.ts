@@ -24,6 +24,7 @@ const defaults = {
   use360Shading: false,
   maxShadingImages: 10,
   maxShadingDistance: 1.0,
+  pitchAngleRange: [-40, 90],
 }
 
 export type MultiGenrationState = {
@@ -90,6 +91,9 @@ export type MultiGenrationState = {
   multiMaxShadingDistance: Record<number, number>;
   getMaxShadingDistance: (id: number) => number;
   setMaxShadingDistance: (id: number, maxDistance: number) => void;
+  multiPitchAngleRanges: Record<number, GenPair>;
+  getPitchAngleRange: (id: number) => GenPair;
+  setPitchAngleRange: (id: number, pitchRange: GenPair) => void;
 
   reset(id: number): void;
 }
@@ -250,6 +254,14 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
           [id]: maxDistance,
         },
       })),
+      multiPitchAngleRanges: {},
+      getPitchAngleRange: (id) => get().multiPitchAngleRanges[id] ?? defaults.pitchAngleRange,
+      setPitchAngleRange: (id, pitchRange) => set((state) => ({
+        multiPitchAngleRanges: {
+          ...state.multiPitchAngleRanges,
+          [id]: pitchRange,
+        },
+      })),
 
       reset: (id) => {
         get().setHeightOffset(id, defaults.heightOffset);
@@ -274,6 +286,7 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
         get().setUse360Shading(id, defaults.use360Shading);
         get().setMaxShadingImages(id, defaults.maxShadingImages);
         get().setMaxShadingDistance(id, defaults.maxShadingDistance);
+        get().setPitchAngleRange(id, defaults.pitchAngleRange as GenPair);
       }
     }),
     {

@@ -16,9 +16,6 @@ import { sceneCache as globalSceneCache } from './sceneCache';
 const DO_CLEANUP = false;
 const DEBUG_RENDERTARGETS = true; // Set to true to enable render target downloads for debugging
 
-// Pitch angle limits in spherical coordinates (0 = up, π/2 = horizon, π = down)
-const MAX_PITCH_RADIANS = (2 * Math.PI) / 3; // 60° down from horizon (120° from north)
-const MIN_PITCH_RADIANS = Math.PI / 3; // 60° up from horizon (60° from north)
 
 // Post-processing material for combining multiple render targets
 function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
@@ -149,7 +146,7 @@ const useOffscreenThree = () => {
   const { id: projectId } = useParams();
   const progressToastId = useRef<null | Id>(null);
   const { getTransformation, getVisibility } = useMultiTransformationStore();
-  const { getUse360Shading, getMaxShadingImages, getMaxShadingDistance } = useMultiGenerationStore();
+  const { getUse360Shading, getMaxShadingImages, getMaxShadingDistance, getPitchAngleRange } = useMultiGenerationStore();
   const { renderScreenshotsFromAbove } = useDebugStore();
 
   // Scene cache to avoid rebuilding for each raycast
@@ -265,6 +262,7 @@ const useOffscreenThree = () => {
     const projectIdNum = Number(projectId);
     const maxShadingImages = getMaxShadingImages(projectIdNum);
     const maxShadingDistance = getMaxShadingDistance(projectIdNum);
+    const pitchAngleRange = getPitchAngleRange(projectIdNum);
 
     // Get the 360s transformation
     const transformation = getTransformation(projectIdNum, "360s");
@@ -447,9 +445,20 @@ const useOffscreenThree = () => {
               material.uniforms.flipVertical.value = false;
             }
             
-            // Set pitch limits
-            material.uniforms.maxPitch.value = MAX_PITCH_RADIANS;
-            material.uniforms.minPitch.value = MIN_PITCH_RADIANS;
+            // Set pitch limits (convert degrees to radians, then to spherical coordinates)
+            // In spherical coordinates: 0 = north pole, π/2 = horizon, π = south pole
+            // User input: negative = up from horizon, positive = down from horizon
+            const minPitchDegrees = pitchAngleRange[0]; // Most negative (up)
+            const maxPitchDegrees = pitchAngleRange[1]; // Most positive (down)
+            
+            // Convert to spherical coordinate system
+            // const minPitchRadians = (90 - maxPitchDegrees) * Math.PI / 180; // Most up becomes smallest v
+            // const maxPitchRadians = (90 - minPitchDegrees) * Math.PI / 180; // Most down becomes largest v
+            const minPitchRadians = minPitchDegrees * Math.PI / 180; // Most up becomes smallest v
+            const maxPitchRadians = maxPitchDegrees * Math.PI / 180; // Most down becomes largest v
+            
+            material.uniforms.minPitch.value = minPitchRadians;
+            material.uniforms.maxPitch.value = maxPitchRadians;
           }
         });
 
@@ -524,7 +533,7 @@ const useOffscreenThree = () => {
     globalSceneCache.invalidateProject(project.id);
 
     return results;
-  }, [getTransformation, getVisibility, project, projectId, getMaxShadingImages, getMaxShadingDistance, renderScreenshotsFromAbove]);
+  }, [getTransformation, getVisibility, project, projectId, getMaxShadingImages, getMaxShadingDistance, getPitchAngleRange, renderScreenshotsFromAbove]);
 
   // Wrapper function that routes to the appropriate implementation
   const takeOffscreenScreenshots = useCallback(async (props: TakeScreenshotProps<Pose>) => {
