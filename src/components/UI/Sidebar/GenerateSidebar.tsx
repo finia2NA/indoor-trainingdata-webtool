@@ -468,7 +468,7 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
                       <label htmlFor="weightingMode" className="mr-2 w-20">Weighting Mode</label>
                       <select
                         id="weightingMode"
-                        className="bg-inactive p-1 rounded"
+                        className="bg-inactive p-1 w-32"
                         value={weightingMode}
                         onChange={(e) => setWeightingMode(e.target.value)}
                       >
