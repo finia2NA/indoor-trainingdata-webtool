@@ -393,11 +393,30 @@ const useOffscreenThree = () => {
             material.uniforms.sphereMap.value = container.imgWithDistance.image.texture;
             // Set light position as vec4 (x, y, z, course) using transformed position
             const transformedPos = container.imgWithDistance.transformedPosition;
+            
+            // Transform the course direction vector to account for coordinate system flips
+            let transformedCourse = container.imgWithDistance.image.course;
+            if (transformation) {
+              const courseVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(container.imgWithDistance.image.course));
+              const matrix = new THREE.Matrix4();
+              const quaternion = new THREE.Quaternion().setFromEuler(
+                new THREE.Euler(...transformation.rotation)
+              );
+              matrix.compose(
+                new THREE.Vector3(0, 0, 0), // No translation for direction vector
+                quaternion,
+                new THREE.Vector3(...transformation.scale) // Include scale!
+              );
+              courseVector.applyMatrix4(matrix);
+              // Convert back to angle
+              transformedCourse = Math.atan2(courseVector.z, courseVector.x) * 180 / Math.PI;
+            }
+            
             material.uniforms.lightPos.value.set(
               transformedPos.x,
               transformedPos.y,
               transformedPos.z,
-              container.imgWithDistance.image.course
+              transformedCourse
             );
             
             // Calculate flip values based on transformation scale

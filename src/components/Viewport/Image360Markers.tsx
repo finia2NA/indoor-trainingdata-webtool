@@ -79,16 +79,22 @@ const Image360Markers = ({ project, onImageSelected }: Image360MarkersProps) => 
     const transformedPosition = originalPosition.applyMatrix4(matrix);
 
     // Calculate camera position based on negative course direction (camera looks back towards sphere)
-    const offset = 0.005;
+    const offset = -0.005;
     const courseRadians = THREE.MathUtils.degToRad(pos.course);
     const courseVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), courseRadians);
     
-    // Apply transformation rotation to the course vector
+    // Apply full transformation (including scale) to the course vector
     if (transformation) {
-      const rotationQuaternion = new THREE.Quaternion().setFromEuler(
+      const matrix = new THREE.Matrix4();
+      const quaternion = new THREE.Quaternion().setFromEuler(
         new THREE.Euler(...transformation.rotation)
       );
-      courseVector.applyQuaternion(rotationQuaternion);
+      matrix.compose(
+        new THREE.Vector3(0, 0, 0), // No translation for direction vector
+        quaternion,
+        new THREE.Vector3(...transformation.scale) // Include scale!
+      );
+      courseVector.applyMatrix4(matrix);
     }
     
     courseVector.multiplyScalar(offset); // Negative to position camera opposite to course direction
