@@ -16,55 +16,6 @@ import { sceneCache as globalSceneCache } from './sceneCache';
 const DO_CLEANUP = false;
 const DEBUG_RENDERTARGETS = true; // Set to true to enable render target downloads for debugging
 
-
-// Post-processing material for combining multiple render targets
-/*
-function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[]) {
-  // Build the fragment shader with dynamic texture sampling
-  const fragmentShader = `
-    varying vec2 vUv;
-    ${renderTargets.map((_, i) => `uniform sampler2D uTexture${i};`).join('\n    ')}
-    
-    void main() {
-      vec3 weightedSum = vec3(0.0);
-      float totalWeight = 0.0;
-
-      ${renderTargets.map((_, i) => `
-      vec4 sample${i} = texture2D(uTexture${i}, vUv);
-      weightedSum += sample${i}.rgb * sample${i}.a;  // Weight color by alpha
-      totalWeight += sample${i}.a;`).join('')}
-
-      vec3 finalColor = totalWeight > 0.0 ? weightedSum / totalWeight : vec3(0.0);
-      float finalAlpha = totalWeight > 0.0 ? 1.0 : 0.0;
-      
-      gl_FragColor = vec4(finalColor, finalAlpha);
-    }
-  `;
-
-  const vertexShader = `
-    varying vec2 vUv;
-    
-    void main() {
-      vUv = uv;
-      gl_Position = vec4(position, 1.0);
-    }
-  `;
-
-  // Create uniforms for each texture
-  const uniforms: Record<string, { value: THREE.Texture }> = {};
-  renderTargets.forEach((rt, i) => {
-    uniforms[`uTexture${i}`] = { value: rt.texture };
-  });
-
-  return new THREE.ShaderMaterial({
-    uniforms,
-    vertexShader,
-    fragmentShader,
-    transparent: true
-  });
-}
-*/
-
 // Post-processing material for combining multiple render targets with influence-based weighting
 function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[], maxImagesToKeep: number, weightingMode: string, polynomialExponent: number, exponentialBase: number, polynomialMultiplier: number, exponentialMultiplier: number) {
   // Build the fragment shader with dynamic texture sampling
