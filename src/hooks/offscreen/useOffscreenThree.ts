@@ -13,8 +13,6 @@ import { get360s } from '../../util/get360s';
 import useScene from './useScene';
 import { sceneCache as globalSceneCache } from './sceneCache';
 
-const DO_CLEANUP = false; // clean up resources after use. This could interfer with subsequent use.
-const DEBUG_RENDERTARGETS = false; // Set to true to enable render target downloads for debugging
 
 // Post-processing material for combining multiple render targets with influence-based weighting
 function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[], maxImagesToKeep: number, weightingMode: string, polynomialExponent: number, exponentialBase: number, polynomialMultiplier: number, exponentialMultiplier: number, lightCameraDistances: number[]) {
@@ -374,7 +372,7 @@ const useOffscreenThree = () => {
   const progressToastId = useRef<null | Id>(null);
   const { getTransformation, getVisibility, getCourseCorrection } = useMultiTransformationStore();
   const { getUse360Shading, getMaxShadingImages, getMaxShadingDistance, getPitchAngleRange, getMaxImagesToKeep, getWeightingMode, getPolynomialExponent, getExponentialBase, getInfluenceRange, getPolynomialMultiplier, getExponentialMultiplier } = useMultiGenerationStore();
-  const { renderScreenshotsFromAbove } = useDebugStore();
+  const { renderScreenshotsFromAbove, doCleanup, debugRenderTargets } = useDebugStore();
 
   // Scene cache to avoid rebuilding for each raycast
   const sceneCache = useRef<{
@@ -710,7 +708,7 @@ const useOffscreenThree = () => {
         renderer.render(scene, camera);
 
         // Download the render target for debugging
-        if (DEBUG_RENDERTARGETS) {
+        if (debugRenderTargets) {
           downloadRenderTarget(renderer, renderTargets[j], `pose_${i}_light_${j}.png`);
         }
       }
@@ -727,7 +725,7 @@ const useOffscreenThree = () => {
       renderer.render(postScene, postCamera);
 
       // Clean up render targets and post-processing quad for this pose
-      if (DO_CLEANUP) {
+      if (doCleanup) {
         renderTargets.forEach(rt => rt.dispose());
         postScene.remove(quad);
         postMaterial.dispose();
@@ -738,7 +736,7 @@ const useOffscreenThree = () => {
       lightContainers.forEach(container => {
         scene.remove(container.light);
         // Clean up shadow map if it exists
-        if (DO_CLEANUP && container.light.shadow && container.light.shadow.map) {
+        if (doCleanup && container.light.shadow && container.light.shadow.map) {
           container.light.shadow.map.dispose();
         }
       });
@@ -767,7 +765,7 @@ const useOffscreenThree = () => {
     }
 
     // Clean up post-processing scene and geometry
-    if (DO_CLEANUP) {
+    if (doCleanup) {
       quadGeom.dispose();
     }
 
@@ -989,7 +987,7 @@ const useOffscreenThree = () => {
 
 
     // Clean up
-    if (DO_CLEANUP) {
+    if (doCleanup) {
       renderer.dispose();
       sphere.geometry.dispose();
       sphere.material.dispose();

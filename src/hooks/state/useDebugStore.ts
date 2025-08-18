@@ -34,6 +34,13 @@ export type DebugState = {
   renderScreenshotsFromAbove: boolean;
   setRenderScreenshotsFromAbove: (fromAbove: boolean) => void;
   
+  // Offscreen rendering debug options
+  doCleanup: boolean;
+  setDoCleanup: (cleanup: boolean) => void;
+  
+  debugRenderTargets: boolean;
+  setDebugRenderTargets: (debug: boolean) => void;
+  
   // Measuring
   measuringActive: boolean;
   setMeasuringActive: (active: boolean) => void;
@@ -74,6 +81,13 @@ const useDebugStore = create<DebugState>((set) => ({
   renderScreenshotsFromAbove: false,
   setRenderScreenshotsFromAbove: (fromAbove: boolean) => set({ renderScreenshotsFromAbove: fromAbove }),
   
+  // Offscreen rendering debug options defaults
+  doCleanup: false,
+  setDoCleanup: (cleanup: boolean) => set({ doCleanup: cleanup }),
+  
+  debugRenderTargets: false,
+  setDebugRenderTargets: (debug: boolean) => set({ debugRenderTargets: debug }),
+  
   // Measuring defaults
   measuringActive: false,
   setMeasuringActive: (active: boolean) => set({ measuringActive: active }),
@@ -90,6 +104,8 @@ const useDebugStore = create<DebugState>((set) => ({
     pointLightDistance: 0,
     pointLightDecay: 2,
     renderScreenshotsFromAbove: false,
+    doCleanup: false,
+    debugRenderTargets: false,
     measuringActive: false,
     measuredPoint: null,
   }),

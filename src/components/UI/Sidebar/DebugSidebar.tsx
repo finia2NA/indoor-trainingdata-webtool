@@ -31,6 +31,10 @@ const DebugSidebar = ({ project: _project }: { project: Project }) => {
     setPointLightDecay,
     renderScreenshotsFromAbove,
     setRenderScreenshotsFromAbove,
+    doCleanup,
+    setDoCleanup,
+    debugRenderTargets,
+    setDebugRenderTargets,
     measuringActive,
     setMeasuringActive,
     measuredPoint,
@@ -186,6 +190,24 @@ const DebugSidebar = ({ project: _project }: { project: Project }) => {
               className="ml-2"
               checked={renderScreenshotsFromAbove}
               onChange={(e) => setRenderScreenshotsFromAbove(e.target.checked)}
+            />
+          </div>
+          <div className="flex items-center">
+            <label className="w-40">Clean up resources</label>
+            <input
+              type="checkbox"
+              className="ml-2"
+              checked={doCleanup}
+              onChange={(e) => setDoCleanup(e.target.checked)}
+            />
+          </div>
+          <div className="flex items-center">
+            <label className="w-40">Debug render targets</label>
+            <input
+              type="checkbox"
+              className="ml-2"
+              checked={debugRenderTargets}
+              onChange={(e) => setDebugRenderTargets(e.target.checked)}
             />
           </div>
           <button
