@@ -13,8 +13,8 @@ import { get360s } from '../../util/get360s';
 import useScene from './useScene';
 import { sceneCache as globalSceneCache } from './sceneCache';
 
-const DO_CLEANUP = false; // clean up resources after use. This could interfer with subsequent use, so disabled by default.
-const DEBUG_RENDERTARGETS = true; // Set to true to enable render target downloads for debugging
+const DO_CLEANUP = false; // clean up resources after use. This could interfer with subsequent use.
+const DEBUG_RENDERTARGETS = false; // Set to true to enable render target downloads for debugging
 
 // Post-processing material for combining multiple render targets with influence-based weighting
 function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[], maxImagesToKeep: number, weightingMode: string, polynomialExponent: number, exponentialBase: number, polynomialMultiplier: number, exponentialMultiplier: number, lightCameraDistances: number[]) {

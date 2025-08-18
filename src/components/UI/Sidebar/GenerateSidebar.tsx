@@ -20,8 +20,8 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
   const { poses, posttrainingPoses } = usePrecomputedPoses();
 
   // Declaring here, then getting them from the store so that we don't polute the main closure with id-independent variables and functions
-  let offset, angles, anglesConcentration, avoidWalls, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize, usePosttraining, numPosttrainingImages, use360Shading, maxShadingImages, maxShadingDistance, pitchAngleRange, maxImagesToKeep, influenceRange, weightingMode, polynomialExponent, exponentialBase, polynomialMultiplier, exponentialMultiplier;
-  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, setUsePosttraining, setNumPosttrainingImages, setUse360Shading, setMaxShadingImages, setMaxShadingDistance, setPitchAngleRange, setMaxImagesToKeep, setInfluenceRange, setWeightingMode, setPolynomialExponent, setExponentialBase, setPolynomialMultiplier, setExponentialMultiplier, reset;
+  let offset, angles, anglesConcentration, avoidWalls, wallAvoidanceThreshold, pair, pairDistanceRange, pairDistanceConcentration, pairAngleOffset, pairAngleConcentration, fovRange, fovConcentration, numSeries, imageSize, usePosttraining, numPosttrainingImages, use360Shading, maxShadingImages, maxShadingDistance, pitchAngleRange, maxImagesToKeep, influenceRange, weightingMode, polynomialExponent, exponentialBase, polynomialMultiplier, exponentialMultiplier;
+  let setHeightOffset, setAnglesRange, setAnglesConcentration, setAvoidWalls, setWallAvoidanceThreshold, setDoPair, setPairDistanceRange, setPairDistanceConcentration, setPairAngleRange, setAngleConcentration, setFovRange, setFovConcentration, setNumSeries, setImageSize, setUsePosttraining, setNumPosttrainingImages, setUse360Shading, setMaxShadingImages, setMaxShadingDistance, setPitchAngleRange, setMaxImagesToKeep, setInfluenceRange, setWeightingMode, setPolynomialExponent, setExponentialBase, setPolynomialMultiplier, setExponentialMultiplier, reset;
   {
     // getting values from store
     const {
@@ -33,6 +33,8 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
       setAnglesConcentration: storeSetAnglesConcentration,
       getAvoidWalls,
       setAvoidWalls: storeSetAvoidWalls,
+      getWallAvoidanceThreshold,
+      setWallAvoidanceThreshold: storeSetWallAvoidanceThreshold,
       getDoPairGeneration,
       setDoPairGeneration: storeSetDoPairGeneration,
       getPairDistanceRange,
@@ -83,6 +85,7 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
     angles = getAnglesRange(id);
     anglesConcentration = getAnglesConcentration(id);
     avoidWalls = getAvoidWalls(id);
+    wallAvoidanceThreshold = getWallAvoidanceThreshold(id);
     pair = getDoPairGeneration(id);
     pairDistanceRange = getPairDistanceRange(id);
     pairDistanceConcentration = getPairDistanceConcentration(id);
@@ -110,6 +113,7 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
     setAnglesRange = (angles: GenPair) => storeSetAnglesRange(id, angles);
     setAnglesConcentration = (concentration: number) => storeSetAnglesConcentration(id, concentration);
     setAvoidWalls = (avoid: boolean) => storeSetAvoidWalls(id, avoid);
+    setWallAvoidanceThreshold = (threshold: number) => storeSetWallAvoidanceThreshold(id, threshold);
     setDoPair = (doPair: boolean) => storeSetDoPairGeneration(id, doPair);
     setPairDistanceRange = (distanceRange: GenPair) => storeSetPairDistanceRange(id, distanceRange);
     setPairDistanceConcentration = (concentration: number) => storeSetPairDistanceConcentration(id, concentration);
@@ -196,6 +200,22 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
               />
             </div>
             <p className="text-gray-400">If checked, poses close to and looking at a wall are not possible</p>
+            {avoidWalls && (
+              <div className="mt-2">
+                <label htmlFor="wallAvoidanceThreshold" className="mr-2 w-20">Wall Distance Threshold</label>
+                <Slider
+                  id="wallAvoidanceThreshold"
+                  color="secondary"
+                  value={wallAvoidanceThreshold}
+                  onChange={(_, value) => setWallAvoidanceThreshold(value as number)}
+                  valueLabelDisplay="auto"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                />
+                <p className="text-gray-400 text-sm">Minimum distance to walls (0-1)</p>
+              </div>
+            )}
           </div>
         </SidebarSection>
 

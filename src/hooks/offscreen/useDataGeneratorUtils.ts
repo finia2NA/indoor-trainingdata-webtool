@@ -19,7 +19,6 @@ import useMultiTransformationStore from "../state/useMultiTransformationStore";
 
 const logging = false;
 const progressLogging = false;
-const wallAvoidanceThreshold = 0.3;
 
 export enum PoseType {
   SINGLE = 'single',
@@ -103,6 +102,7 @@ const useDataGeneratorUtils = () => {
     getAnglesRange,
     getAnglesConcentration,
     getAvoidWalls,
+    getWallAvoidanceThreshold,
     getDoPairGeneration,
     getPairDistanceRange,
     getPairDistanceConcentration,
@@ -119,6 +119,7 @@ const useDataGeneratorUtils = () => {
   const anglesRange = getAnglesRange(id);
   const anglesConcentration = getAnglesConcentration(id);
   const avoidWalls = getAvoidWalls(id);
+  const wallAvoidanceThreshold = getWallAvoidanceThreshold(id);
   const pair = getDoPairGeneration(id);
   const pairDistanceRange = getPairDistanceRange(id);
   const pairDistanceConcentration = getPairDistanceConcentration(id);

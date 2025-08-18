@@ -8,6 +8,7 @@ const defaults = {
   anglesRange: [-10, 10],
   anglesConcentration: 0.5,
   avoidWalls: false,
+  wallAvoidanceThreshold: 0.3,
   doPairGeneration: false,
   pairDistance: [0, 0.2],
   pairDistanceConcentration: 0.5,
@@ -46,6 +47,9 @@ export type MultiGenrationState = {
   avoidWalls: Record<number, boolean>;
   getAvoidWalls: (id: number) => boolean;
   setAvoidWalls: (id: number, avoidWalls: boolean) => void;
+  wallAvoidanceThresholds: Record<number, number>;
+  getWallAvoidanceThreshold: (id: number) => number;
+  setWallAvoidanceThreshold: (id: number, threshold: number) => void;
 
   // pair
   multiDoPairGenerations: Record<number, boolean>;
@@ -160,6 +164,14 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
         avoidWalls: {
           ...state.avoidWalls,
           [id]: avoidWalls,
+        },
+      })),
+      wallAvoidanceThresholds: {},
+      getWallAvoidanceThreshold: (id) => get().wallAvoidanceThresholds[id] ?? defaults.wallAvoidanceThreshold,
+      setWallAvoidanceThreshold: (id, threshold) => set((state) => ({
+        wallAvoidanceThresholds: {
+          ...state.wallAvoidanceThresholds,
+          [id]: threshold,
         },
       })),
 
@@ -354,6 +366,7 @@ const useMultiGenerationStore = create<MultiGenrationState>()(
         get().setAnglesRange(id, defaults.anglesRange as GenPair);
         get().setAnglesConcentration(id, defaults.anglesConcentration);
         get().setAvoidWalls(id, defaults.avoidWalls);
+        get().setWallAvoidanceThreshold(id, defaults.wallAvoidanceThreshold);
 
         get().setDoPairGeneration(id, defaults.doPairGeneration);
         get().setPairDistanceRange(id, defaults.pairDistance as GenPair);
