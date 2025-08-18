@@ -98,6 +98,7 @@ const WrappedOrbitControls = React.memo((props: WrappedOrbitControlsProps) => {
     <OrbitControls
       ref={controlsRef}
       enableZoom={!(props.useCase === 'cube')}
+      enableDamping={false}
       enabled={!isTransforming}
       onChange={() => {
         if (controlsRef.current) {

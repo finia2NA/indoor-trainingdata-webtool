@@ -48,6 +48,7 @@ const TriangulationDisplay = ({ polygon }: TriangulationDisplayProps) => {
                 side={DoubleSide}
                 transparent
                 opacity={0.5}
+                depthTest={false}
               />
             </mesh>
           ))
