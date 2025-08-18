@@ -13,15 +13,16 @@ import { get360s } from '../../util/get360s';
 import useScene from './useScene';
 import { sceneCache as globalSceneCache } from './sceneCache';
 
-const DO_CLEANUP = false;
+const DO_CLEANUP = false; // clean up resources after use. This could interfer with subsequent use, so disabled by default.
 const DEBUG_RENDERTARGETS = true; // Set to true to enable render target downloads for debugging
 
 // Post-processing material for combining multiple render targets with influence-based weighting
-function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[], maxImagesToKeep: number, weightingMode: string, polynomialExponent: number, exponentialBase: number, polynomialMultiplier: number, exponentialMultiplier: number) {
+function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[], maxImagesToKeep: number, weightingMode: string, polynomialExponent: number, exponentialBase: number, polynomialMultiplier: number, exponentialMultiplier: number, lightCameraDistances: number[]) {
   // Build the fragment shader with dynamic texture sampling
   const fragmentShader = `
     varying vec2 vUv;
     ${renderTargets.map((_, i) => `uniform sampler2D uTexture${i};`).join('\n    ')}
+    uniform float uLightCameraDistances[${renderTargets.length}];
     
     void main() {
       // First pass: decode all samples and collect valid ones with influence
@@ -94,6 +95,23 @@ function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[], maxImagesT
         }
       }
       
+${weightingMode === 'closestAvailable' ? `
+      // Closest available mode: find the closest valid sample with non-zero influence
+      vec3 finalColor = vec3(0.0);
+      float finalAlpha = 0.0;
+      float minDistance = 999999.0;
+      
+      for (int i = 0; i < ${renderTargets.length}; i++) {
+        if (validSamples[i] && influences[i] > 0.0) {
+          float distance = uLightCameraDistances[i];
+          if (distance < minDistance) {
+            minDistance = distance;
+            finalColor = colors[i];
+            finalAlpha = 1.0;
+          }
+        }
+      }
+` : `
       // Final weighted averaging using remaining valid samples
       vec3 weightedSum = vec3(0.0);
       float totalWeight = 0.0;
@@ -117,6 +135,7 @@ function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[], maxImagesT
       
       vec3 finalColor = totalWeight > 0.0 ? weightedSum / totalWeight : vec3(0.0);
       float finalAlpha = totalWeight > 0.0 ? 1.0 : 0.0;
+`}
       
       gl_FragColor = vec4(finalColor, finalAlpha);
     }
@@ -132,10 +151,13 @@ function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[], maxImagesT
   `;
 
   // Create uniforms for each texture
-  const uniforms: Record<string, { value: THREE.Texture }> = {};
+  const uniforms: Record<string, { value: THREE.Texture | number[] }> = {};
   renderTargets.forEach((rt, i) => {
     uniforms[`uTexture${i}`] = { value: rt.texture };
   });
+
+  // Add light-to-camera distances uniform
+  uniforms['uLightCameraDistances'] = { value: lightCameraDistances };
 
   return new THREE.ShaderMaterial({
     uniforms,
@@ -590,8 +612,11 @@ const useOffscreenThree = () => {
       const polynomialMultiplier = getPolynomialMultiplier(projectIdNum);
       const exponentialMultiplier = getExponentialMultiplier(projectIdNum);
 
+      // Calculate light-to-camera distances
+      const lightCameraDistances = lightContainers.map(container => container.imgWithDistance.distance);
+
       // Create post-processing material for this pose's render targets
-      const postMaterial = createPostMaterial(renderTargets, maxImagesToKeep, weightingMode, polynomialExponent, exponentialBase, polynomialMultiplier, exponentialMultiplier);
+      const postMaterial = createPostMaterial(renderTargets, maxImagesToKeep, weightingMode, polynomialExponent, exponentialBase, polynomialMultiplier, exponentialMultiplier, lightCameraDistances);
       const quad = new THREE.Mesh(quadGeom, postMaterial);
       postScene.add(quad);
 

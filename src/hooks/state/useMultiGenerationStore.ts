@@ -3,8 +3,6 @@ import { persist } from "zustand/middleware";
 
 export type GenPair = [number, number];
 
-// TODO: make getters create if not exists
-
 const defaults = {
   heightOffset: 0,
   anglesRange: [-10, 10],

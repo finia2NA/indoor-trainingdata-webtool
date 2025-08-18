@@ -475,9 +475,10 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
                         <option value="linear">Linear</option>
                         <option value="polynomial">Polynomial</option>
                         <option value="exponential">Exponential</option>
+                        <option value="closestAvailable">Closest Available</option>
                       </select>
                     </div>
-                    <p className="text-gray-400">Determines how 360° image influence values are weighted in the final combination</p>
+                    <p className="text-gray-400">Determines how 360° images are combined: weighting modes blend multiple images, while Closest Available uses only the nearest valid image</p>
                   </div>
                   {weightingMode === 'polynomial' && (
                     <>
