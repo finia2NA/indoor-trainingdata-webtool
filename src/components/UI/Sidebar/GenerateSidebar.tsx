@@ -495,7 +495,7 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
                             onChange={(e) => setPolynomialExponent(parseFloat(e.target.value))}
                           />
                         </div>
-                        <p className="text-gray-400">Formula: weight = (influence^{polynomialExponent}) × multiplier</p>
+                        <p className="text-gray-400">Formula: weight = (influence × multiplier)^{polynomialExponent}</p>
                       </div>
                       <div className="flex flex-col mb-2">
                         <div className="flex items-center">
@@ -531,7 +531,7 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
                             onChange={(e) => setExponentialBase(parseFloat(e.target.value))}
                           />
                         </div>
-                        <p className="text-gray-400">Formula: weight = ({exponentialBase}^influence - 1) × multiplier</p>
+                        <p className="text-gray-400">Formula: weight = {exponentialBase}^(influence × multiplier) - 1</p>
                       </div>
                       <div className="flex flex-col mb-2">
                         <div className="flex items-center">

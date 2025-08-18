@@ -152,9 +152,9 @@ function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[], maxImagesT
           // Apply weighting function to influence
           float weight = influences[i];
           ${weightingMode === 'polynomial' ? `
-          weight = pow(weight, ${polynomialExponent.toFixed(1)}) * ${polynomialMultiplier.toFixed(1)};
+          weight = pow(weight * ${polynomialMultiplier.toFixed(1)}, ${polynomialExponent.toFixed(1)});
           ` : weightingMode === 'exponential' ? `
-          weight = (pow(${exponentialBase.toFixed(1)}, weight) - 1.0) * ${exponentialMultiplier.toFixed(1)};
+          weight = pow(${exponentialBase.toFixed(1)}, weight * ${exponentialMultiplier.toFixed(1)}) - 1.0;
           ` : `
           // Linear weighting (no transformation needed)
           `}
