@@ -210,7 +210,7 @@ const GenerateSidebar = ({ project }: { project: Project }) => {
                   onChange={(_, value) => setWallAvoidanceThreshold(value as number)}
                   valueLabelDisplay="auto"
                   min={0}
-                  max={1}
+                  max={3}
                   step={0.01}
                 />
                 <p className="text-gray-400 text-sm">Minimum distance to walls (0-1)</p>

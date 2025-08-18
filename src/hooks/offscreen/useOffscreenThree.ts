@@ -13,6 +13,8 @@ import { get360s } from '../../util/get360s';
 import useScene from './useScene';
 import { sceneCache as globalSceneCache } from './sceneCache';
 
+const VERBOSE = false; // Set to true for detailed logging
+
 
 // Post-processing material for combining multiple render targets with influence-based weighting
 function createPostMaterial(renderTargets: THREE.WebGLRenderTarget[], maxImagesToKeep: number, weightingMode: string, polynomialExponent: number, exponentialBase: number, polynomialMultiplier: number, exponentialMultiplier: number, lightCameraDistances: number[]) {
@@ -197,74 +199,74 @@ const downloadRenderTarget = (renderer: THREE.WebGLRenderer, renderTarget: THREE
   let pixelsWithCleanEncoding = 0;
   let pixelsWithFractionalBits = 0;
   let maxFractionalError = 0;
-  
+
   for (let i = 0; i < pixels.length; i += 4) {
     const r = pixels[i];
     const g = pixels[i + 1];
     const b = pixels[i + 2];
     const alpha = pixels[i + 3];
-    
+
     // Skip transparent pixels (no data)
     if (alpha < 0.1) continue;
-    
+
     // Check if encoded values are clean integers (no fractional bits)
     const channels = [r, g, b];
     let hasCleanEncoding = true;
     let maxChannelFractionalError = 0;
-    
+
     // Debug: log first few pixels to see what we're getting
     if (i < 20) {
-      console.log(`Pixel ${i/4}: R=${r.toFixed(6)}, G=${g.toFixed(6)}, B=${b.toFixed(6)}, A=${alpha.toFixed(6)}`);
-      console.log(`  Scaled: R=${(r*65535).toFixed(6)}, G=${(g*65535).toFixed(6)}, B=${(b*65535).toFixed(6)}`);
+      console.log(`Pixel ${i / 4}: R=${r.toFixed(6)}, G=${g.toFixed(6)}, B=${b.toFixed(6)}, A=${alpha.toFixed(6)}`);
+      console.log(`  Scaled: R=${(r * 65535).toFixed(6)}, G=${(g * 65535).toFixed(6)}, B=${(b * 65535).toFixed(6)}`);
     }
-    
+
     for (let c = 0; c < 3; c++) {
       const scaledValue = channels[c] * 65535.0;
       const fractionalPart = scaledValue - Math.floor(scaledValue);
       maxChannelFractionalError = Math.max(maxChannelFractionalError, fractionalPart);
-      
+
       if (fractionalPart > 0.0001) { // Allow tiny floating point errors
         hasCleanEncoding = false;
       }
     }
-    
+
     if (hasCleanEncoding) {
       pixelsWithCleanEncoding++;
     } else {
       pixelsWithFractionalBits++;
       maxFractionalError = Math.max(maxFractionalError, maxChannelFractionalError);
     }
-    
+
     // Decode influence from each RGB channel (should be identical)
     let hasInfluence = false;
     let influenceValues = [];
     let colorValues = [];
-    
+
     for (let c = 0; c < 3; c++) {
       const packedValue = Math.round(channels[c] * 65535.0);
       const colorInt = (packedValue >> 8) & 0xFF; // High 8 bits
       const influenceInt = packedValue & 0xFF;    // Low 8 bits
-      
+
       const decodedColor = colorInt / 255.0;
       const decodedInfluence = influenceInt / 255.0;
-      
+
       influenceValues.push(decodedInfluence);
       colorValues.push(decodedColor);
-      
+
       if (decodedInfluence < 0.99) { // Non-full influence
         hasInfluence = true;
       }
     }
-    
+
     if (hasInfluence) {
       pixelsWithInfluence++;
-      
+
       // Check encoding accuracy - influence should be identical across RGB channels
       const minInfluence = Math.min(...influenceValues);
       const maxInfluence = Math.max(...influenceValues);
       const influenceError = maxInfluence - minInfluence;
       maxInfluenceError = Math.max(maxInfluenceError, influenceError);
-      
+
       // Check color encoding accuracy (less critical but good to verify)
       const minColor = Math.min(...colorValues);
       const maxColor = Math.max(...colorValues);
@@ -274,30 +276,30 @@ const downloadRenderTarget = (renderer: THREE.WebGLRenderer, renderTarget: THREE
       pixelsWithoutInfluence++;
     }
   }
-  
+
   console.log(`Influence encoding analysis for ${filename}:`);
   console.log(`  Total non-transparent pixels: ${pixelsWithInfluence + pixelsWithoutInfluence}`);
-  console.log(`  Pixels with clean integer encoding: ${pixelsWithCleanEncoding} (${(pixelsWithCleanEncoding/(pixelsWithInfluence + pixelsWithoutInfluence)*100).toFixed(1)}%)`);
-  console.log(`  Pixels with fractional bits: ${pixelsWithFractionalBits} (${(pixelsWithFractionalBits/(pixelsWithInfluence + pixelsWithoutInfluence)*100).toFixed(1)}%)`);
+  console.log(`  Pixels with clean integer encoding: ${pixelsWithCleanEncoding} (${(pixelsWithCleanEncoding / (pixelsWithInfluence + pixelsWithoutInfluence) * 100).toFixed(1)}%)`);
+  console.log(`  Pixels with fractional bits: ${pixelsWithFractionalBits} (${(pixelsWithFractionalBits / (pixelsWithInfluence + pixelsWithoutInfluence) * 100).toFixed(1)}%)`);
   console.log(`  Max fractional error: ${maxFractionalError.toFixed(6)}`);
-  console.log(`  Pixels with variable influence: ${pixelsWithInfluence} (${(pixelsWithInfluence/(pixelsWithInfluence + pixelsWithoutInfluence)*100).toFixed(1)}%)`);
-  console.log(`  Pixels with full influence: ${pixelsWithoutInfluence} (${(pixelsWithoutInfluence/(pixelsWithInfluence + pixelsWithoutInfluence)*100).toFixed(1)}%)`);
+  console.log(`  Pixels with variable influence: ${pixelsWithInfluence} (${(pixelsWithInfluence / (pixelsWithInfluence + pixelsWithoutInfluence) * 100).toFixed(1)}%)`);
+  console.log(`  Pixels with full influence: ${pixelsWithoutInfluence} (${(pixelsWithoutInfluence / (pixelsWithInfluence + pixelsWithoutInfluence) * 100).toFixed(1)}%)`);
   console.log(`  Max influence encoding error: ${(maxInfluenceError * 255).toFixed(2)}/255`);
   console.log(`  Max color encoding error: ${(maxColorError * 255).toFixed(2)}/255`);
-  
+
   if (pixelsWithFractionalBits > 0) {
     console.warn(`⚠️  Found ${pixelsWithFractionalBits} pixels with fractional bits - encoding may have precision issues!`);
     console.warn(`⚠️  Max fractional error: ${maxFractionalError.toFixed(6)}`);
   } else {
     console.log(`✅ All pixels have clean integer encoding - no fractional bits detected`);
   }
-  
+
   if (pixelsWithInfluence === 0) {
     console.warn(`⚠️  No pixels with variable influence found in ${filename} - encoding may not be working correctly!`);
   } else {
     console.log(`✅ Influence encoding working - found ${pixelsWithInfluence} pixels with variable influence`);
   }
-  
+
   if (maxInfluenceError > 0.004) { // More than 1/255 difference
     console.warn(`⚠️  High influence encoding error: ${(maxInfluenceError * 255).toFixed(2)}/255`);
   } else {
@@ -325,7 +327,7 @@ const downloadRenderTarget = (renderer: THREE.WebGLRenderer, renderTarget: THREE
 
   // Ensure canvas contexts preserve alpha
   ctx.putImageData(imageData, 0, 0);
-  
+
   // Don't fill with any background color - preserve transparency
   flippedCtx.scale(1, -1);
   flippedCtx.translate(0, -flippedCanvas.height);
@@ -642,11 +644,15 @@ const useOffscreenThree = () => {
             const courseCorrection = getCourseCorrection(projectIdNum, container.imgWithDistance.image.name);
             transformedCourse += courseCorrection;
             if (transformation) {
-              console.log("Original course:", transformedCourse);
-              console.log("Transformation scale:", transformation.scale);
+              if (VERBOSE) {
+                console.log("Original course:", transformedCourse);
+                console.log("Transformation scale:", transformation.scale);
+              }
 
               const courseVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(transformedCourse));
-              console.log("Course vector before transform:", courseVector);
+              if (VERBOSE) {
+                console.log("Course vector before transform:", courseVector);
+              }
 
               const matrix = new THREE.Matrix4();
               const quaternion = new THREE.Quaternion().setFromEuler(
@@ -658,11 +664,15 @@ const useOffscreenThree = () => {
                 new THREE.Vector3(...transformation.scale) // Include scale!
               );
               courseVector.applyMatrix4(matrix);
-              console.log("Course vector after transform:", courseVector);
+              if (VERBOSE) {
+                console.log("Course vector after transform:", courseVector);
+              }
 
               // Convert back to angle
               transformedCourse = Math.atan2(courseVector.z, courseVector.x) * 180 / Math.PI;
-              console.log("Transformed course:", transformedCourse);
+              if (VERBOSE) {
+                console.log("Transformed course:", transformedCourse);
+              }
             }
 
             material.uniforms.lightPos.value.set(
@@ -671,7 +681,9 @@ const useOffscreenThree = () => {
               transformedPos.z,
               transformedCourse
             );
-            console.log("Light position sent to shader:", transformedPos.x, transformedPos.y, transformedPos.z, transformedCourse);
+            if (VERBOSE) {
+              console.log("Light position sent to shader:", transformedPos.x, transformedPos.y, transformedPos.z, transformedCourse);
+            }
 
             // Calculate flip values based on transformation scale
             if (transformation) {
@@ -679,7 +691,9 @@ const useOffscreenThree = () => {
               const flipHorizontal = !(transformation.scale[0] < 0) !== (transformation.scale[2] < 0);
               // Vertical flip when y scale is negative
               const flipVertical = false;
-              console.log("Vertical flip:", flipVertical, "Horizontal flip:", flipHorizontal);
+              if (VERBOSE) {
+                console.log("Vertical flip:", flipVertical, "Horizontal flip:", flipHorizontal);
+              }
 
               material.uniforms.flipHorizontal.value = flipHorizontal;
               material.uniforms.flipVertical.value = flipVertical;

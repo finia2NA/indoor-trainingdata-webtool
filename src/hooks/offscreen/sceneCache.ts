@@ -352,7 +352,7 @@ class SceneCache {
     // Check if we have a cached scene for this exact configuration
     const cachedScene = this.cache.get(keyString);
     if (cachedScene) {
-      console.log('Returning cached scene');
+      // console.log('Returning cached scene');
       return cachedScene;
     }
 
