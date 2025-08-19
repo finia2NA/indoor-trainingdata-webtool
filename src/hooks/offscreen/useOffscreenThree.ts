@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useParams } from 'react-router-dom';
 import db, { Project } from "../../data/db";
+import Transformation from "../../data/Transformation";
 import { Pose, ScreenShotResult, PostTrainingPose } from './useDataGeneratorUtils';
 import { Id, toast } from 'react-toastify';
 import { ProgressToast, ProgressType } from '../../components/UI/Toasts';
@@ -512,11 +513,7 @@ const useOffscreenThree = () => {
     // Get influence range from store
     const influenceRange = getInfluenceRange(projectIdNum);
 
-    // build the scene with 360° shading enabled
-    const { offscreen, renderer, scene, camera } =
-      await getOrCreateScene({ width, height, doubleSided: false, use360Shading: true, influenceRange });
-
-    // Set up post-processing scene outside the loop
+    // Set up post-processing scene outside the loop (reusable)
     const postScene = new THREE.Scene();
     const postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     const quadGeom = new THREE.PlaneGeometry(2, 2);
@@ -528,7 +525,44 @@ const useOffscreenThree = () => {
     }
 
     const results: ScreenShotResult<Pose>[] = [];
+    let currentScene: { offscreen: OffscreenCanvas; renderer: THREE.WebGLRenderer; scene: THREE.Scene; camera: THREE.PerspectiveCamera } | null = null;
+
     for (let i = 0; i < poses.length; i++) {
+      // Create new scene every 20 poses or on first iteration
+      if (i % 20 === 0 || currentScene === null) {
+        // Invalidate previous scene to free memory
+        if (currentScene !== null) {
+          globalSceneCache.invalidateProject(project.id);
+        }
+
+        // Get fresh scene directly from cache (bypassing useScene hook)
+        const transformations: Record<number, Transformation> = {};
+        const visibilities: Record<number, boolean> = {};
+        
+        if (project.models) {
+          for (const model of project.models) {
+            const transformation = getTransformation(projectIdNum, model.id);
+            const visibility = getVisibility(projectIdNum, model.id);
+            if (transformation) {
+              transformations[model.id] = transformation;
+            }
+            visibilities[model.id] = visibility;
+          }
+        }
+
+        currentScene = await globalSceneCache.getOrCreateScene(
+          project,
+          (projectId, modelId) => visibilities[modelId] ?? true,
+          (projectId, modelId) => transformations[modelId] ?? null,
+          width,
+          height,
+          false, // doubleSided
+          true,  // use360Shading
+          influenceRange
+        );
+      }
+
+      const { offscreen, renderer, scene, camera } = currentScene;
       if (stop) break;
       const progress = (i + 1) / poses.length;
 
