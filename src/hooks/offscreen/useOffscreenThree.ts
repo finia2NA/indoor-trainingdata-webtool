@@ -739,18 +739,16 @@ const useOffscreenThree = () => {
       renderer.render(postScene, postCamera);
 
       // Clean up render targets and post-processing quad for this pose
-      if (doCleanup) {
-        renderTargets.forEach(rt => rt.dispose());
-        postScene.remove(quad);
-        postMaterial.dispose();
-      }
+      renderTargets.forEach(rt => rt.dispose());
+      postScene.remove(quad);
+      postMaterial.dispose();
       // ----------------------------------------
 
       // Clean up point lights after rendering this pose
       lightContainers.forEach(container => {
         scene.remove(container.light);
         // Clean up shadow map if it exists
-        if (doCleanup && container.light.shadow && container.light.shadow.map) {
+        if (container.light.shadow && container.light.shadow.map) {
           container.light.shadow.map.dispose();
         }
       });
@@ -779,9 +777,7 @@ const useOffscreenThree = () => {
     }
 
     // Clean up post-processing scene and geometry
-    if (doCleanup) {
-      quadGeom.dispose();
-    }
+    quadGeom.dispose();
 
     // Invalidate the global scene cache to ensure fresh scene on next render
     globalSceneCache.invalidateProject(project.id);
@@ -1001,15 +997,13 @@ const useOffscreenThree = () => {
 
 
     // Clean up
-    if (doCleanup) {
-      renderer.dispose();
-      sphere.geometry.dispose();
-      sphere.material.dispose();
+    renderer.dispose();
+    sphere.geometry.dispose();
+    sphere.material.dispose();
 
-      for (const imageData of images360) {
-        if (imageData.texture) {
-          imageData.texture.dispose();
-        }
+    for (const imageData of images360) {
+      if (imageData.texture) {
+        imageData.texture.dispose();
       }
     }
 
