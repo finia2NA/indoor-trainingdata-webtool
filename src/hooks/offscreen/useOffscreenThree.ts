@@ -528,32 +528,18 @@ const useOffscreenThree = () => {
     let currentScene: { offscreen: OffscreenCanvas; renderer: THREE.WebGLRenderer; scene: THREE.Scene; camera: THREE.PerspectiveCamera } | null = null;
 
     for (let i = 0; i < poses.length; i++) {
-      // Create new scene every 20 poses or on first iteration
-      if (i % 20 === 0 || currentScene === null) {
+      // Create new scene every 10 poses or on first iteration
+      if (i % 10 === 0 || currentScene === null) {
         // Invalidate previous scene to free memory
         if (currentScene !== null) {
           globalSceneCache.invalidateProject(project.id);
         }
 
         // Get fresh scene directly from cache (bypassing useScene hook)
-        const transformations: Record<number, Transformation> = {};
-        const visibilities: Record<number, boolean> = {};
-        
-        if (project.models) {
-          for (const model of project.models) {
-            const transformation = getTransformation(projectIdNum, model.id);
-            const visibility = getVisibility(projectIdNum, model.id);
-            if (transformation) {
-              transformations[model.id] = transformation;
-            }
-            visibilities[model.id] = visibility;
-          }
-        }
-
         currentScene = await globalSceneCache.getOrCreateScene(
           project,
-          (projectId, modelId) => visibilities[modelId] ?? true,
-          (projectId, modelId) => transformations[modelId] ?? null,
+          getVisibility,
+          getTransformation,
           width,
           height,
           false, // doubleSided
@@ -796,9 +782,21 @@ const useOffscreenThree = () => {
       // Clean up point lights after rendering this pose
       lightContainers.forEach(container => {
         scene.remove(container.light);
-        // Clean up shadow map if it exists
-        if (container.light.shadow && container.light.shadow.map) {
-          container.light.shadow.map.dispose();
+        // Enhanced shadow cleanup
+        if (container.light.shadow) {
+          if (container.light.shadow.dispose) {
+            container.light.shadow.dispose();
+          }
+          if (container.light.shadow.map) {
+            container.light.shadow.map.dispose();
+          }
+          // Also dispose shadow camera if it exists
+          if (container.light.shadow.camera) {
+            // Shadow cameras might hold references
+            container.light.shadow.camera = null;
+          }
+          // Clear the entire shadow object
+          container.light.shadow = null;
         }
         // Also dispose the light itself to free up any remaining resources
         if (container.light.dispose) {
