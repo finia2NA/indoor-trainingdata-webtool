@@ -739,9 +739,24 @@ const useOffscreenThree = () => {
       renderer.render(postScene, postCamera);
 
       // Clean up render targets and post-processing quad for this pose
-      renderTargets.forEach(rt => rt.dispose());
+      renderTargets.forEach(rt => {
+        rt.dispose();
+        // Also dispose the texture explicitly
+        if (rt.texture) {
+          rt.texture.dispose();
+        }
+      });
       postScene.remove(quad);
+      // Clear material uniforms to break texture references
+      Object.keys(postMaterial.uniforms).forEach(key => {
+        if (postMaterial.uniforms[key].value && postMaterial.uniforms[key].value.dispose) {
+          // Don't dispose the textures here as they're owned by render targets
+        }
+        postMaterial.uniforms[key].value = null;
+      });
       postMaterial.dispose();
+      // Clear the renderTargets array to break references
+      renderTargets.length = 0;
       // ----------------------------------------
 
       // Clean up point lights after rendering this pose
@@ -751,7 +766,13 @@ const useOffscreenThree = () => {
         if (container.light.shadow && container.light.shadow.map) {
           container.light.shadow.map.dispose();
         }
+        // Also dispose the light itself to free up any remaining resources
+        if (container.light.dispose) {
+          container.light.dispose();
+        }
       });
+      // Clear the lightContainers array to break references
+      lightContainers.length = 0;
 
       const blob = await offscreen.convertToBlob({ type: 'image/png' });
       results.push({
@@ -760,6 +781,11 @@ const useOffscreenThree = () => {
         width,
         height,
       });
+
+      // Force garbage collection after every pose to prevent memory crashes
+      // In browsers, we can't directly trigger GC, but we can help by nullifying references
+      // and yielding control back to the browser event loop
+      await new Promise(resolve => setTimeout(resolve, 0));
     }
 
     if (!stop) {
