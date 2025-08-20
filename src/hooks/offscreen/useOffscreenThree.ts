@@ -799,9 +799,9 @@ const useOffscreenThree = () => {
           container.light.shadow = null;
         }
         // Also dispose the light itself to free up any remaining resources
-        if (container.light.dispose) {
-          container.light.dispose();
-        }
+        // if (container.light.dispose) {
+        //   container.light.dispose();
+        // }
       });
       // Clear the lightContainers array to break references
       lightContainers.length = 0;
