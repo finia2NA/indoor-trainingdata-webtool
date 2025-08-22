@@ -930,6 +930,8 @@ const useOffscreenThree = () => {
       new THREE.SphereGeometry(5, 64, 64),
       new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })
     );
+    // Fix mirroring issue by scaling X axis by -1
+    sphere.scale.x = -1;
     scene.add(sphere);
 
     return { offscreen, scene, renderer, camera, sphere };
