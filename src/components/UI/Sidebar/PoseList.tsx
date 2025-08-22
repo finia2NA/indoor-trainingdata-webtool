@@ -65,6 +65,21 @@ const PoseList = () => {
     }
   };
 
+  const handleConvertPosttrainingToNormal = () => {
+    // Convert each posttraining pose to a normal pose by removing the imageName
+    posttrainingPoses.forEach(posttrainingPose => {
+      const normalPose: Pose = {
+        position: posttrainingPose.position,
+        target: posttrainingPose.target,
+        quaternion: posttrainingPose.quaternion,
+        fov: posttrainingPose.fov,
+        series: posttrainingPose.series,
+        type: posttrainingPose.type,
+      };
+      addPose(normalPose);
+    });
+  };
+
   const formatVector = (vec: Vector3) => {
     return `(${vec.x.toFixed(2)}, ${vec.y.toFixed(2)}, ${vec.z.toFixed(2)})`;
   };
@@ -152,6 +167,16 @@ const PoseList = () => {
             className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
           >
             Clear All Poses
+          </button>
+        )}
+
+        {/* Convert Posttraining to Normal Poses Button */}
+        {posttrainingPoses.length > 0 && (
+          <button
+            onClick={handleConvertPosttrainingToNormal}
+            className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+          >
+            Convert Posttraining to Normal Poses
           </button>
         )}
 
